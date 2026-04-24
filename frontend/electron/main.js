@@ -1,6 +1,20 @@
 const path = require("path");
 const fs = require("fs");
-const { app, BrowserWindow, globalShortcut, ipcMain, dialog } = require("electron");
+const electron = require("electron");
+
+if (typeof electron === "string") {
+  try {
+    // When this file is executed under plain Node (instead of Electron),
+    // `require("electron")` resolves to the path of the Electron binary.
+    // Re-spawn Electron so the built-in Electron module APIs are available.
+    // eslint-disable-next-line global-require
+    const { spawn } = require("child_process");
+    spawn(electron, [__filename, ...process.argv.slice(2)], { stdio: "inherit" });
+  } catch {}
+  process.exit(0);
+}
+
+const { app, BrowserWindow, globalShortcut, ipcMain, dialog } = electron;
 
 const TERMS_TEXT = `The game is in early testing.
 By continuing, you agree to the Terms:
