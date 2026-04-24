@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus } from 'lucide-react';
-import { logout, changePassword, validatePassword, getPlayerId } from '../../lib/player';
+import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers } from '../../lib/player';
 import { promoteToAdmin } from '../../lib/lobby';
 import InventoryModal from '../modals/InventoryModal';
 import { LANGUAGES, setLang, t, useLang } from '../../lib/i18n';
@@ -14,6 +14,8 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   const [showInventory, setShowInventory] = useState(false);
   const [showChangePw, setShowChangePw] = useState(false);
   const [showPromote, setShowPromote] = useState(false);
+  const [adminPlayers, setAdminPlayers] = useState(null);
+  const [adminPlayersQuery, setAdminPlayersQuery] = useState('');
   const [lang] = useLang();
   const [tab, setTab] = useState('account');
 
@@ -24,6 +26,14 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
       .then(r => setStats(r.data))
       .catch(() => setStats({ offline: true }));
   }, [player?.nick]);
+
+  useEffect(() => {
+    if (!player?.isAdmin) return;
+    setAdminPlayers(null);
+    adminListPlayers({ limit: 500 })
+      .then((r) => setAdminPlayers(r?.players || []))
+      .catch(() => setAdminPlayers([]));
+  }, [player?.isAdmin]);
 
   const handleLogout = async () => {
     try { await logout(); } catch {}
@@ -84,6 +94,40 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               <div className="text-slate-500 text-xs text-center py-6">{t('profile.loading')}</div>
             )}
           </div>
+
+          {player?.isAdmin && (
+            <div className="glass-panel rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Shield size={14} className="neon-gold" />
+                <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">ALL PLAYERS</h3>
+              </div>
+              <input
+                className="neon-input mb-3"
+                placeholder="SEARCH NICKNAME"
+                value={adminPlayersQuery}
+                onChange={(e) => setAdminPlayersQuery(e.target.value)}
+              />
+              {adminPlayers === null ? (
+                <div className="text-slate-500 text-xs text-center py-4">{t('profile.loading')}</div>
+              ) : (
+                <div className="glass-panel-light rounded-lg p-3 max-h-[280px] overflow-auto">
+                  {(adminPlayers || [])
+                    .filter((p) => {
+                      const q = (adminPlayersQuery || '').trim().toLowerCase();
+                      if (!q) return true;
+                      return String(p?.nickname || '').toLowerCase().includes(q);
+                    })
+                    .slice(0, 200)
+                    .map((p) => (
+                      <div key={`${p?.player_num}-${p?.nickname}`} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-b-0">
+                        <div className="font-mono text-[11px] text-slate-300">#{p?.player_num ?? '—'}</div>
+                        <div className="font-mono text-[11px] text-white">{p?.nickname || '—'}</div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="glass-panel rounded-xl p-6 space-y-3">
             <div className="flex items-center gap-2 mb-2">

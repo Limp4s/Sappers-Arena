@@ -484,3 +484,7 @@ export const submitScore = async (body) => {
 
 export const adminHeaders = () => authHeaders();
 export const sessionHeaders = () => authHeaders();
+
+export const adminListPlayers = async ({ limit = 200 } = {}) => {
+  return (await axios.get(`${API}/admin/players`, { params: { limit }, headers: authHeaders() })).data;
+};

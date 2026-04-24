@@ -521,6 +521,28 @@ async def promote_to_admin(payload: AdminPromoteRequest, nick: str = Depends(req
     return {"ok": True, "player": _sanitize_player(updated)}
 
 
+@api_router.get("/admin/players")
+async def admin_list_players(limit: int = Query(default=200, ge=1, le=2000), nick: str = Depends(require_session)):
+    me_player = await _get_player(nick)
+    if not me_player or not (me_player.get("is_admin") or _is_admin_nick(nick)):
+        raise HTTPException(status_code=403, detail="Admin privileges required.")
+    cursor = db.players.find(
+        {},
+        {"_id": 0, "password_hash": 0},
+    ).sort("player_num", 1).limit(limit)
+    players = await cursor.to_list(length=limit)
+    out = []
+    for p in players:
+        p = await _ensure_player_ids(p)
+        out.append({
+            "nickname": p.get("nickname"),
+            "player_num": p.get("player_num"),
+            "player_uuid": p.get("player_uuid"),
+            "is_admin": bool(p.get("is_admin")),
+        })
+    return {"players": out}
+
+
 @api_router.post("/admin/demote")
 async def demote_admin(payload: AdminPromoteRequest, nick: str = Depends(require_session)):
     me_player = await _get_player(nick)
