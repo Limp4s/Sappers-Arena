@@ -1,7 +1,6 @@
 const path = require("path");
 const fs = require("fs");
 const { app, BrowserWindow, globalShortcut, ipcMain, dialog } = require("electron");
-const { autoUpdater } = require("electron-updater");
 
 const TERMS_TEXT = `The game is in early testing.
 By continuing, you agree to the Terms:
@@ -71,6 +70,11 @@ function configureAutoUpdates() {
   if (!app.isPackaged) return;
 
   try {
+    // Lazy-load to avoid issues when running in dev/unpackaged mode.
+    // electron-updater can access electron's app internals during module init.
+    // eslint-disable-next-line global-require
+    const { autoUpdater } = require("electron-updater");
+
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = false;
 
