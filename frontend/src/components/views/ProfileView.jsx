@@ -6,7 +6,7 @@ import { promoteToAdmin } from '../../lib/lobby';
 import InventoryModal from '../modals/InventoryModal';
 import { LANGUAGES, setLang, t, useLang } from '../../lib/i18n';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
 const API = `${BACKEND_URL}/api`;
 
 export default function ProfileView({ player, onPlayerUpdate, onLogout }) {

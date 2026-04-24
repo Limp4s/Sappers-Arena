@@ -5,7 +5,7 @@ import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, CURSORS, loadEquipped, saveEquippe
 import { purchaseItem, fetchPlayer } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
 const API = `${BACKEND_URL}/api`;
 
 export default function ShopView({ player, onPlayerUpdate }) {

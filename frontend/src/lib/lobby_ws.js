@@ -1,6 +1,15 @@
 import { getToken } from './player';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+const DEFAULT_RENDER_BACKEND = 'https://sappers-arena.onrender.com';
+const BACKEND_URL = (() => {
+  const fromEnv = process.env.REACT_APP_BACKEND_URL;
+  if (fromEnv) return fromEnv;
+  try {
+    const host = (window?.location?.hostname || '').toLowerCase();
+    if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:8000';
+  } catch {}
+  return DEFAULT_RENDER_BACKEND;
+})();
 
 const toWsUrl = (httpUrl) => {
   try {

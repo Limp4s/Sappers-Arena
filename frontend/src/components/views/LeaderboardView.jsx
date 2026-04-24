@@ -4,7 +4,7 @@ import { Trophy, Clock, User, Search, Trash2, Crown, Shield, Sparkles } from 'lu
 import { getStoredNickname, adminHeaders } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
 const API = `${BACKEND_URL}/api`;
 
 const SCOPES = [
