@@ -9,6 +9,11 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
   const dragState = useRef({ dragging: false, startY: 0, startScroll: 0, moved: false });
 
   useEffect(() => {
+    const isCoarse = (() => {
+      try { return window.matchMedia && window.matchMedia('(pointer: coarse)').matches; } catch { return false; }
+    })();
+    if (isCoarse) return undefined;
+
     const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
     const prevBody = {
       overflowY: document.body.style.overflowY,
@@ -82,7 +87,14 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
 
   // Layout: each node placed along a sinusoidal curve
   const ROW_HEIGHT = 130;
-  const CURVE_WIDTH = 340;
+  const CURVE_WIDTH = (() => {
+    try {
+      const vw = Math.max(320, Math.min(520, window.innerWidth || 340));
+      return Math.max(260, Math.min(340, vw - 40));
+    } catch {
+      return 340;
+    }
+  })();
   const PATH_H_OFFSET = CURVE_WIDTH / 2;
   const curveX = (idx) => Math.sin(idx * 0.7) * PATH_H_OFFSET;
 
@@ -131,7 +143,7 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
           style={{ height: '76vh', minHeight: '620px', cursor: 'grab' }}
           data-testid="campaign-scroller"
         >
-          <div className="relative mx-auto" style={{ width: CURVE_WIDTH + 320, height: totalHeight }}>
+          <div className="relative mx-auto" style={{ width: '100%', maxWidth: CURVE_WIDTH + 320, height: totalHeight }}>
             {/* SVG curvy path */}
             <svg className="absolute left-1/2 -translate-x-1/2 top-0 pointer-events-none"
               width={CURVE_WIDTH + 40} height={totalHeight}
