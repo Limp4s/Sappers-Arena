@@ -1,0 +1,89 @@
+{
+  "theme": "dark",
+  "archetype": "Archetype 7: Electric & Neon (Cyberpunk/Futuristic) mixed with Archetype 5 (Jewel & Luxury) for premium glass depth",
+  "design_vision": "A premium 'Tron meets Apple Vision Pro' Minesweeper. Holographic tiles over deep frosted glass. Avoids standard purple/violet cyberpunk cliches in favor of Electric Cyan and Hot Coral. High-end, immersive, and tactical.",
+  "colors": {
+    "background_base": "#050505",
+    "glass_dark": "rgba(0, 0, 0, 0.5)",
+    "glass_light": "rgba(255, 255, 255, 0.03)",
+    "primary_neon": "#00E5FF",
+    "primary_neon_dim": "rgba(0, 229, 255, 0.3)",
+    "danger_neon": "#FF2A6D",
+    "warning_neon": "#FFD700",
+    "text_main": "#F8FAFC",
+    "text_muted": "#94A3B8",
+    "grid_numbers": {
+      "1": "#00E5FF",
+      "2": "#00FF9D",
+      "3": "#FFD700",
+      "4": "#FF2A6D",
+      "5": "#FF003C",
+      "6": "#00E5FF",
+      "7": "#00FF9D",
+      "8": "#FFD700"
+    }
+  },
+  "typography": {
+    "headings": "Orbitron",
+    "body": "JetBrains Mono",
+    "numbers": "JetBrains Mono",
+    "rules": [
+      "NO Inter, NO Space Grotesk. Use Orbitron for all display/headings, and JetBrains Mono for UI labels, timer, and grid numbers.",
+      "Headings should have tight letter spacing (tracking-tight).",
+      "Overlines/labels should be uppercase, small, and wide spacing (tracking-[0.2em])."
+    ]
+  },
+  "surfaces_and_effects": {
+    "glass_panel": "backdrop-blur-xl bg-black/50 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)]",
+    "neon_glow_primary": "drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]",
+    "neon_glow_danger": "drop-shadow-[0_0_12px_rgba(255,42,109,0.9)]",
+    "tile_unrevealed": "bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#00E5FF]/50 transition-all duration-200 cursor-pointer",
+    "tile_revealed": "bg-black/60 border border-[#00E5FF]/20 shadow-[inset_0_0_15px_rgba(0,229,255,0.1)]",
+    "tile_mine": "bg-[#FF2A6D]/20 border border-[#FF2A6D] shadow-[inset_0_0_20px_rgba(255,42,109,0.5)]",
+    "tile_flag": "bg-[#FFD700]/10 border border-[#FFD700]/50"
+  },
+  "layout": {
+    "global": "Full viewport height (`h-screen`), overflow hidden. The main background image covers the screen. All content lives inside frosted glass bento containers.",
+    "dashboard_stats": "A top control bar. Uses grid or flex with dense spacing. Contains: Timer, Lives indicator (3 glowing shields/hearts), Score counter, and Difficulty Selector.",
+    "game_container": "Centered floating glass panel.",
+    "game_grid": "CSS Grid layout that dynamically adjusts columns based on difficulty (e.g., grid-cols-9, grid-cols-16). Grid gap should be 2px to 4px max to maintain the tactical board feel."
+  },
+  "components": {
+    "app_wrapper": "Div with absolute background image and a dark overlay `bg-black/40` to ensure contrast.",
+    "stats_panel": "Glassmorphism header. Values like timer and score MUST use JetBrains Mono `text-2xl` or `text-3xl` with `text-[#00E5FF]` and neon glow.",
+    "cell": "Interactive div representing a single tile. Requires `framer-motion` for interactions (scale down on click, pop on reveal).",
+    "leaderboard": "Glass panel table showing top players. Columns: Rank, Name, Score, Time. Zebra striping with `bg-white/5`.",
+    "game_over_modal": "Frosted glass modal overlaid on screen. If victory: Cyan glowing text. If defeat: Red glowing text. Includes input for Name to submit to Leaderboard."
+  },
+  "media": {
+    "background_image": "https://static.prod-images.emergentagent.com/jobs/1ce29f67-a683-47ec-8286-0f1d17bf03cb/images/95b6cfb1a1755ad385d99855b36008be35e7b84abe026c274145b57d80b62f90.png"
+  },
+  "animations": {
+    "cell_reveal": "Framer motion layout transition. `initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}`.",
+    "explosion": "Screen shake animation (`framer-motion` keyframes on main container). Red flash overlay `bg-red-500/20` fading out.",
+    "victory_scanline": "A sweeping bright cyan gradient line moving across the grid.",
+    "hover_state": "Subtle brightness increase and border color transition to neon."
+  },
+  "mechanics": {
+    "difficulty_levels": {
+      "easy": { "rows": 9, "cols": 9, "mines": 10 },
+      "medium": { "rows": 16, "cols": 16, "mines": 40 },
+      "hard": { "rows": 16, "cols": 30, "mines": 99 }
+    },
+    "lives_system": "Player starts with 3 lives. Uncovering a mine removes 1 life and flags the mine automatically. Game ends only if lives reach 0.",
+    "timer": "Starts on first click. Formatted as 000.",
+    "score_system": "Score increases per safe cell revealed. Faster times yield a higher score multiplier. Subtract massive points for lost lives.",
+    "leaderboard": "Submit Player Name and Score to MongoDB. Fetch Top 10 on load."
+  },
+  "testing": {
+    "data_testid_rules": "All interactive elements (cells, difficulty buttons, submit button, modals) MUST have descriptive `data-testid` attributes (e.g., `data-testid='grid-cell-0-0'`, `data-testid='difficulty-medium'`, `data-testid='submit-score-btn'`)."
+  },
+  "instructions_to_main_agent": [
+    "Initialize React with Tailwind CSS and Framer Motion.",
+    "Import fonts Orbitron and JetBrains Mono from Google Fonts in index.css.",
+    "Build the UI directly into the application using raw HTML/Tailwind for the glass layout to ensure creative freedom, but use Shadcn for complex inputs/selects if needed.",
+    "Implement the 3-lives logic explicitly in the game engine state.",
+    "Add audio context or HTML5 Audio for sound effects (click, flag, explosion, win) using online free resources or generated sounds if applicable.",
+    "Setup a simple Express/FastAPI backend or mock it for the Leaderboard functionality if full stack is required."
+  ]
+}

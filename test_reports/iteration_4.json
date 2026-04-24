@@ -1,0 +1,46 @@
+{
+  "summary": "Iteration 4 full testing (backend + frontend) against live preview URL. Backend: 59/59 pytest tests pass, covering new shop catalog, purchase flow (401/403/404/402/409/200), coin awards (campaign/battle_simple/battle_ranked), rating delta (+46 on ranked win, -12 on ranked loss), ranked leaderboard, new POST /api/leaderboard response shape {entry, coins_awarded, rating_delta}, plus all iteration-1/2/3 regressions (leaderboard CRUD, campaign/custom/stats, player register, admin delete, gating). Frontend: fresh-session NicknameGate blocks; nick-admin-hint now correctly visible for 'Limp4' (iter-3 bug fixed); all 5 tabs render; admin sees coin-badge(100)+player-badge(ADMIN crown); Campaign scroller has hide-scrollbar class and 40 level nodes (1/20/40 verified); toggle-infinite-lives present for admin and, when ON, launching level-1 shows infinite-lives-badge + lives-infinity (two infinity glyphs) instead of hearts; BATTLES tab has start-simple-battle + start-ranked-battle; SHOP renders 13 catalog items + 3 default equip cards across 3 categories with shop-coin-balance; CUSTOM shows all three default skin selectors; LEADERBOARD has 5 scope tabs, ranked-players-card with top players by rating, and campaign scope renders lb-lives-used-N columns (20 rows). No 'Compiled with problems' banner, no pageerrors.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_campaign_custom_stats.py",
+    "/app/backend/tests/test_players_admin.py",
+    "/app/backend/tests/test_iteration4_shop_rating.py",
+    "/app/backend/tests/conftest.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py /api/leaderboard/ranked returns ALL registered players (filter only requires `rating` field to exist), not just those who have played ranked matches. Since every newly-registered player gets a default rating=1000 via the Player model, the 'Top Ranked' card gets polluted with inactive test users all tied at 1000. Consider filtering to players who have at least one battle_ranked submission (e.g., join against leaderboard.mode=='battle_ranked') or tracking battles_played and requiring >0.",
+    "server.py _compute_coins/_compute_rating_delta are keyed on the client-supplied `mode` string. A client could send mode='battle_ranked' for a 3x3 custom board and farm rating. Consider server-side mode validation (allow-list: classic|campaign|custom|battle_simple|battle_ranked) and minimal board-size sanity per mode.",
+    "server.py purchase_item uses X-Player-Name header with zero auth (same spoofing concern as admin delete). OK for the hobby demo but flag for prod. Consider signing the nickname with a short-lived token when login evolves.",
+    "ShopView auto-equips on successful purchase — good UX — but there is no visible confirmation toast for 'already owned' vs 'insufficient coins'; both surface via shop-msg text which is good, but the msg element might be missed by users. Consider auto-dismiss timer and focus ring.",
+    "CampaignView drag-to-scroll: verify on touch devices (pointerdown->pointermove); if only mousedown is wired, touch users get no drag. (Not tested here; worth a follow-up on mobile.)",
+    "Player model default rating=1000 is set in the Pydantic defaults, so a $inc of 0 on a player doc that never had 'rating' still leaves the field missing. The ranked endpoint's `{'rating': {'$exists': True}}` filter then drops that player from /ranked. The register_player path does insert rating via model_dump() so new registrations are fine, but any legacy players from iter 1-3 are invisible on the ranked board until they play a ranked match. Consider a one-shot migration: db.players.update_many({'rating': {'$exists': False}}, {'$set': {'rating': 1000, 'coins': 100, 'owned_items': []}})."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_campaign_custom_stats.py",
+    "/app/backend/tests/test_players_admin.py",
+    "/app/backend/tests/test_iteration4_shop_rating.py",
+    "/app/test_reports/iteration_4.json"
+  ],
+  "success_rate": {
+    "backend": "100% (59/59 pytest)",
+    "frontend": "100% (all target selectors/flows verified, no compile/page errors)"
+  },
+  "test_credentials": "Admin nickname is 'Limp4' (case-insensitive), registered in MongoDB. All generated test players use TEST_<hex8>/RANK_<hex8>/CAMP_<hex8>/UNREG_<hex8>/REG_<hex8> prefixes for easy cleanup.",
+  "seed_data_creation": "conftest.py session-autouse still seeds TEST_Alpha/Beta/S*/Camp*/Cust/StatsAgent/V/X registrations (idempotent on 409). test_iteration4_shop_rating.py creates per-test unique registered players and submits several campaign wins (level_id=10) to farm coins for the purchase happy-path test. No manual seed required.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run backend tests with: REACT_APP_BACKEND_URL=https://minefield-adventure.preview.emergentagent.com python -m pytest /app/backend/tests/ -v  -- all 59 should pass. /api/leaderboard POST now returns {entry: Score, coins_awarded: int, rating_delta: int} not Score directly; parse r.json()['entry']['id']. For Playwright tests that want to bypass the NicknameGate, set THREE localStorage keys (mg_player='Limp4', mg_player_locked_v2='1', mg_is_admin='1') before reload. Campaign now has 40 levels (testids level-node-1..40), and scroller uses hide-scrollbar class with vertical wheel + click-drag. Shop renders 13 catalog items plus 3 'default' cards (mine_default/cell_default/fx_default) that use shop-equip-* testids instead of shop-buy-*. When infinite-lives toggle is ON and admin launches a campaign level, look for testids infinite-lives-badge and lives-infinity (instead of heart icons). Score submissions from infinite-lives runs intentionally are NOT posted to /api/leaderboard.",
+  "rca of the issue": "N/A - no bugs found this iteration. The previously reported iter-3 ADMIN SLOT hint bug (nick-admin-hint never shown for registered admin nick) has been fixed: typing 'Limp4' now shows the ADMIN SLOT chip alongside the 'Already taken' message, verified end-to-end."
+}

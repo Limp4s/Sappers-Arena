@@ -1,0 +1,50 @@
+{
+  "summary": "Iteration 3 testing: 47/47 backend tests passed (existing iter1+iter2 + new players/admin/gating). Frontend nickname-gate, admin-protected leaderboard delete, 25-node Campaign trail, Custom max-mines cap, and player badge with ADMIN crown all verified end-to-end against the live preview URL. One UX miss: ADMIN SLOT hint never appears for 'Limp4' once it's registered (gated behind `available`).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "NicknameGate",
+        "issue": "ADMIN SLOT hint is rendered ONLY inside the `nick-available` block (line 122-131 of NicknameGate.jsx). Once 'Limp4' is registered (which it now is in the DB), checkResult.available=false, so typing 'Limp4' shows 'Already taken' but never reveals the ADMIN crown/hint, contradicting the iter-3 acceptance criterion: \"Typing 'Limp4' shows ADMIN SLOT hint.\" Also no `data-testid=\"nick-admin-hint\"` is present on the span.",
+        "selector": "[data-testid=\"nick-admin-hint\"]",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_campaign_custom_stats.py",
+    "/app/backend/tests/test_players_admin.py",
+    "/app/backend/tests/conftest.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Render the ADMIN SLOT hint (and add `data-testid=\"nick-admin-hint\"`) whenever `checkResult?.is_admin_nick` is true regardless of availability, OR show a distinct 'Admin slot already claimed' message so the admin badge is visible during the input phase as the spec requires."
+  ],
+  "critical_code_review_comments": [
+    "server.py: registration is not atomic — `_nick_taken` then `insert_one` race could allow two concurrent registers with the same nickname. Add a unique index on `players.nickname_lower` (db.players.create_index('nickname_lower', unique=True)) and catch DuplicateKeyError -> 409.",
+    "server.py: DELETE /api/leaderboard/{id} relies on a client header (X-Player-Name). Anyone can spoof `X-Player-Name: Limp4` from curl/Postman and delete entries — there's no token/secret. Acceptable for a hobby demo, but flag for production.",
+    "server.py: `ScoreCreate.player_name` min_length=3 is enforced in Pydantic, but `_nick_taken` lookup uses `lower()` while submit sends the raw `player_name`. A user registered as 'Foo' can submit as 'foo' and pass. Consider normalizing `player_name` on submit to the registered casing.",
+    "Frontend NicknameGate: input.trim() in onChange + maxLength=20 is fine, but the debounced check uses the raw value — typing fast then deleting could leave a stale `checkResult`. Tests passed but worth a minor cleanup.",
+    "test_credentials.md is empty — populate with the admin nickname 'Limp4' for next agents."
+  ],
+  "updated_files": [
+    "/app/backend/tests/conftest.py",
+    "/app/backend/tests/test_players_admin.py"
+  ],
+  "success_rate": {
+    "backend": "100% (47/47)",
+    "frontend": "~95% (all flows pass; only ADMIN SLOT hint visibility for already-registered admin name fails)"
+  },
+  "test_credentials": "Admin nickname is 'Limp4' (case-insensitive). Already registered in MongoDB. Non-admin test nicknames generated as TEST_<uuid8> per run.",
+  "seed_data_creation": "conftest.py auto-registers TEST_Alpha, TEST_Beta, TEST_S500, TEST_S2500, TEST_S1200, TEST_Camp1, TEST_Camp3, TEST_Cust, TEST_StatsAgent, TEST_X, TEST_V before any test runs (idempotent, ignores 409). test_players_admin.py also ensures 'Limp4' exists and uses unique TEST_<hex8> nicks for one-shot registration tests.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run with REACT_APP_BACKEND_URL exported (preview URL). Backend pytest: `REACT_APP_BACKEND_URL=https://minefield-adventure.preview.emergentagent.com python -m pytest /app/backend/tests/ -v`. The conftest.py session-autouse fixture pre-registers all required TEST_ nicknames so leaderboard POSTs (now gated on registration) succeed. 'Limp4' is the admin and is already in DB. For frontend Playwright tests, ALWAYS clear localStorage (mg_player, mg_player_locked_v2, mg_is_admin) before reload to test the NicknameGate; or seed those keys to skip the gate as a particular user/admin. Campaign trail uses data-testid=\"level-node-N\" (1..25). Leaderboard admin delete buttons use data-testid=\"admin-delete-N\". The delete UX uses a window.confirm() dialog — hook page.on('dialog', d.accept()) before clicking.",
+  "rca of the issue": "ADMIN SLOT hint missing for 'Limp4': In /app/frontend/src/components/auth/NicknameGate.jsx line 122, the admin chip is nested inside the `available` branch (`{!formatError && checkResult?.available && (... {adminPreview && <span>ADMIN SLOT</span>} ...)}`). Once 'Limp4' is registered, `checkResult.available` is false and the entire wrapper renders the 'taken' message instead, so the ADMIN SLOT chip never appears. Mitigation: lift the admin chip out into its own conditional that only checks `checkResult?.is_admin_nick && !formatError`, and add `data-testid=\"nick-admin-hint\"` for testability."
+}

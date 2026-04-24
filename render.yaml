@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: sappers-arena-backend
+    env: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        sync: false
+
+  - type: web
+    name: sappers-arena-frontend
+    env: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: REACT_APP_BACKEND_URL
+        sync: false
