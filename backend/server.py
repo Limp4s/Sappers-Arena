@@ -13,11 +13,31 @@ from datetime import datetime, timezone, timedelta
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+
+def _get_cors_origins() -> List[str]:
+    raw = os.environ.get('CORS_ORIGINS', '*')
+    if raw is None:
+        return ['*']
+    raw = str(raw).strip()
+    if raw == '' or raw == '*':
+        return ['*']
+    parts = [p.strip() for p in raw.split(',')]
+    parts = [p for p in parts if p]
+    return parts or ['*']
+
+
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_get_cors_origins(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 api_router = APIRouter(prefix="/api")
 
 ADMIN_NICKS = {"limp4"}
@@ -658,14 +678,6 @@ async def cancel_lobby(code: str, nick: str = Depends(require_session)):
 
 
 app.include_router(api_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
