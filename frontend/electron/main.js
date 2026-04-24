@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
-const { app, BrowserWindow, globalShortcut, ipcMain } = require("electron");
+const { app, BrowserWindow, globalShortcut, ipcMain, dialog } = require("electron");
+const { autoUpdater } = require("electron-updater");
 
 const TERMS_TEXT = `The game is in early testing.
 By continuing, you agree to the Terms:
@@ -66,8 +67,47 @@ function createWindow() {
   }
 }
 
+function configureAutoUpdates() {
+  if (!app.isPackaged) return;
+
+  try {
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = false;
+
+    autoUpdater.on("error", (err) => {
+      // eslint-disable-next-line no-console
+      console.error("autoUpdater:error", err);
+    });
+
+    autoUpdater.on("update-available", () => {
+      // eslint-disable-next-line no-console
+      console.log("autoUpdater:update-available");
+    });
+
+    autoUpdater.on("update-downloaded", async () => {
+      try {
+        const res = await dialog.showMessageBox({
+          type: "info",
+          buttons: ["Restart", "Later"],
+          defaultId: 0,
+          cancelId: 1,
+          title: "Update ready",
+          message: "A new version has been downloaded.",
+          detail: "Restart the game to apply the update."
+        });
+        if (res.response === 0) {
+          try { autoUpdater.quitAndInstall(); } catch {}
+        }
+      } catch {}
+    });
+
+    try { autoUpdater.checkForUpdates(); } catch {}
+  } catch {}
+}
+
 app.whenReady().then(() => {
   configurePortableDataDir();
+  configureAutoUpdates();
 
   try {
     ipcMain.handle("sa:quit-app", () => {
