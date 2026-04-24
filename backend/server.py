@@ -2,6 +2,7 @@ from fastapi import FastAPI, APIRouter, Query, HTTPException, Header, Depends, W
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import ReturnDocument
 import os, logging, re, random, string, hashlib, secrets
 import certifi
 from pathlib import Path
@@ -120,6 +121,33 @@ async def _get_player(nick: str):
     return await db.players.find_one({"nickname_lower": (nick or "").lower()}, {"_id": 0})
 
 
+async def _next_player_num() -> int:
+    doc = await db.counters.find_one_and_update(
+        {"_id": "player_num"},
+        {"$setOnInsert": {"seq": 0}, "$inc": {"seq": 1}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+    return int(doc.get("seq") or 0)
+
+
+async def _ensure_player_ids(player: dict) -> dict:
+    if not player:
+        return player
+    patch: Dict[str, Any] = {}
+    if not player.get("player_uuid"):
+        patch["player_uuid"] = str(uuid.uuid4())
+    if player.get("player_num") is None:
+        patch["player_num"] = await _next_player_num()
+    if patch:
+        await db.players.update_one(
+            {"nickname_lower": player.get("nickname_lower")},
+            {"$set": patch},
+        )
+        player = {**player, **patch}
+    return player
+
+
 def _is_admin_nick(nick: str) -> bool:
     return (nick or "").lower() in ADMIN_NICKS
 
@@ -130,6 +158,8 @@ def _sanitize_player(doc: dict) -> dict:
     doc.pop("_id", None)
     doc.pop("nickname_lower", None)
     doc.pop("password_hash", None)
+    doc.setdefault("player_uuid", None)
+    doc.setdefault("player_num", None)
     doc.setdefault("coins", STARTER_COINS)
     doc.setdefault("owned_items", [])
     doc.setdefault("rating", 1000)
@@ -296,6 +326,8 @@ async def register_player(payload: RegisterRequest):
     if await _get_player(nick):
         raise HTTPException(status_code=409, detail=f"Nickname '{nick}' is already taken.")
     doc = {
+        "player_uuid": str(uuid.uuid4()),
+        "player_num": await _next_player_num(),
         "nickname": nick,
         "nickname_lower": nick.lower(),
         "password_hash": _hash_password(payload.password),
@@ -315,6 +347,7 @@ async def login_player(payload: LoginRequest):
     player = await _get_player(payload.nickname)
     if not player:
         raise HTTPException(status_code=404, detail="Player not found.")
+    player = await _ensure_player_ids(player)
     stored = player.get("password_hash")
     if not stored:
         # Backward compatibility: older accounts may exist without password hashes.
@@ -328,6 +361,7 @@ async def login_player(payload: LoginRequest):
             {"$set": patch},
         )
         player = await _get_player(payload.nickname)
+        player = await _ensure_player_ids(player)
         stored = player.get("password_hash")
         if not stored:
             raise HTTPException(status_code=500, detail="Failed to initialize account password.")
@@ -365,6 +399,7 @@ async def change_password(payload: ChangePasswordRequest, nick: str = Depends(re
 @api_router.get("/me")
 async def me(nick: str = Depends(require_session)):
     player = await _get_player(nick)
+    player = await _ensure_player_ids(player)
     return _sanitize_player(player)
 
 
