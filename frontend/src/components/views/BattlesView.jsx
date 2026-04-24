@@ -8,6 +8,7 @@ export default function BattlesView({ onStartBattle, player }) {
   const [lobby, setLobby] = useState(null);
   const [error, setError] = useState(null);
   const pollRef = useRef(null);
+  const startedRef = useRef(false);
   useLang();
 
   const SIMPLE_CFG = { rows: 10, cols: 10, mines: 20, lives: 3, mode: 'battle_simple', public: true };
@@ -23,11 +24,19 @@ export default function BattlesView({ onStartBattle, player }) {
     try {
       const l = await matchmakingFind(cfg);
       setLobby(l);
+      startedRef.current = false;
       // If we just joined an existing lobby with a guest already (us), wait for host to start
       pollRef.current = setInterval(async () => {
         try {
           const latest = await getLobby(l.code);
           setLobby(latest);
+          if (!startedRef.current && latest.status === 'waiting' && latest.host === player?.nick && latest.guest) {
+            startedRef.current = true;
+            try {
+              const started = await startLobby(latest.code);
+              setLobby(started);
+            } catch {}
+          }
           if (latest.status === 'playing') {
             stopPolling();
             launchFromLobby(latest, kind, cfg);

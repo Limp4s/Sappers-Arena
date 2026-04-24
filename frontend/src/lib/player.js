@@ -83,6 +83,8 @@ const _ensurePlayerId = (nick) => {
 export const getStoredNickname = () => localStorage.getItem(KEY_NICK) || '';
 export const getToken = () => localStorage.getItem(KEY_TOKEN) || '';
 export const isAuthed = () => !!(localStorage.getItem(KEY_NICK) && localStorage.getItem(KEY_TOKEN));
+
+const isOnlineToken = (t) => !!t && !(t || '').startsWith('offline-');
 export const isAdmin = () => {
   const nick = getStoredNickname();
   const token = getToken();
@@ -155,11 +157,12 @@ const _offlinePlayerDoc = (u) => ({
 
 const authHeaders = () => {
   const t = getToken();
-  return t ? { 'X-Session-Token': t } : {};
+  return isOnlineToken(t) ? { 'X-Session-Token': t } : {};
 };
 
-const ensureOnlineSession = async () => {
-  if (isAuthed()) return { nickname: getStoredNickname(), token: getToken() };
+export const ensureOnlineSession = async () => {
+  const existing = getToken();
+  if (isOnlineToken(existing) && getStoredNickname()) return { nickname: getStoredNickname(), token: existing };
   try {
     for (let i = 0; i < 5; i += 1) {
       const nick = _makeGuestNick();

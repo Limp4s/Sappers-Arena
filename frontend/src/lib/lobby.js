@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { sessionHeaders } from './player';
+import { sessionHeaders, ensureOnlineSession, getToken } from './player';
 
 const DEFAULT_RENDER_BACKEND = 'https://sappers-arena.onrender.com';
 const BACKEND_URL = (() => {
@@ -13,15 +13,25 @@ const BACKEND_URL = (() => {
 })();
 const API = `${BACKEND_URL}/api`;
 
-export const createLobby = async (cfg) => (await axios.post(`${API}/lobbies`, cfg, { headers: sessionHeaders() })).data;
-export const joinLobby = async (code) => (await axios.post(`${API}/lobbies/${code}/join`, null, { headers: sessionHeaders() })).data;
-export const getLobby = async (code) => (await axios.get(`${API}/lobbies/${code}`)).data;
-export const startLobby = async (code) => (await axios.post(`${API}/lobbies/${code}/start`, null, { headers: sessionHeaders() })).data;
-export const submitLobbyResult = async (code, result) => (await axios.post(`${API}/lobbies/${code}/result`, result, { headers: sessionHeaders() })).data;
-export const cancelLobby = async (code) => (await axios.post(`${API}/lobbies/${code}/cancel`, null, { headers: sessionHeaders() })).data;
-export const matchmakingFind = async (cfg) => (await axios.post(`${API}/matchmaking/find`, cfg, { headers: sessionHeaders() })).data;
+const ensureLobbyAuth = async () => {
+  const t = getToken();
+  if (!t || (t || '').startsWith('offline-')) await ensureOnlineSession();
+};
 
-export const reportProgress = async (code, progress) => (await axios.post(`${API}/lobbies/${code}/progress`, progress, { headers: sessionHeaders() })).data;
+const authedPost = async (url, body) => {
+  await ensureLobbyAuth();
+  return axios.post(url, body, { headers: sessionHeaders() });
+};
+
+export const createLobby = async (cfg) => (await authedPost(`${API}/lobbies`, cfg)).data;
+export const joinLobby = async (code) => (await authedPost(`${API}/lobbies/${code}/join`, null)).data;
+export const getLobby = async (code) => (await axios.get(`${API}/lobbies/${code}`)).data;
+export const startLobby = async (code) => (await authedPost(`${API}/lobbies/${code}/start`, null)).data;
+export const submitLobbyResult = async (code, result) => (await authedPost(`${API}/lobbies/${code}/result`, result)).data;
+export const cancelLobby = async (code) => (await authedPost(`${API}/lobbies/${code}/cancel`, null)).data;
+export const matchmakingFind = async (cfg) => (await authedPost(`${API}/matchmaking/find`, cfg)).data;
+
+export const reportProgress = async (code, progress) => (await authedPost(`${API}/lobbies/${code}/progress`, progress)).data;
 export const promoteToAdmin = async (nickname) => (await axios.post(`${API}/admin/promote`, { nickname }, { headers: sessionHeaders() })).data;
 
 // Simple xorshift seeded RNG for deterministic board generation
