@@ -15,6 +15,13 @@ const OFFLINE_ADMIN_PASSWORD = 'Limon626';
 export const ADMIN_NICKS = new Set(['limp4']);
 export const isAdminNick = (nick) => ADMIN_NICKS.has((nick || '').toLowerCase());
 
+const _randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const _makeGuestNick = () => {
+  const suffix = `${Date.now().toString(36)}${_randInt(100, 999)}`.slice(-8);
+  return `Guest${suffix}`;
+};
+const _makeGuestPassword = () => `${crypto.getRandomValues(new Uint32Array(2))[0].toString(16)}${crypto.getRandomValues(new Uint32Array(2))[1].toString(16)}`;
+
 const _loadIds = () => {
   try {
     const raw = localStorage.getItem(KEY_IDS);
@@ -140,6 +147,24 @@ const _offlinePlayerDoc = (u) => ({
 const authHeaders = () => {
   const t = getToken();
   return t ? { 'X-Session-Token': t } : {};
+};
+
+const ensureOnlineSession = async () => {
+  if (isAuthed()) return { nickname: getStoredNickname(), token: getToken() };
+  try {
+    for (let i = 0; i < 5; i += 1) {
+      const nick = _makeGuestNick();
+      const password = _makeGuestPassword();
+      const res = (await axios.post(`${API}/players/register`, { nickname: nick, password })).data;
+      if (res?.token && res?.player?.nickname) {
+        saveSession(res.player.nickname, res.token, !!res.player.is_admin);
+        return { nickname: res.player.nickname, token: res.token };
+      }
+    }
+  } catch {
+    // ignore: will fall back to offline behavior
+  }
+  return null;
 };
 
 export const checkNickAvailable = async (nick) => {
@@ -348,6 +373,7 @@ export const changePassword = async (oldPw, newPw) => {
 
 export const fetchMe = async () => {
   try {
+    if (!getToken()) await ensureOnlineSession();
     return (await axios.get(`${API}/me`, { headers: authHeaders() })).data;
   } catch {
     const nick = getStoredNickname();
@@ -408,6 +434,7 @@ export const purchaseItem = async (itemId) => {
 
 export const submitScore = async (body) => {
   try {
+    if (!getToken()) await ensureOnlineSession();
     return (await axios.post(`${API}/leaderboard`, body, { headers: authHeaders() })).data;
   } catch {
     // Offline: keep a minimal local coins system.
