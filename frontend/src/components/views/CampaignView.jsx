@@ -49,6 +49,18 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
   }, []);
 
   useEffect(() => {
+    const onStorage = (e) => {
+      if (!e) return;
+      if (e.key !== 'mg_session_token' && e.key !== 'mg_player') return;
+      syncCampaignProgress().then((merged) => {
+        if (merged) setProgress(merged);
+      }).catch(() => {});
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  useEffect(() => {
     if (!scrollerRef.current) return;
     const next = LEVELS.find((l) => isLevelUnlocked(l.id, progress) && !progress[l.id]?.completed);
     const target = next || LEVELS[0];

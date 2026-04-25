@@ -458,7 +458,10 @@ export const fetchPlayer = async (nick) => {
 export const purchaseItem = async (itemId) => {
   try {
     return (await axios.post(`${API}/shop/purchase`, { item_id: itemId }, { headers: authHeaders() })).data;
-  } catch {
+  } catch (error) {
+    if (!_isElectron()) throw error;
+    const reachable = await _isBackendReachable();
+    if (reachable) throw error;
     // Offline: do not block gameplay; keep a minimal local inventory/coins system.
     const nick = getStoredNickname();
     const key = _userKey(nick);
@@ -489,7 +492,11 @@ export const submitScore = async (body) => {
     const nick = getStoredNickname();
     const payload = (nick && nick.trim()) ? { ...body, player_name: nick.trim() } : body;
     return (await axios.post(`${API}/leaderboard`, payload, { headers: authHeaders() })).data;
-  } catch {
+  } catch (error) {
+    if (!_isElectron()) throw error;
+    if (error?.response) throw error;
+    const reachable = await _isBackendReachable();
+    if (reachable) throw error;
     // Offline: keep a minimal local coins system.
     const _computeCampaignCoins = ({ level_id, lives_remaining, time_seconds, flags, won }) => {
       if (level_id == null) return 0;
