@@ -76,18 +76,34 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   const reconnectRef = useRef({ t: null, attempt: 0, stopped: false });
   const rematchTimeoutRef = useRef(null);
   const finishedRef = useRef(false);
+  const startedAtRef = useRef(null);
+  const serverOffsetRef = useRef(0);
+  const statusRef = useRef('idle');
 
   const minesLeft = useMemo(() => mines, [mines]);
   const gridStyle = useMemo(() => ({ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: '3px' }), [cols]);
 
+  useEffect(() => {
+    startedAtRef.current = startedAt;
+  }, [startedAt]);
+
+  useEffect(() => {
+    serverOffsetRef.current = serverOffset;
+  }, [serverOffset]);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
   const startTimer = useCallback(() => {
     if (timerRef.current) return;
     timerRef.current = setInterval(() => {
-      if (!startedAt) return;
-      const now = Math.floor(Date.now() / 1000) + serverOffset;
-      setTimer(Math.min(Math.max(0, now - startedAt), 999));
+      const sAt = startedAtRef.current;
+      if (!sAt) return;
+      const now = Math.floor(Date.now() / 1000) + (serverOffsetRef.current || 0);
+      setTimer(Math.min(Math.max(0, now - sAt), 999));
     }, 250);
-  }, [serverOffset, startedAt]);
+  }, []);
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -187,8 +203,11 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
           if (sNow != null) setServerOffset(sNow - Math.floor(Date.now() / 1000));
           if (sStart != null) setStartedAt(sStart);
 
-          setStatus(msg.status === 'playing' ? 'playing' : 'idle');
-          if (msg.status === 'playing') {
+          const nextStatus = msg.status === 'playing' ? 'playing' : 'idle';
+          const prevStatus = statusRef.current;
+          const prevStarted = startedAtRef.current;
+          setStatus(nextStatus);
+          if (nextStatus === 'playing' && (prevStatus !== 'playing' || (sStart != null && prevStarted != null && sStart !== prevStarted))) {
             setWinner(null);
             setResultText(null);
             setModalOpen(false);
@@ -287,7 +306,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
       wsRef.current?.close?.();
       wsRef.current = null;
     };
-  }, [lobbyCode, playerName, rows, cols, mines, startTimer, stopTimer]);
+  }, [lobbyCode, playerName, rows, cols, mines, livesTotal, opponent]);
 
   const revealCell = (r, c) => {
     if (status === 'won' || status === 'lost') return;
