@@ -37,8 +37,16 @@ export function connectLobbyWs(code, { onMessage, onOpen, onClose, onError } = {
       onMessage?.(data);
     } catch {}
   };
-  ws.onerror = (e) => onError?.(e);
-  ws.onclose = (e) => onClose?.(e);
+  ws.onerror = (e) => {
+    try {
+      onError?.({ type: 'error', event: e, url });
+    } catch {}
+  };
+  ws.onclose = (e) => {
+    try {
+      onClose?.({ type: 'close', code: e?.code, reason: e?.reason, wasClean: e?.wasClean, url });
+    } catch {}
+  };
 
   const send = (data) => {
     try {

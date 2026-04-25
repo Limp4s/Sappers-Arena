@@ -1226,7 +1226,8 @@ async def ws_lobby(code: str, websocket: WebSocket):
                 res = game.players[nick].flag(r, c)
                 if not res.get("ok"):
                     continue
-                await WS_HUB.broadcast(code, {
+                # Flags are private: only send flag updates to the player who placed them.
+                await WS_HUB.send(code, nick, {
                     "type": "player_update",
                     "player": nick,
                     "changes": res.get("changes") or [],

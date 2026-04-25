@@ -102,7 +102,16 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
 
     const conn = connectLobbyWs(lobbyCode, {
       onOpen: () => setWsError(null),
-      onClose: () => setWsError('Disconnected.'),
+      onError: (e) => {
+        const url = e?.url ? ` ${e.url}` : '';
+        setWsError(`WebSocket error.${url}`);
+      },
+      onClose: (e) => {
+        const c = typeof e?.code === 'number' ? e.code : null;
+        const r = e?.reason ? ` ${e.reason}` : '';
+        const url = e?.url ? ` ${e.url}` : '';
+        setWsError(`Disconnected.${c != null ? ` code=${c}` : ''}${r}${url}`);
+      },
       onMessage: (msg) => {
         if (!msg) return;
         if (msg.type === 'init') {
