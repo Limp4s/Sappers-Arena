@@ -241,12 +241,13 @@ def _compute_coins(mode: str, level_id, lives_remaining: int, lives_total: int, 
             time_bonus = max(0, (target - time_seconds) // 12)
         flag_bonus = min(10, flags)
         return min(50, base_win + base_lose + time_bonus + flag_bonus)
+    # Online duels: keep rewards small (about 3x lower than before), with a hard cap.
     if mode == "battle_ranked":
-        return 40 + lives_remaining * 8 if won else 3
+        return min(15, (8 + lives_remaining * 2) if won else 1)
     if mode == "battle_simple":
-        return 25 + lives_remaining * 5 if won else 2
+        return min(15, (6 + lives_remaining * 2) if won else 1)
     if mode == "lobby":
-        return 15 + lives_remaining * 5 if won else 2
+        return min(15, (5 + lives_remaining * 2) if won else 1)
     return 0
 
 
@@ -254,8 +255,8 @@ def _compute_rating_delta(mode: str, won: bool, time_seconds: int, lives_remaini
     if mode != "battle_ranked":
         return 0
     if won:
-        return 18 + lives_remaining * 4 + max(0, 180 - time_seconds) // 6
-    return -12
+        return 6 + lives_remaining * 1 + max(0, 180 - time_seconds) // 18
+    return -4
 
 
 # ---------------- Models ----------------
@@ -1351,7 +1352,24 @@ async def ws_lobby(code: str, websocket: WebSocket):
                     await WS_HUB.broadcast(code, {"type": "duel_over", "winner": winner})
 
     except WebSocketDisconnect:
-        pass
+        # If a player leaves mid-duel, it's an instant loss for the leaver.
+        try:
+            lobby = await db.lobbies.find_one({"code": code}, {"_id": 0, "status": 1})
+            if not lobby or lobby.get("status") != "playing":
+                return
+            game = ACTIVE_GAMES.get(code)
+            if game and not game.finished and nick in (game.host, game.guest):
+                winner = game.guest if nick == game.host else game.host
+                game.finished = True
+                if winner in game.players:
+                    game.players[winner].done = True
+                    game.players[winner].won = True
+                if nick in game.players:
+                    game.players[nick].done = True
+                    game.players[nick].won = False
+                await WS_HUB.broadcast(code, {"type": "duel_over", "winner": winner})
+        except Exception:
+            pass
     except Exception:
         logger.exception("ws_lobby crashed code=%s nick=%s", code, nick)
         try:
