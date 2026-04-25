@@ -424,7 +424,7 @@ async def register_player(payload: RegisterRequest):
 async def login_player(payload: LoginRequest):
     player = await _get_player(payload.nickname)
     if not player:
-        raise HTTPException(status_code=404, detail="Player not found.")
+        raise HTTPException(status_code=401, detail="Invalid credentials.")
     player = await _ensure_player_ids(player)
     stored = player.get("password_hash")
     if not stored:
@@ -444,7 +444,7 @@ async def login_player(payload: LoginRequest):
         if not stored:
             raise HTTPException(status_code=500, detail="Failed to initialize account password.")
     if not _verify_password(payload.password, stored):
-        raise HTTPException(status_code=401, detail="Invalid password.")
+        raise HTTPException(status_code=401, detail="Invalid credentials.")
     token = await _create_session(player["nickname"])
     return {"player": _sanitize_player(player), "token": token}
 
