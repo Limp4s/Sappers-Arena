@@ -70,6 +70,8 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   const timerRef = useRef(null);
   const wsRef = useRef(null);
   const roleRef = useRef(null);
+  const pingRef = useRef(null);
+  const reconnectRef = useRef({ t: null, attempt: 0, stopped: false });
 
   const minesLeft = useMemo(() => mines, [mines]);
   const gridStyle = useMemo(() => ({ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: '3px' }), [cols]);
@@ -95,24 +97,64 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   useEffect(() => {
     if (!lobbyCode || !playerName) return;
 
-    wsRef.current?.close?.();
+    const clearPing = () => {
+      if (pingRef.current) {
+        clearInterval(pingRef.current);
+        pingRef.current = null;
+      }
+    };
 
-    setWsError(null);
-    roleRef.current = null;
+    const stopReconnect = () => {
+      reconnectRef.current.stopped = true;
+      if (reconnectRef.current.t) {
+        clearTimeout(reconnectRef.current.t);
+        reconnectRef.current.t = null;
+      }
+    };
 
-    const conn = connectLobbyWs(lobbyCode, {
-      onOpen: () => setWsError(null),
-      onError: (e) => {
-        const url = e?.url ? ` ${e.url}` : '';
-        setWsError(`WebSocket error.${url}`);
-      },
-      onClose: (e) => {
-        const c = typeof e?.code === 'number' ? e.code : null;
-        const r = e?.reason ? ` ${e.reason}` : '';
-        const url = e?.url ? ` ${e.url}` : '';
-        setWsError(`Disconnected.${c != null ? ` code=${c}` : ''}${r}${url}`);
-      },
-      onMessage: (msg) => {
+    const scheduleReconnect = () => {
+      if (reconnectRef.current.stopped) return;
+      if (reconnectRef.current.t) return;
+      const attempt = reconnectRef.current.attempt || 0;
+      const delay = Math.min(15000, 600 + attempt * 900);
+      reconnectRef.current.t = setTimeout(() => {
+        reconnectRef.current.t = null;
+        reconnectRef.current.attempt = attempt + 1;
+        connect();
+      }, delay);
+    };
+
+    const connect = () => {
+      wsRef.current?.close?.();
+      clearPing();
+
+      setWsError(null);
+      roleRef.current = null;
+
+      const conn = connectLobbyWs(lobbyCode, {
+        onOpen: () => {
+          reconnectRef.current.attempt = 0;
+          setWsError(null);
+          clearPing();
+          pingRef.current = setInterval(() => {
+            try {
+              if (wsRef.current?.ws?.readyState === WebSocket.OPEN) wsRef.current.send({ type: 'ping' });
+            } catch {}
+          }, 20000);
+        },
+        onError: (e) => {
+          const url = e?.url ? ` ${e.url}` : '';
+          setWsError(`WebSocket error.${url}`);
+        },
+        onClose: (e) => {
+          clearPing();
+          const c = typeof e?.code === 'number' ? e.code : null;
+          const r = e?.reason ? ` ${e.reason}` : '';
+          const url = e?.url ? ` ${e.url}` : '';
+          setWsError(`Disconnected.${c != null ? ` code=${c}` : ''}${r}${url}`);
+          scheduleReconnect();
+        },
+        onMessage: (msg) => {
         if (!msg) return;
         if (msg.type === 'init') {
           setWsError(null);
@@ -161,13 +203,20 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
           stopTimer();
           setTimeout(() => setModalOpen(true), 600);
         }
-      },
-    });
+        },
+      });
 
-    wsRef.current = conn;
+      wsRef.current = conn;
+    };
+
+    reconnectRef.current.stopped = false;
+    reconnectRef.current.attempt = 0;
+    connect();
 
     return () => {
-      conn.close();
+      stopReconnect();
+      clearPing();
+      wsRef.current?.close?.();
       wsRef.current = null;
     };
   }, [lobbyCode, playerName, rows, cols, mines, startTimer, stopTimer]);
