@@ -6,9 +6,55 @@ export const Cell = React.memo(function Cell({
   cell, r, c, onReveal, onFlag, disabled, revealDelay = 0,
   mineIcon: MineIcon = Bomb,
   cellTheme,
+  flagMode = false,
 }) {
-  const handleClick = (e) => { e.preventDefault(); if (disabled || cell.revealed || cell.flagged) return; onReveal(r, c); };
+  const touchRef = React.useRef({ timer: null, triggered: false, skipClick: false });
+
+  const handleClick = (e) => {
+    if (touchRef.current.skipClick) { touchRef.current.skipClick = false; return; }
+    e.preventDefault();
+    if (disabled || cell.revealed || cell.flagged) return;
+    if (flagMode) onFlag(r, c);
+    else onReveal(r, c);
+  };
   const handleContext = (e) => { e.preventDefault(); if (disabled || cell.revealed) return; onFlag(r, c); };
+
+  const clearTouchTimer = () => {
+    if (touchRef.current.timer) {
+      clearTimeout(touchRef.current.timer);
+      touchRef.current.timer = null;
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    if (disabled || cell.revealed) return;
+    touchRef.current.triggered = false;
+    clearTouchTimer();
+    touchRef.current.timer = setTimeout(() => {
+      touchRef.current.triggered = true;
+      touchRef.current.skipClick = true;
+      onFlag(r, c);
+    }, 420);
+  };
+
+  const handleTouchMove = () => {
+    clearTouchTimer();
+  };
+
+  const handleTouchEnd = (e) => {
+    if (disabled || cell.revealed) return;
+    const wasTriggered = touchRef.current.triggered;
+    clearTouchTimer();
+    if (wasTriggered) {
+      e.preventDefault();
+      return;
+    }
+    touchRef.current.skipClick = true;
+    e.preventDefault();
+    if (cell.flagged) return;
+    if (flagMode) onFlag(r, c);
+    else onReveal(r, c);
+  };
 
   let className = 'cell';
   let content = null;
@@ -48,10 +94,12 @@ export const Cell = React.memo(function Cell({
   return (
     <div className={className}
       onClick={handleClick} onContextMenu={handleContext}
+      onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}
       data-testid={`grid-cell-${r}-${c}`}
       style={{
         ...(cell.revealed && !cell.mine ? { animationDelay: `${revealDelay}ms` } : {}),
         ...themedStyle,
+        touchAction: 'manipulation',
       }}
     >
       {content}
@@ -59,7 +107,7 @@ export const Cell = React.memo(function Cell({
   );
 });
 
-export const StatsBar = ({ timer, lives, livesTotal = 3, score, minesLeft, onReset, infiniteLives }) => {
+export const StatsBar = ({ timer, lives, livesTotal = 3, score, minesLeft, onReset, infiniteLives, flagMode, onToggleFlagMode }) => {
   const fmt = (n) => String(n).padStart(3, '0');
   useLang();
   return (
@@ -70,9 +118,17 @@ export const StatsBar = ({ timer, lives, livesTotal = 3, score, minesLeft, onRes
         <StatItem icon={<Zap size={14} />} label={t('game.score')} value={score.toLocaleString()} color="gold" testid="stat-score" />
         <LivesDisplay lives={lives} livesTotal={livesTotal} infiniteLives={infiniteLives} />
       </div>
-      <button className="neon-btn flex items-center gap-2" onClick={onReset} data-testid="reset-btn">
-        <RefreshCw size={14} /> {t('game.reset')}
-      </button>
+      <div className="flex items-center gap-2">
+        {onToggleFlagMode && (
+          <button className={`neon-btn flex items-center gap-2 ${flagMode ? 'neon-btn-gold' : ''}`}
+            onClick={onToggleFlagMode} type="button" data-testid="flag-mode-btn">
+            <Flag size={14} /> {t('game.flag')}
+          </button>
+        )}
+        <button className="neon-btn flex items-center gap-2" onClick={onReset} data-testid="reset-btn" type="button">
+          <RefreshCw size={14} /> {t('game.reset')}
+        </button>
+      </div>
     </div>
   );
 };

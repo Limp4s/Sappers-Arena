@@ -37,6 +37,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const [coinsAwarded, setCoinsAwarded] = useState(0);
   const [ratingDelta, setRatingDelta] = useState(0);
   const [lobbyResult, setLobbyResult] = useState(null);
+  const [flagMode, setFlagMode] = useState(false);
   useLang();
   const timerRef = useRef(null);
 
@@ -76,6 +77,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     setStatus('idle'); setTimer(0); setScore(0); setShaking(false); setFxFlash(false);
     setVictory(false); setModalOpen(false); setSubmitted(false);
     setCoinsAwarded(0); setRatingDelta(0); setLobbyResult(null);
+    setFlagMode(false);
     if (timerRef.current) clearInterval(timerRef.current);
   }, [rows, cols, livesTotal]);
 
@@ -207,7 +209,8 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
       <main className="relative z-10 flex-1 max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-8 flex flex-col gap-4">
         <StatsBar timer={timer} lives={lives} livesTotal={displayLives} score={score} minesLeft={minesLeft}
-          onReset={reset} infiniteLives={infiniteLives} />
+          onReset={reset} infiniteLives={infiniteLives}
+          flagMode={flagMode} onToggleFlagMode={() => setFlagMode((v) => !v)} />
 
         <div className={`glass-panel rounded-xl p-4 md:p-6 flex-1 flex items-center justify-center relative overflow-hidden ${shaking ? 'shake' : ''}`}
           style={{ borderColor: `${cellTheme.accent}33` }}>
@@ -221,6 +224,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
                     disabled={status === 'won' || status === 'lost'}
                     revealDelay={Math.min(300, (r + c) * 4)}
                     mineIcon={mineDef.icon} cellTheme={cellTheme}
+                    flagMode={flagMode}
                   />
                 ))
               )}
