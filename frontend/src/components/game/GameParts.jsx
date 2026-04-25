@@ -177,6 +177,16 @@ export const GameOverModal = ({
   const [autoSubmitted, setAutoSubmitted] = React.useState(false);
   useLang();
 
+  const canContinueCampaign = mode === 'campaign' && won && Number(levelId) > 0 && Number(levelId) < 150 && typeof onExit === 'function';
+
+  const handleContinue = () => {
+    try {
+      const nextId = Number(levelId) + 1;
+      localStorage.setItem('mg_campaign_autostart_next', String(nextId));
+    } catch {}
+    onExit();
+  };
+
   React.useEffect(() => {
     if (open && !noSubmit && playerName && !submitted && !autoSubmitted && !submitting) {
       setSubmitting(true); setAutoSubmitted(true);
@@ -274,11 +284,20 @@ export const GameOverModal = ({
         )}
 
         <div className="flex flex-wrap gap-2">
-          <button className="neon-btn flex-1 min-w-[120px]" onClick={onNewGame} data-testid="new-game-btn">{t('game.replay')}</button>
-          {onExit && (
-            <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={onExit} data-testid="modal-exit-btn">{t('common.back')}</button>
+          {canContinueCampaign ? (
+            <>
+              <button className="neon-btn flex-1 min-w-[120px]" onClick={handleContinue} data-testid="continue-btn">{t('common.continue')}</button>
+              <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={onExit} data-testid="modal-exit-btn">{t('common.back')}</button>
+            </>
+          ) : (
+            <>
+              <button className="neon-btn flex-1 min-w-[120px]" onClick={onNewGame} data-testid="new-game-btn">{t('game.replay')}</button>
+              {onExit && (
+                <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={onExit} data-testid="modal-exit-btn">{t('common.back')}</button>
+              )}
+              <button className="neon-btn neon-btn-coral" onClick={onClose} data-testid="close-modal-btn">{t('common.close')}</button>
+            </>
           )}
-          <button className="neon-btn neon-btn-coral" onClick={onClose} data-testid="close-modal-btn">{t('common.close')}</button>
         </div>
       </div>
     </div>

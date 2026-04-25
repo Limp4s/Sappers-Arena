@@ -7,6 +7,7 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
   const [progress, setProgress] = useState(() => loadProgress());
   const scrollerRef = useRef(null);
   const dragState = useRef({ dragging: false, startY: 0, startScroll: 0, moved: false });
+  const startedAutoRef = useRef(false);
 
   useEffect(() => {
     const isCoarse = (() => {
@@ -47,6 +48,22 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
       if (merged) setProgress(merged);
     }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (startedAutoRef.current) return;
+    let nextId = null;
+    try {
+      nextId = localStorage.getItem('mg_campaign_autostart_next');
+    } catch {}
+    const idNum = Number(nextId);
+    if (!idNum || !Number.isFinite(idNum)) return;
+    const lvl = LEVELS.find((l) => Number(l.id) === idNum);
+    if (!lvl) return;
+    if (!isLevelUnlocked(lvl.id, progress)) return;
+    startedAutoRef.current = true;
+    try { localStorage.removeItem('mg_campaign_autostart_next'); } catch {}
+    onStartLevel(lvl);
+  }, [progress, onStartLevel]);
 
   useEffect(() => {
     const onStorage = (e) => {
