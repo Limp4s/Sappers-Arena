@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus } from 'lucide-react';
-import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers } from '../../lib/player';
+import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, getToken } from '../../lib/player';
 import { promoteToAdmin } from '../../lib/lobby';
 import InventoryModal from '../modals/InventoryModal';
 import { LANGUAGES, setLang, t, useLang } from '../../lib/i18n';
@@ -29,6 +29,8 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
 
   useEffect(() => {
     if (!player?.isAdmin) return;
+    const tok = getToken?.();
+    if (!tok || (tok || '').startsWith('offline-')) { setAdminPlayers([]); return; }
     setAdminPlayers(null);
     adminListPlayers({ limit: 500 })
       .then((r) => setAdminPlayers(r?.players || []))
