@@ -882,7 +882,6 @@ class _WsHub:
 
     async def connect(self, code: str, nick: str, ws: WebSocket):
         code = (code or "").upper()
-        await ws.accept()
         self._conns.setdefault(code, {})[nick] = ws
 
     def disconnect(self, code: str, nick: str):
@@ -1110,19 +1109,20 @@ async def _nick_from_token(token: str) -> Optional[str]:
 @app.websocket("/api/ws/lobbies/{code}")
 async def ws_lobby(code: str, websocket: WebSocket):
     code = (code or "").upper()
+    await websocket.accept()
     token = websocket.query_params.get("token")
     nick = await _nick_from_token(token)
     if not nick:
-        await websocket.close(code=4401)
+        await websocket.close(code=4401, reason="Unauthorized")
         return
 
     lobby = await db.lobbies.find_one({"code": code}, {"_id": 0})
     if not lobby:
-        await websocket.close(code=4404)
+        await websocket.close(code=4404, reason="Lobby not found")
         return
 
     if nick != lobby.get("host") and nick != lobby.get("guest"):
-        await websocket.close(code=4403)
+        await websocket.close(code=4403, reason="Forbidden")
         return
 
     await WS_HUB.connect(code, nick, websocket)
@@ -1278,6 +1278,7 @@ async def ws_lobby(code: str, websocket: WebSocket):
     except WebSocketDisconnect:
         pass
     except Exception:
+        logger.exception("ws_lobby crashed code=%s nick=%s", code, nick)
         try:
             await websocket.close(code=1011)
         except Exception:
