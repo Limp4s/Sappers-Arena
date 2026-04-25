@@ -1199,7 +1199,7 @@ async def ws_lobby(code: str, websocket: WebSocket):
                 await WS_HUB.send(code, nick, {"type": "error", "error": "Lobby not found"})
                 continue
 
-            if lobby.get("status") != "playing":
+            if lobby.get("status") != "playing" and mtype not in ("ping", "rematch"):
                 await WS_HUB.send(code, nick, {"type": "error", "error": "Lobby not playing"})
                 continue
 
