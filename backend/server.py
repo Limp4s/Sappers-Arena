@@ -702,8 +702,27 @@ async def get_recent_runs(limit: int = Query(default=10, ge=1, le=50)):
 
 @api_router.get("/leaderboard/ranked")
 async def get_ranked_leaderboard(limit: int = Query(default=20, ge=1, le=500)):
-    cursor = db.players.find({"rating": {"$exists": True}}, {"_id": 0, "nickname_lower": 0, "password_hash": 0}).sort("rating", -1).limit(limit)
-    return await cursor.to_list(length=limit)
+    # Defensive de-duplication (old DB data might contain duplicate nicknames).
+    # We fetch more than needed, then keep only the highest-rated entry per nickname/player_uuid.
+    fetch_n = min(2000, max(500, int(limit) * 4))
+    cursor = db.players.find(
+        {"rating": {"$exists": True}},
+        {"_id": 0, "nickname_lower": 0, "password_hash": 0},
+    ).sort("rating", -1).limit(fetch_n)
+    rows = await cursor.to_list(length=fetch_n)
+    seen = set()
+    out = []
+    for p in rows:
+        key = (p.get("player_uuid") or p.get("nickname") or "").lower()
+        if not key:
+            continue
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(p)
+        if len(out) >= int(limit):
+            break
+    return out
 
 
 @api_router.delete("/leaderboard/{entry_id}")

@@ -43,10 +43,15 @@ export default function LeaderboardView({ isAdmin = false }) {
     setLoading(true);
     try {
       const def = SCOPES.find((s) => s.key === selectedScope);
-      const params = { limit: 20 };
-      if (def?.mode) params.mode = def.mode;
-      const res = await axios.get(`${API}/leaderboard`, { params });
-      setEntries(res.data || []);
+      if (def?.mode === 'battle_ranked') {
+        const res = await axios.get(`${API}/leaderboard/ranked`, { params: { limit: 500 } });
+        setEntries(res.data || []);
+      } else {
+        const params = { limit: 20 };
+        if (def?.mode) params.mode = def.mode;
+        const res = await axios.get(`${API}/leaderboard`, { params });
+        setEntries(res.data || []);
+      }
     } catch (e) { setEntries([]); } finally { setLoading(false); }
   }, []);
 
@@ -99,10 +104,13 @@ export default function LeaderboardView({ isAdmin = false }) {
 
   const getRankColor = (i) => i === 0 ? 'neon-gold' : i === 1 ? 'neon-cyan' : i === 2 ? 'neon-coral' : 'text-slate-500';
 
-  const showLevelCol = scope === 'campaign';
-  const cols = isAdmin
-    ? (showLevelCol ? '28px 1fr 50px 70px 50px 56px 26px' : '28px 1fr 70px 56px 26px')
-    : (showLevelCol ? '28px 1fr 50px 70px 50px 56px'     : '28px 1fr 70px 56px');
+  const showRankedPlayersTable = scope === 'battle_ranked';
+  const showLevelCol = scope === 'campaign' && !showRankedPlayersTable;
+  const cols = showRankedPlayersTable
+    ? '28px 1fr 80px'
+    : (isAdmin
+      ? (showLevelCol ? '28px 1fr 50px 70px 50px 56px 26px' : '28px 1fr 70px 56px 26px')
+      : (showLevelCol ? '28px 1fr 50px 70px 50px 56px'     : '28px 1fr 70px 56px'));
 
   return (
     <div className="max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-10" data-testid="leaderboard-view">
@@ -143,7 +151,7 @@ export default function LeaderboardView({ isAdmin = false }) {
           <div className="flex items-center gap-2 mb-4">
             <Trophy size={14} className="neon-gold" />
             <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">
-              {t('leaderboard.top')} · {scope === 'campaign' ? t('tabs.campaign')
+              {(showRankedPlayersTable ? 'TOP 500' : t('leaderboard.top'))} · {scope === 'campaign' ? t('tabs.campaign')
                 : scope === 'battle_simple' ? t('tabs.battles')
                 : scope === 'battle_ranked' ? t('battles.rankedTitle')
                 : scope === 'custom' ? t('tabs.custom')
@@ -155,11 +163,17 @@ export default function LeaderboardView({ isAdmin = false }) {
             <div className="grid gap-2 text-slate-500 text-[10px] tracking-[0.2em] uppercase border-b border-white/5 pb-2 mb-1 px-3" style={{ gridTemplateColumns: cols }}>
               <div>#</div>
               <div>{t('leaderboard.name')}</div>
-              {showLevelCol && <div>{t('leaderboard.lvl')}</div>}
-              <div className="text-right">{t('leaderboard.score')}</div>
-              {showLevelCol && <div className="text-right">LIVES LEFT</div>}
-              <div className="text-right">{t('leaderboard.time')}</div>
-              {isAdmin && <div />}
+              {showRankedPlayersTable ? (
+                <div className="text-right">{t('common.rating')}</div>
+              ) : (
+                <>
+                  {showLevelCol && <div>{t('leaderboard.lvl')}</div>}
+                  <div className="text-right">{t('leaderboard.score')}</div>
+                  {showLevelCol && <div className="text-right">LIVES LEFT</div>}
+                  <div className="text-right">{t('leaderboard.time')}</div>
+                  {isAdmin && <div />}
+                </>
+              )}
             </div>
 
             {loading && <div className="text-center text-slate-500 text-xs py-8">{t('leaderboard.loading')}</div>}
@@ -169,6 +183,26 @@ export default function LeaderboardView({ isAdmin = false }) {
               </div>
             )}
             {!loading && entries.map((e, i) => {
+              if (showRankedPlayersTable) {
+                const name = e.nickname || e.player_name || '';
+                const rating = e.rating || 1000;
+                return (
+                  <div
+                    key={e.nickname || e.player_name || i}
+                    className="grid gap-2 px-3 py-2 rounded items-center text-[12px] font-mono hover:bg-[rgba(0,229,255,0.06)] transition-colors"
+                    style={{ gridTemplateColumns: cols }}
+                    data-testid={`lb-entry-${i}`}
+                  >
+                    <div className={`font-display font-bold ${getRankColor(i)}`}>{String(i + 1).padStart(2, '0')}</div>
+                    <div className="truncate text-slate-200 flex items-center gap-1.5">
+                      {name}
+                      {(name || '').toLowerCase() === 'limp4' && <Crown size={10} className="neon-gold shrink-0" />}
+                    </div>
+                    <div className="text-right neon-gold">{rating}</div>
+                  </div>
+                );
+              }
+
               const livesRem = e.lives_remaining ?? 0;
               const livesTotalVal = e.lives_total ?? 3;
               return (
@@ -225,66 +259,37 @@ export default function LeaderboardView({ isAdmin = false }) {
             </div>
           </div>
 
-          <div className="glass-panel rounded-xl p-5" data-testid="player-stats-card">
-            <div className="flex items-center gap-2 mb-3">
-              <User size={14} className="neon-cyan" />
-              <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('leaderboard.agentStats')}</h3>
-            </div>
-            <div className="flex gap-2 mb-3">
-              <div className="relative flex-1">
-                <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input className="neon-input pl-9" placeholder={t('leaderboard.callsignPlaceholder')} value={nameQuery}
-                  onChange={(e) => setNameQuery(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') fetchStats(nameQuery); }}
-                  data-testid="stats-name-input" maxLength={20} />
-              </div>
-              <button onClick={() => fetchStats(nameQuery)} className="neon-btn px-3 py-2 text-[10px]" data-testid="stats-fetch-btn">{t('leaderboard.scan')}</button>
-            </div>
-            {statsLoading && <div className="text-slate-500 text-xs text-center py-4">{t('leaderboard.scanning')}</div>}
-            {!statsLoading && stats && (
-              <div className="space-y-2">
-                <StatLine label={t('stats.runs')} value={stats.total_runs} color="cyan" />
-                <StatLine label={t('stats.wins')} value={stats.wins} color="lime" />
-                <StatLine label={t('stats.losses')} value={stats.losses} color="coral" />
-                <StatLine label={t('stats.winRate')} value={`${(stats.win_rate * 100).toFixed(1)}%`} color="gold" />
-                <StatLine label={t('stats.bestScore')} value={stats.best_score.toLocaleString()} color="cyan" />
-                <StatLine label={t('stats.bestTime')} value={stats.best_time ? `${stats.best_time}s` : '—'} color="gold" />
-              </div>
-            )}
-            {!statsLoading && !stats && <div className="text-slate-500 text-xs text-center py-4">{t('leaderboard.enterCallsignHint')}</div>}
-          </div>
-
           {isAdmin && (
-            <div className="glass-panel rounded-xl p-5 border border-[#FFD700]/30" data-testid="admin-panel">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="glass-panel rounded-xl p-5" data-testid="player-stats-card">
+              <div className="flex items-center gap-2 mb-3">
                 <Shield size={14} className="neon-gold" />
-                <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase neon-gold">{t('admin.panelTitle')}</h3>
+                <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('admin.panelTitle')}</h3>
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">{t('admin.panelHint')}</p>
+              <div className="flex gap-2 mb-3">
+                <div className="relative flex-1">
+                  <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input className="neon-input pl-9" placeholder={t('leaderboard.callsignPlaceholder')} value={nameQuery}
+                    onChange={(e) => setNameQuery(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') fetchStats(nameQuery); }}
+                    data-testid="stats-name-input" maxLength={20} />
+                </div>
+                <button onClick={() => fetchStats(nameQuery)} className="neon-btn px-3 py-2 text-[10px]" data-testid="stats-fetch-btn">{t('leaderboard.scan')}</button>
+              </div>
+              {statsLoading && <div className="text-slate-500 text-xs text-center py-4">{t('leaderboard.scanning')}</div>}
+              {!statsLoading && stats && (
+                <div className="space-y-2">
+                  <StatLine label={t('stats.runs')} value={stats.total_runs} color="cyan" />
+                  <StatLine label={t('stats.wins')} value={stats.wins} color="lime" />
+                  <StatLine label={t('stats.losses')} value={stats.losses} color="coral" />
+                  <StatLine label={t('stats.winRate')} value={`${(stats.win_rate * 100).toFixed(1)}%`} color="gold" />
+                  <StatLine label={t('stats.bestScore')} value={stats.best_score.toLocaleString()} color="cyan" />
+                  <StatLine label={t('stats.bestTime')} value={stats.best_time ? `${stats.best_time}s` : '—'} color="gold" />
+                </div>
+              )}
+              {!statsLoading && !stats && <div className="text-slate-500 text-xs text-center py-4">{t('leaderboard.enterCallsignHint')}</div>}
             </div>
           )}
 
-          <div className="glass-panel rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock size={14} className="neon-cyan" />
-              <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('leaderboard.recentActivity')}</h3>
-            </div>
-            <div className="space-y-2" data-testid="recent-list">
-              {recent.length === 0 && <div className="text-slate-500 text-[11px] text-center py-4">{t('leaderboard.noRunsYet')}</div>}
-              {recent.map((r) => (
-                <div key={r.id} className="flex items-center justify-between text-[11px] py-1.5 border-b border-white/5 last:border-0">
-                  <div className="flex items-center gap-2 truncate">
-                    <span className={`w-1.5 h-1.5 rounded-full ${r.won ? 'bg-[#00FF9D]' : 'bg-[#FF2A6D]'}`} />
-                    <span className="truncate text-slate-300">{r.player_name}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-500 font-mono shrink-0">
-                    <span>{r.mode}</span>
-                    <span className="neon-cyan">{r.score.toLocaleString()}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </aside>
       </div>
     </div>
