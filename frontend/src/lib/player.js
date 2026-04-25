@@ -416,11 +416,16 @@ export const purchaseItem = async (itemId) => {
     const nick = getStoredNickname();
     const key = _userKey(nick);
     const users = _loadUsers();
-    const u = users[key];
+    let u = users[key];
     if (!u) {
-      const e = new Error('Not logged in.');
-      e.response = { data: { detail: 'Not logged in.' } };
-      throw e;
+      if (!nick || !nick.trim()) {
+        const e = new Error('Not logged in.');
+        e.response = { data: { detail: 'Not logged in.' } };
+        throw e;
+      }
+      u = { nickname: nick.trim(), coins: 0, owned_items: [], rating: 1000 };
+      users[key] = u;
+      _saveUsers(users);
     }
     if ((u.owned_items || []).includes(itemId)) return { player: _offlinePlayerDoc(u) };
     // No catalog/prices offline: just grant it for now.
