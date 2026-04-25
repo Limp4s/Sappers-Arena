@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Trophy, Clock, User, Search, Trash2, Crown, Shield, Sparkles } from 'lucide-react';
-import { getStoredNickname, adminHeaders, ensureOnlineSession, authHeaders } from '../../lib/player';
+import { getStoredNickname, adminHeaders, authHeaders, getToken } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
@@ -29,8 +29,9 @@ export default function LeaderboardView({ isAdmin = false }) {
 
   const ensureServer = useCallback(async () => {
     try {
-      await ensureOnlineSession();
-      await axios.get(`${API}/players/me`, { headers: authHeaders() });
+      const tok = getToken();
+      if (!tok || (tok || '').startsWith('offline-')) throw new Error('Not logged in.');
+      await axios.get(`${API}/me`, { headers: authHeaders() });
       setServerOk(true);
       return true;
     } catch {

@@ -163,22 +163,6 @@ export const authHeaders = () => {
 export const ensureOnlineSession = async () => {
   const existing = getToken();
   if (isOnlineToken(existing) && getStoredNickname()) return { nickname: getStoredNickname(), token: existing };
-  // If the user already has a chosen nickname stored, do NOT auto-register a guest account,
-  // otherwise we will overwrite their nickname/id and break consistency across devices.
-  if (getStoredNickname() && !isOnlineToken(existing)) return null;
-  try {
-    for (let i = 0; i < 5; i += 1) {
-      const nick = _makeGuestNick();
-      const password = _makeGuestPassword();
-      const res = (await axios.post(`${API}/players/register`, { nickname: nick, password })).data;
-      if (res?.token && res?.player?.nickname) {
-        saveSession(res.player.nickname, res.token, !!res.player.is_admin);
-        return { nickname: res.player.nickname, token: res.token };
-      }
-    }
-  } catch {
-    // ignore: will fall back to offline behavior
-  }
   return null;
 };
 
@@ -388,7 +372,7 @@ export const changePassword = async (oldPw, newPw) => {
 
 export const fetchMe = async () => {
   try {
-    if (!getToken()) await ensureOnlineSession();
+    if (!isOnlineToken(getToken())) throw new Error('Not logged in.');
     return (await axios.get(`${API}/me`, { headers: authHeaders() })).data;
   } catch {
     const nick = getStoredNickname();
@@ -449,7 +433,7 @@ export const purchaseItem = async (itemId) => {
 
 export const submitScore = async (body) => {
   try {
-    if (!isOnlineToken(getToken())) await ensureOnlineSession();
+    if (!isOnlineToken(getToken())) throw new Error('Not logged in.');
     const nick = getStoredNickname();
     const payload = (nick && nick.trim()) ? { ...body, player_name: nick.trim() } : body;
     return (await axios.post(`${API}/leaderboard`, payload, { headers: authHeaders() })).data;

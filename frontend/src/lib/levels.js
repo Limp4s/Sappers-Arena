@@ -67,12 +67,7 @@ const _mergeProgress = (localProgress, serverProgress) => {
 
 export const syncCampaignProgress = async () => {
   try {
-    const { ensureOnlineSession, sessionHeaders, getToken } = await import('./player');
-    const token = getToken?.();
-    if (!token || (token || '').startsWith('offline-')) {
-      await ensureOnlineSession?.();
-    }
-
+    const { sessionHeaders, getToken } = await import('./player');
     const t2 = getToken?.();
     if (!t2 || (t2 || '').startsWith('offline-')) return loadProgress();
 
@@ -106,9 +101,7 @@ export const recordLevelResult = (levelId, { stars, score, time, won }) => {
 
   try {
     (async () => {
-      const { ensureOnlineSession, sessionHeaders, getToken } = await import('./player');
-      const token = getToken?.();
-      if (!token || (token || '').startsWith('offline-')) await ensureOnlineSession?.();
+      const { sessionHeaders, getToken } = await import('./player');
       const t2 = getToken?.();
       if (!t2 || (t2 || '').startsWith('offline-')) return;
 

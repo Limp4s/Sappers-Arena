@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { sessionHeaders, ensureOnlineSession, getToken } from './player';
+import { sessionHeaders, getToken } from './player';
 
 const DEFAULT_RENDER_BACKEND = 'https://sappers-arena.onrender.com';
 const BACKEND_URL = (() => {
@@ -15,7 +15,7 @@ const API = `${BACKEND_URL}/api`;
 
 const ensureLobbyAuth = async () => {
   const t = getToken();
-  if (!t || (t || '').startsWith('offline-')) await ensureOnlineSession();
+  if (!t || (t || '').startsWith('offline-')) throw new Error('Not logged in.');
 };
 
 const authedPost = async (url, body) => {
