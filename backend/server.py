@@ -328,7 +328,16 @@ async def root():
 
 @api_router.get("/campaign/progress")
 async def get_campaign_progress(nick: str = Depends(require_session)):
-    player = await db.players.find_one({"nickname_lower": (nick or "").lower()}, {"_id": 0, "campaign_progress": 1})
+    player = await _get_player(nick)
+    if not player:
+        # Backward compatibility for legacy docs that may not have nickname_lower.
+        legacy = await db.players.find_one({"nickname": nick}, {"_id": 0})
+        if legacy:
+            await db.players.update_one(
+                {"nickname": nick},
+                {"$set": {"nickname_lower": (nick or "").lower()}},
+            )
+            player = legacy
     if not player:
         raise HTTPException(status_code=404, detail="Player not found.")
     return {"progress": player.get("campaign_progress") or {}}
@@ -359,7 +368,16 @@ def _merge_campaign_entry(prev: Optional[dict], incoming: dict) -> dict:
 
 @api_router.post("/campaign/level_result")
 async def submit_campaign_level_result(payload: CampaignLevelResultRequest, nick: str = Depends(require_session)):
-    player = await db.players.find_one({"nickname_lower": (nick or "").lower()}, {"_id": 0, "campaign_progress": 1})
+    player = await _get_player(nick)
+    if not player:
+        # Backward compatibility for legacy docs that may not have nickname_lower.
+        legacy = await db.players.find_one({"nickname": nick}, {"_id": 0})
+        if legacy:
+            await db.players.update_one(
+                {"nickname": nick},
+                {"$set": {"nickname_lower": (nick or "").lower()}},
+            )
+            player = legacy
     if not player:
         raise HTTPException(status_code=404, detail="Player not found.")
 
