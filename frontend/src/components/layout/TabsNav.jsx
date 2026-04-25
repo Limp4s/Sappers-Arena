@@ -18,7 +18,7 @@ export default function TabsNav({ current, onChange, player }) {
       <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center glass-panel-light pulse-glow">
-            <span className="font-display font-black text-sm neon-cyan">SP</span>
+            <img src="/logo.png" alt="Sappers Arena" className="w-8 h-8 object-contain" />
           </div>
           <div>
             <h1 className="font-display text-xl md:text-2xl font-black tracking-tight neon-cyan leading-none">
