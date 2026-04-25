@@ -691,6 +691,26 @@ def _sanitize_lobby(doc):
     return doc
 
 
+DUEL_TIME_LIMIT_SECONDS = 5 * 60
+
+
+async def _ensure_lobby_playing(code: str) -> Optional[dict]:
+    """Server-authoritative start (matchmaking only): if lobby is PUBLIC and both players are present and lobby is waiting, start it."""
+    code = (code or "").upper()
+    lobby = await db.lobbies.find_one({"code": code}, {"_id": 0})
+    if not lobby:
+        return None
+    if not lobby.get("public"):
+        return lobby
+    if lobby.get("status") == "waiting" and lobby.get("guest"):
+        await db.lobbies.update_one(
+            {"code": code},
+            {"$set": {"status": "playing", "started_at": datetime.now(timezone.utc).isoformat()}},
+        )
+        lobby = await db.lobbies.find_one({"code": code}, {"_id": 0})
+    return lobby
+
+
 @api_router.post("/lobbies")
 async def create_lobby(payload: LobbyCreateRequest, nick: str = Depends(require_session)):
     for _ in range(8):
@@ -732,6 +752,9 @@ async def join_lobby(code: str, nick: str = Depends(require_session)):
     if lobby.get("guest") and lobby["guest"] != nick:
         raise HTTPException(status_code=409, detail="Lobby full.")
     await db.lobbies.update_one({"code": code.upper()}, {"$set": {"guest": nick}})
+    # Auto-start only for PUBLIC matchmaking duels. Friend-code lobbies remain host-started.
+    if lobby.get("public"):
+        await _ensure_lobby_playing(code)
     return _sanitize_lobby(await db.lobbies.find_one({"code": code.upper()}))
 
 
@@ -748,6 +771,17 @@ async def start_lobby(code: str, nick: str = Depends(require_session)):
     lobby = await db.lobbies.find_one({"code": code.upper()})
     if not lobby:
         raise HTTPException(status_code=404, detail="Lobby not found.")
+
+    # Public matchmaking lobbies are started by the server automatically.
+    if lobby.get("public"):
+        lob = await _ensure_lobby_playing(code)
+        if not lob:
+            raise HTTPException(status_code=404, detail="Lobby not found.")
+        if lob.get("status") != "playing":
+            raise HTTPException(status_code=409, detail="No opponent yet.")
+        return _sanitize_lobby(lob)
+
+    # Private friend-code lobbies: host must start.
     if lobby["host"] != nick:
         raise HTTPException(status_code=403, detail="Only host can start.")
     if not lobby.get("guest"):
@@ -812,7 +846,11 @@ async def matchmaking_find(payload: LobbyCreateRequest, nick: str = Depends(requ
     }
     lobby = await db.lobbies.find_one(query)
     if lobby:
-        await db.lobbies.update_one({"code": lobby["code"]}, {"$set": {"guest": nick}})
+        await db.lobbies.update_one(
+            {"code": lobby["code"]},
+            {"$set": {"guest": nick}},
+        )
+        await _ensure_lobby_playing(lobby["code"])
         return _sanitize_lobby(await db.lobbies.find_one({"code": lobby["code"]}))
     return await create_lobby(payload, nick)
 
@@ -1090,6 +1128,9 @@ async def ws_lobby(code: str, websocket: WebSocket):
     await WS_HUB.connect(code, nick, websocket)
 
     try:
+        # Server-authoritative start for PUBLIC matchmaking duels only.
+        lobby = await _ensure_lobby_playing(code) or lobby
+
         game = ACTIVE_GAMES.get(code)
         if not game and lobby.get("status") == "playing":
             game = _LobbyGame(code, lobby)
@@ -1114,7 +1155,7 @@ async def ws_lobby(code: str, websocket: WebSocket):
             msg = await websocket.receive_json()
             mtype = (msg or {}).get("type")
 
-            lobby = await db.lobbies.find_one({"code": code}, {"_id": 0})
+            lobby = await _ensure_lobby_playing(code)
             if not lobby:
                 await WS_HUB.send(code, nick, {"type": "error", "error": "Lobby not found"})
                 continue
@@ -1128,6 +1169,38 @@ async def ws_lobby(code: str, websocket: WebSocket):
                 game = _LobbyGame(code, lobby)
                 ACTIVE_GAMES[code] = game
             game.ensure_player(nick)
+
+            # Time limit: resolve duel if it took too long.
+            try:
+                now_epoch = int(datetime.now(timezone.utc).timestamp())
+                started_epoch = int(getattr(game, "started_at_epoch", 0) or 0)
+                if started_epoch and not game.finished and (now_epoch - started_epoch) >= DUEL_TIME_LIMIT_SECONDS:
+                    host_p = game.players.get(game.host)
+                    guest_p = game.players.get(game.guest)
+                    host_safe = host_p.safe_revealed() if host_p else 0
+                    guest_safe = guest_p.safe_revealed() if guest_p else 0
+                    host_lives = host_p.lives if host_p else 0
+                    guest_lives = guest_p.lives if guest_p else 0
+
+                    # Winner: more safe cells; tie-breaker: more lives; final tie: host wins.
+                    if (host_safe, host_lives) >= (guest_safe, guest_lives):
+                        winner = game.host
+                        loser = game.guest
+                    else:
+                        winner = game.guest
+                        loser = game.host
+
+                    game.finished = True
+                    if loser in game.players:
+                        game.players[loser].done = True
+                        game.players[loser].won = False
+                    if winner in game.players:
+                        game.players[winner].done = True
+                        game.players[winner].won = True
+                    await WS_HUB.broadcast(code, {"type": "duel_over", "winner": winner})
+                    continue
+            except Exception:
+                pass
 
             if mtype == "open":
                 r = int(msg.get("r"))

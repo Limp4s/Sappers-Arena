@@ -4,7 +4,7 @@ import { Cell, StatsBar, GameOverModal } from './GameParts';
 import { t, useLang } from '../../lib/i18n';
 import { connectLobbyWs } from '../../lib/lobby_ws';
 import { submitScore } from '../../lib/player';
-import { startLobby, submitLobbyResult } from '../../lib/lobby';
+import { submitLobbyResult } from '../../lib/lobby';
 import { loadEquipped, MINE_ICONS, CELL_THEMES, FX_EFFECTS } from '../../lib/shop';
 
 const makeEmptyBoard = (rows, cols) => Array.from({ length: rows }, () => Array.from({ length: cols }, () => ({
@@ -69,6 +69,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   useLang();
   const timerRef = useRef(null);
   const wsRef = useRef(null);
+  const roleRef = useRef(null);
 
   const minesLeft = useMemo(() => mines, [mines]);
   const gridStyle = useMemo(() => ({ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: '3px' }), [cols]);
@@ -96,11 +97,17 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
 
     wsRef.current?.close?.();
 
+    setWsError(null);
+    roleRef.current = null;
+
     const conn = connectLobbyWs(lobbyCode, {
+      onOpen: () => setWsError(null),
+      onClose: () => setWsError('Disconnected.'),
       onMessage: (msg) => {
         if (!msg) return;
         if (msg.type === 'init') {
           setWsError(null);
+          roleRef.current = msg.role;
           const sNow = typeof msg.server_now === 'number' ? msg.server_now : null;
           const sStart = typeof msg.started_at === 'number' ? msg.started_at : null;
           if (sNow != null) setServerOffset(sNow - Math.floor(Date.now() / 1000));
@@ -111,11 +118,6 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
           if (msg.status === 'playing') {
             stopTimer();
             startTimer();
-          } else {
-            // If host is connected and lobby isn't started yet, start it automatically.
-            if ((msg.role === 'host' || msg.role === 'HOST') && lobbyCode) {
-              startLobby(lobbyCode).catch(() => {});
-            }
           }
         }
 
@@ -163,11 +165,21 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
 
   const revealCell = (r, c) => {
     if (status === 'won' || status === 'lost') return;
+    const ready = wsRef.current?.ws?.readyState === WebSocket.OPEN;
+    if (!ready) {
+      setWsError('Connecting...');
+      return;
+    }
     wsRef.current?.send?.({ type: 'open', r, c });
   };
 
   const flagCell = (r, c) => {
     if (status === 'won' || status === 'lost') return;
+    const ready = wsRef.current?.ws?.readyState === WebSocket.OPEN;
+    if (!ready) {
+      setWsError('Connecting...');
+      return;
+    }
     wsRef.current?.send?.({ type: 'flag', r, c });
   };
 
