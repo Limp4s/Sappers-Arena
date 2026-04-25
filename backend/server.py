@@ -61,6 +61,16 @@ async def health():
         "build": os.getenv("RENDER_SERVICE_ID"),
     }
 
+
+def _serialize_cells(cells: set, mines: set, adj: List[List[int]], revealed: set, flags: set, exploded: Optional[tuple] = None) -> List[dict]:
+    out: List[dict] = []
+    for (r, c) in cells:
+        try:
+            out.append(_serialize_cell(int(r), int(c), mines, adj, revealed, flags, exploded=exploded))
+        except Exception:
+            pass
+    return out
+
 NICK_PATTERN = re.compile(r"^[A-Za-z0-9_\-]{3,20}$")
 STARTER_COINS = 100
 
@@ -1151,6 +1161,20 @@ async def ws_lobby(code: str, websocket: WebSocket):
         if game:
             game.ensure_player(nick)
 
+        your_cells: List[dict] = []
+        opp_cells: List[dict] = []
+        try:
+            if game and nick in game.players:
+                p = game.players[nick]
+                your_union = set(p.revealed) | set(p.flags)
+                your_cells = _serialize_cells(your_union, p.mines, p.adj, p.revealed, p.flags, exploded=p.exploded)
+                other = (game.guest if nick == game.host else game.host)
+                if other in game.players:
+                    op = game.players[other]
+                    opp_cells = _serialize_cells(set(op.revealed), op.mines, op.adj, op.revealed, set(), exploded=op.exploded)
+        except Exception:
+            pass
+
         await WS_HUB.send(code, nick, {
             "type": "init",
             "code": code,
@@ -1162,6 +1186,8 @@ async def ws_lobby(code: str, websocket: WebSocket):
             "config": lobby.get("config") or {},
             "server_now": int(datetime.now(timezone.utc).timestamp()),
             "started_at": int((game.started_at_epoch if game else (_parse_iso_to_epoch_seconds(lobby.get('started_at')) or int(datetime.now(timezone.utc).timestamp())))),
+            "your_cells": your_cells,
+            "opp_cells": opp_cells,
         })
 
         while True:

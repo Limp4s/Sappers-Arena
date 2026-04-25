@@ -207,20 +207,16 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
           const prevStatus = statusRef.current;
           const prevStarted = startedAtRef.current;
           setStatus(nextStatus);
-          if (nextStatus === 'playing' && (prevStatus !== 'playing' || (sStart != null && prevStarted != null && sStart !== prevStarted))) {
-            setWinner(null);
-            setResultText(null);
-            setModalOpen(false);
-            setSubmitted(false);
-            setCoinsAwarded(0);
-            setRatingDelta(0);
-            setRematchWaiting(false);
-            setLives(livesTotal);
-            setOppLives(livesTotal);
-            setSafe(0);
-            setOppSafe(0);
-            setMyBoard(makeEmptyBoard(rows, cols));
-            setOppBoard(makeEmptyBoard(rows, cols));
+          if (nextStatus === 'playing') {
+            const yourCells = Array.isArray(msg.your_cells) ? msg.your_cells : null;
+            const oppCells = Array.isArray(msg.opp_cells) ? msg.opp_cells : null;
+            if (yourCells || oppCells) {
+              if (yourCells) setMyBoard((b) => applyChanges(makeEmptyBoard(rows, cols), yourCells));
+              if (oppCells) setOppBoard((b) => applyChanges(makeEmptyBoard(rows, cols), oppCells));
+            } else if (prevStatus !== 'playing' || (sStart != null && prevStarted != null && sStart !== prevStarted)) {
+              setMyBoard(makeEmptyBoard(rows, cols));
+              setOppBoard(makeEmptyBoard(rows, cols));
+            }
           }
           setTotalSafe(rows * cols - mines);
           if (msg.status === 'playing') {
