@@ -163,6 +163,9 @@ export const authHeaders = () => {
 export const ensureOnlineSession = async () => {
   const existing = getToken();
   if (isOnlineToken(existing) && getStoredNickname()) return { nickname: getStoredNickname(), token: existing };
+  // If the user already has a chosen nickname stored, do NOT auto-register a guest account,
+  // otherwise we will overwrite their nickname/id and break consistency across devices.
+  if (getStoredNickname() && !isOnlineToken(existing)) return null;
   try {
     for (let i = 0; i < 5; i += 1) {
       const nick = _makeGuestNick();
@@ -447,7 +450,9 @@ export const purchaseItem = async (itemId) => {
 export const submitScore = async (body) => {
   try {
     if (!isOnlineToken(getToken())) await ensureOnlineSession();
-    return (await axios.post(`${API}/leaderboard`, body, { headers: authHeaders() })).data;
+    const nick = getStoredNickname();
+    const payload = (nick && nick.trim()) ? { ...body, player_name: nick.trim() } : body;
+    return (await axios.post(`${API}/leaderboard`, payload, { headers: authHeaders() })).data;
   } catch {
     // Offline: keep a minimal local coins system.
     const _computeCampaignCoins = ({ level_id, lives_remaining, time_seconds, flags, won }) => {
