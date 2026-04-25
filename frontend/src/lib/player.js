@@ -12,6 +12,18 @@ const BACKEND_URL = (() => {
 })();
 const API = `${BACKEND_URL}/api`;
 
+const _isElectron = () => {
+  try {
+    // renderer process
+    if (typeof window !== 'undefined' && window?.process?.type === 'renderer') return true;
+    // main process
+    if (typeof process !== 'undefined' && !!process?.versions?.electron) return true;
+    // user agent
+    if (typeof navigator !== 'undefined' && /Electron\//i.test(navigator.userAgent || '')) return true;
+  } catch {}
+  return false;
+};
+
 const _isBackendReachable = async () => {
   try {
     const res = await fetch(`${API}/health`, { method: 'GET' });
@@ -194,21 +206,33 @@ export const checkNickAvailable = async (nick) => {
 };
 
 export const registerNick = async (nick, password) => {
+  const errNick = validateNickFormat(nick);
+  if (errNick) {
+    const e = new Error(errNick);
+    e.response = { data: { detail: errNick } };
+    throw e;
+  }
+  const errPw = validatePassword(password);
+  if (errPw) {
+    const e = new Error(errPw);
+    e.response = { data: { detail: errPw } };
+    throw e;
+  }
+
   try {
     return (await axios.post(`${API}/players/register`, { nickname: nick, password })).data;
-  } catch {
-    const errNick = validateNickFormat(nick);
-    if (errNick) {
-      const e = new Error(errNick);
-      e.response = { data: { detail: errNick } };
-      throw e;
+  } catch (error) {
+    // Web build: do not silently go offline. If the backend is reachable but requests fail
+    // (CORS/HTTPS/misconfig), surface the error so the user can fix connectivity.
+    if (!_isElectron()) {
+      if (error?.response) throw error;
+      const reachable = await _isBackendReachable();
+      if (reachable) throw error;
+      throw error;
     }
-    const errPw = validatePassword(password);
-    if (errPw) {
-      const e = new Error(errPw);
-      e.response = { data: { detail: errPw } };
-      throw e;
-    }
+
+    // If the server responded with a validation/auth error, do not create an offline account.
+    if (error?.response) throw error;
 
     const key = _userKey(nick);
     const users = _loadUsers();
@@ -256,6 +280,11 @@ export const loginNick = async (nick, password) => {
   try {
     return (await axios.post(`${API}/players/login`, { nickname: nick, password })).data;
   } catch (error) {
+    // Web build: never auto-switch to offline.
+    if (!_isElectron()) {
+      throw error;
+    }
+
     // If the server responded (4xx/5xx), do not silently fall back to offline.
     // Offline fallback is reserved for network/unreachable scenarios.
     if (error?.response) throw error;
