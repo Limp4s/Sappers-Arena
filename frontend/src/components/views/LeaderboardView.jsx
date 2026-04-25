@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Trophy, Clock, User, Search, Trash2, Crown, Shield, Sparkles } from 'lucide-react';
-import { getStoredNickname, adminHeaders } from '../../lib/player';
+import { getStoredNickname, adminHeaders, ensureOnlineSession, authHeaders } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
@@ -24,7 +24,20 @@ export default function LeaderboardView({ isAdmin = false }) {
   const [nameQuery, setNameQuery] = useState(() => getStoredNickname());
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [serverOk, setServerOk] = useState(null);
   useLang();
+
+  const ensureServer = useCallback(async () => {
+    try {
+      await ensureOnlineSession();
+      await axios.get(`${API}/players/me`, { headers: authHeaders() });
+      setServerOk(true);
+      return true;
+    } catch {
+      setServerOk(false);
+      return false;
+    }
+  }, []);
 
   const fetchLeaderboard = useCallback(async (selectedScope) => {
     setLoading(true);
@@ -63,6 +76,16 @@ export default function LeaderboardView({ isAdmin = false }) {
   useEffect(() => { fetchLeaderboard(scope); }, [scope, fetchLeaderboard]);
   useEffect(() => { fetchRecent(); fetchRanked(); }, [fetchRecent, fetchRanked]);
   useEffect(() => { if (nameQuery) fetchStats(nameQuery); }, [nameQuery, fetchStats]);
+
+  useEffect(() => {
+    ensureServer().then((ok) => {
+      if (ok) {
+        fetchLeaderboard(scope);
+        fetchRecent();
+        fetchRanked();
+      }
+    });
+  }, [ensureServer, fetchLeaderboard, fetchRecent, fetchRanked, scope]);
 
   const handleDelete = async (id) => {
     if (!isAdmin) return;

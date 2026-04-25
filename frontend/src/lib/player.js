@@ -446,7 +446,7 @@ export const purchaseItem = async (itemId) => {
 
 export const submitScore = async (body) => {
   try {
-    if (!getToken()) await ensureOnlineSession();
+    if (!isOnlineToken(getToken())) await ensureOnlineSession();
     return (await axios.post(`${API}/leaderboard`, body, { headers: authHeaders() })).data;
   } catch {
     // Offline: keep a minimal local coins system.
