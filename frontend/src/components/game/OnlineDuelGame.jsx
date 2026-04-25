@@ -59,6 +59,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   const [winner, setWinner] = useState(null);
   const [resultText, setResultText] = useState(null);
   const [wsError, setWsError] = useState(null);
+  const [wsErrorDisplay, setWsErrorDisplay] = useState(null);
   const [serverOffset, setServerOffset] = useState(0);
   const [startedAt, setStartedAt] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -93,6 +94,15 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   }, []);
 
   useEffect(() => () => stopTimer(), [stopTimer]);
+
+  useEffect(() => {
+    if (!wsError) {
+      setWsErrorDisplay(null);
+      return;
+    }
+    const t = setTimeout(() => setWsErrorDisplay(wsError), 5000);
+    return () => clearTimeout(t);
+  }, [wsError]);
 
   useEffect(() => {
     if (!lobbyCode || !playerName) return;
@@ -225,7 +235,6 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
     if (status === 'won' || status === 'lost') return;
     const ready = wsRef.current?.ws?.readyState === WebSocket.OPEN;
     if (!ready) {
-      setWsError('Connecting...');
       return;
     }
     wsRef.current?.send?.({ type: 'open', r, c });
@@ -235,7 +244,6 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
     if (status === 'won' || status === 'lost') return;
     const ready = wsRef.current?.ws?.readyState === WebSocket.OPEN;
     if (!ready) {
-      setWsError('Connecting...');
       return;
     }
     wsRef.current?.send?.({ type: 'flag', r, c });
@@ -303,10 +311,10 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
       <main className="relative z-10 flex-1 max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-8 flex flex-col gap-4">
         <StatsBar timer={timer} lives={lives} livesTotal={livesTotal} score={safe} minesLeft={minesLeft} onReset={() => {}} infiniteLives={false} showReset={false} />
 
-        {wsError && (
+        {wsErrorDisplay && (
           <div className="glass-panel rounded-xl px-5 py-4 border border-[#FF2A6D]/40" data-testid="ws-error">
             <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display">// network</div>
-            <div className="font-mono text-[12px] neon-coral">{wsError}</div>
+            <div className="font-mono text-[12px] neon-coral">{wsErrorDisplay}</div>
           </div>
         )}
 

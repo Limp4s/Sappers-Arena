@@ -54,7 +54,12 @@ ADMIN_NICKS = {"limp4"}
 
 @api_router.get("/health")
 async def health():
-    return {"ok": True}
+    return {
+        "ok": True,
+        "service": "sappers-arena",
+        "commit": os.getenv("RENDER_GIT_COMMIT") or os.getenv("GIT_COMMIT"),
+        "build": os.getenv("RENDER_SERVICE_ID"),
+    }
 
 NICK_PATTERN = re.compile(r"^[A-Za-z0-9_\-]{3,20}$")
 STARTER_COINS = 100
@@ -938,7 +943,14 @@ def _adj_counts(rows: int, cols: int, mines: set) -> List[List[int]]:
 
 def _place_mines(rows: int, cols: int, mines_count: int, safe_r: int, safe_c: int, seed: int) -> set:
     r = _rng(seed)
-    all_cells = [(rr, cc) for rr in range(rows) for cc in range(cols) if not (rr == safe_r and cc == safe_c)]
+    safe_zone = set()
+    for dr in (-1, 0, 1):
+        for dc in (-1, 0, 1):
+            rr = safe_r + dr
+            cc = safe_c + dc
+            if 0 <= rr < rows and 0 <= cc < cols:
+                safe_zone.add((rr, cc))
+    all_cells = [(rr, cc) for rr in range(rows) for cc in range(cols) if (rr, cc) not in safe_zone]
     r.shuffle(all_cells)
     return set(all_cells[: max(0, min(mines_count, len(all_cells)))])
 
@@ -1219,6 +1231,14 @@ async def ws_lobby(code: str, websocket: WebSocket):
                     "done": res.get("done"),
                     "won": res.get("won"),
                 })
+                if res.get("done") and not res.get("won") and not game.finished:
+                    winner = game.guest if nick == game.host else game.host
+                    game.finished = True
+                    if winner in game.players:
+                        game.players[winner].done = True
+                        game.players[winner].won = True
+                    await WS_HUB.broadcast(code, {"type": "duel_over", "winner": winner})
+                    continue
 
             elif mtype == "flag":
                 r = int(msg.get("r"))
