@@ -286,8 +286,8 @@ export const GameOverModal = ({
         <div className="flex flex-wrap gap-2">
           {canContinueCampaign ? (
             <>
-              <button className="neon-btn flex-1 min-w-[120px]" onClick={handleContinue} data-testid="continue-btn">{t('common.continue')}</button>
               <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={onExit} data-testid="modal-exit-btn">{t('common.back')}</button>
+              <button className="neon-btn flex-1 min-w-[120px]" onClick={handleContinue} data-testid="continue-btn">{t('common.continue')}</button>
             </>
           ) : (
             <>

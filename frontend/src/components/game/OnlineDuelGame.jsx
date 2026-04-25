@@ -151,12 +151,12 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   }, [lobbyCode, playerName, rows, cols, mines, startTimer, stopTimer]);
 
   const revealCell = (r, c) => {
-    if (status !== 'playing') return;
+    if (status === 'won' || status === 'lost') return;
     wsRef.current?.send?.({ type: 'open', r, c });
   };
 
   const flagCell = (r, c) => {
-    if (status !== 'playing') return;
+    if (status === 'won' || status === 'lost') return;
     wsRef.current?.send?.({ type: 'flag', r, c });
   };
 
@@ -240,19 +240,19 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1">
-          <div className="glass-panel rounded-xl p-4 md:p-6 flex items-center justify-center relative overflow-hidden" style={{ borderColor: `${cellTheme.accent}33` }}>
+          <div className="glass-panel rounded-xl p-4 md:p-6 flex items-center justify-center relative overflow-hidden" style={{ borderColor: '#00FF9D66' }}>
             <div className="w-full" style={{ maxWidth: `min(100%, ${cols * 48}px)` }}>
               <div className="text-[10px] tracking-[0.25em] uppercase text-slate-400 font-display mb-3">{t('common.you')} · {safe}/{totalSafe} · {t('game.lives')} {lives}</div>
               <div style={gridStyle}>
                 {myBoard.map((row, r) => row.map((cell, c) => (
                   <Cell key={`m-${r}-${c}`} cell={cell} r={r} c={c} onReveal={revealCell} onFlag={flagCell}
-                    disabled={status !== 'playing'} revealDelay={0} mineIcon={mineDef.icon} cellTheme={cellTheme} />
+                    disabled={status === 'won' || status === 'lost'} revealDelay={0} mineIcon={mineDef.icon} cellTheme={cellTheme} />
                 )))}
               </div>
             </div>
           </div>
 
-          <div className="glass-panel rounded-xl p-4 md:p-6 flex items-center justify-center relative overflow-hidden" style={{ borderColor: `${cellTheme.accent}22` }}>
+          <div className="glass-panel rounded-xl p-4 md:p-6 flex items-center justify-center relative overflow-hidden" style={{ borderColor: '#FF2A6D66' }}>
             <div className="w-full" style={{ maxWidth: `min(100%, ${cols * 48}px)` }}>
               <div className="text-[10px] tracking-[0.25em] uppercase text-slate-400 font-display mb-3">{t('common.opponent')} · {oppSafe}/{totalSafe} · {t('game.lives')} {oppLives}</div>
               <div style={gridStyle}>
