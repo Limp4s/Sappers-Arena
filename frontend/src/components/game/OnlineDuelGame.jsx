@@ -4,7 +4,7 @@ import { Cell, StatsBar, GameOverModal } from './GameParts';
 import { t, useLang } from '../../lib/i18n';
 import { connectLobbyWs } from '../../lib/lobby_ws';
 import { submitScore } from '../../lib/player';
-import { submitLobbyResult } from '../../lib/lobby';
+import { startLobby, submitLobbyResult } from '../../lib/lobby';
 import { loadEquipped, MINE_ICONS, CELL_THEMES, FX_EFFECTS } from '../../lib/shop';
 
 const makeEmptyBoard = (rows, cols) => Array.from({ length: rows }, () => Array.from({ length: cols }, () => ({
@@ -58,6 +58,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   const [totalSafe, setTotalSafe] = useState(rows * cols - mines);
   const [winner, setWinner] = useState(null);
   const [resultText, setResultText] = useState(null);
+  const [wsError, setWsError] = useState(null);
   const [serverOffset, setServerOffset] = useState(0);
   const [startedAt, setStartedAt] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -99,6 +100,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
       onMessage: (msg) => {
         if (!msg) return;
         if (msg.type === 'init') {
+          setWsError(null);
           const sNow = typeof msg.server_now === 'number' ? msg.server_now : null;
           const sStart = typeof msg.started_at === 'number' ? msg.started_at : null;
           if (sNow != null) setServerOffset(sNow - Math.floor(Date.now() / 1000));
@@ -109,7 +111,16 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
           if (msg.status === 'playing') {
             stopTimer();
             startTimer();
+          } else {
+            // If host is connected and lobby isn't started yet, start it automatically.
+            if ((msg.role === 'host' || msg.role === 'HOST') && lobbyCode) {
+              startLobby(lobbyCode).catch(() => {});
+            }
           }
+        }
+
+        if (msg.type === 'error') {
+          setWsError(msg.error || 'Error');
         }
 
         if (msg.type === 'player_update') {
@@ -220,7 +231,14 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
       </header>
 
       <main className="relative z-10 flex-1 max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-8 flex flex-col gap-4">
-        <StatsBar timer={timer} lives={lives} livesTotal={livesTotal} score={safe} minesLeft={minesLeft} onReset={() => {}} infiniteLives={false} />
+        <StatsBar timer={timer} lives={lives} livesTotal={livesTotal} score={safe} minesLeft={minesLeft} onReset={() => {}} infiniteLives={false} showReset={false} />
+
+        {wsError && (
+          <div className="glass-panel rounded-xl px-5 py-4 border border-[#FF2A6D]/40" data-testid="ws-error">
+            <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display">// network</div>
+            <div className="font-mono text-[12px] neon-coral">{wsError}</div>
+          </div>
+        )}
 
         {winner && (
           <div className={`glass-panel rounded-xl px-5 py-4 flex items-center justify-between gap-4 border ${winner === playerName ? 'border-[#00FF9D]/50' : 'border-[#FF2A6D]/50'}`}>
@@ -242,7 +260,14 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1">
           <div className="glass-panel rounded-xl p-4 md:p-6 flex items-center justify-center relative overflow-hidden" style={{ borderColor: '#00FF9D66' }}>
             <div className="w-full" style={{ maxWidth: `min(100%, ${cols * 48}px)` }}>
-              <div className="text-[10px] tracking-[0.25em] uppercase text-slate-400 font-display mb-3">{t('common.you')} · {safe}/{totalSafe} · {t('game.lives')} {lives}</div>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="text-[10px] tracking-[0.25em] uppercase text-slate-400 font-display">
+                  {t('common.you')} · {safe}/{totalSafe} · {t('game.lives')} {lives}
+                </div>
+                <div className="pill border border-[#00FF9D]/40 text-[10px] font-display neon-lime px-3 py-1">
+                  {playerName || t('common.you')}
+                </div>
+              </div>
               <div style={gridStyle}>
                 {myBoard.map((row, r) => row.map((cell, c) => (
                   <Cell key={`m-${r}-${c}`} cell={cell} r={r} c={c} onReveal={revealCell} onFlag={flagCell}
@@ -254,7 +279,14 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
 
           <div className="glass-panel rounded-xl p-4 md:p-6 flex items-center justify-center relative overflow-hidden" style={{ borderColor: '#FF2A6D66' }}>
             <div className="w-full" style={{ maxWidth: `min(100%, ${cols * 48}px)` }}>
-              <div className="text-[10px] tracking-[0.25em] uppercase text-slate-400 font-display mb-3">{t('common.opponent')} · {oppSafe}/{totalSafe} · {t('game.lives')} {oppLives}</div>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="text-[10px] tracking-[0.25em] uppercase text-slate-400 font-display">
+                  {t('common.opponent')} · {oppSafe}/{totalSafe} · {t('game.lives')} {oppLives}
+                </div>
+                <div className="pill border border-[#FF2A6D]/40 text-[10px] font-display neon-coral px-3 py-1">
+                  {opponent || t('common.opponent')}
+                </div>
+              </div>
               <div style={gridStyle}>
                 {oppBoard.map((row, r) => row.map((cell, c) => (
                   <Cell key={`o-${r}-${c}`} cell={cell} r={r} c={c} onReveal={() => {}} onFlag={() => {}}

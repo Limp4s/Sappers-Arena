@@ -107,7 +107,7 @@ export const Cell = React.memo(function Cell({
   );
 });
 
-export const StatsBar = ({ timer, lives, livesTotal = 3, score, minesLeft, onReset, infiniteLives, flagMode, onToggleFlagMode }) => {
+export const StatsBar = ({ timer, lives, livesTotal = 3, score, minesLeft, onReset, infiniteLives, flagMode, onToggleFlagMode, showReset = true }) => {
   const fmt = (n) => String(n).padStart(3, '0');
   useLang();
   return (
@@ -125,9 +125,11 @@ export const StatsBar = ({ timer, lives, livesTotal = 3, score, minesLeft, onRes
             <Flag size={14} /> {t('game.flag')}
           </button>
         )}
-        <button className="neon-btn flex items-center gap-2" onClick={onReset} data-testid="reset-btn" type="button">
-          <RefreshCw size={14} /> {t('game.reset')}
-        </button>
+        {showReset && (
+          <button className="neon-btn flex items-center gap-2" onClick={onReset} data-testid="reset-btn" type="button">
+            <RefreshCw size={14} /> {t('game.reset')}
+          </button>
+        )}
       </div>
     </div>
   );
