@@ -67,6 +67,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   const [coinsAwarded, setCoinsAwarded] = useState(0);
   const [ratingDelta, setRatingDelta] = useState(0);
   const [rematchWaiting, setRematchWaiting] = useState(false);
+  const [rematchSecondsLeft, setRematchSecondsLeft] = useState(0);
 
   useLang();
   const timerRef = useRef(null);
@@ -75,6 +76,8 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   const pingRef = useRef(null);
   const reconnectRef = useRef({ t: null, attempt: 0, stopped: false });
   const rematchTimeoutRef = useRef(null);
+  const rematchTickRef = useRef(null);
+  const rematchSendRef = useRef({ queued: false, t: null });
   const finishedRef = useRef(false);
   const startedAtRef = useRef(null);
   const serverOffsetRef = useRef(0);
@@ -119,6 +122,14 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
       if (rematchTimeoutRef.current) {
         clearTimeout(rematchTimeoutRef.current);
         rematchTimeoutRef.current = null;
+      }
+      if (rematchTickRef.current) {
+        clearInterval(rematchTickRef.current);
+        rematchTickRef.current = null;
+      }
+      if (rematchSendRef.current.t) {
+        clearTimeout(rematchSendRef.current.t);
+        rematchSendRef.current.t = null;
       }
     };
   }, []);
@@ -179,6 +190,11 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
               if (wsRef.current?.ws?.readyState === WebSocket.OPEN) wsRef.current.send({ type: 'ping' });
             } catch {}
           }, 20000);
+
+          if (rematchSendRef.current.queued) {
+            try { wsRef.current?.send?.({ type: 'rematch' }); } catch {}
+            rematchSendRef.current.queued = false;
+          }
         },
         onError: (e) => {
           const url = e?.url ? ` ${e.url}` : '';
@@ -277,6 +293,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
           setCoinsAwarded(0);
           setRatingDelta(0);
           setRematchWaiting(false);
+          setRematchSecondsLeft(0);
           setLives(livesTotal);
           setOppLives(livesTotal);
           setSafe(0);
@@ -359,13 +376,40 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   const requestRematch = () => {
     if (rematchWaiting) return;
     const ready = wsRef.current?.ws?.readyState === WebSocket.OPEN;
-    if (!ready) return;
     setRematchWaiting(true);
-    wsRef.current?.send?.({ type: 'rematch' });
+    setRematchSecondsLeft(15);
+    if (rematchTickRef.current) clearInterval(rematchTickRef.current);
+    rematchTickRef.current = setInterval(() => {
+      setRematchSecondsLeft((s) => {
+        const n = Math.max(0, (Number(s) || 0) - 1);
+        if (n <= 0 && rematchTickRef.current) {
+          clearInterval(rematchTickRef.current);
+          rematchTickRef.current = null;
+        }
+        return n;
+      });
+    }, 1000);
+
+    if (ready) {
+      wsRef.current?.send?.({ type: 'rematch' });
+    } else {
+      rematchSendRef.current.queued = true;
+      setWsError((prev) => prev || 'Reconnecting...');
+      if (rematchSendRef.current.t) clearTimeout(rematchSendRef.current.t);
+      rematchSendRef.current.t = setTimeout(() => {
+        rematchSendRef.current.t = null;
+        const ok = wsRef.current?.ws?.readyState === WebSocket.OPEN;
+        if (ok && rematchSendRef.current.queued) {
+          try { wsRef.current?.send?.({ type: 'rematch' }); } catch {}
+          rematchSendRef.current.queued = false;
+        }
+      }, 1200);
+    }
     if (rematchTimeoutRef.current) clearTimeout(rematchTimeoutRef.current);
     rematchTimeoutRef.current = setTimeout(() => {
       rematchTimeoutRef.current = null;
       setRematchWaiting(false);
+      setRematchSecondsLeft(0);
       onExit?.();
     }, 15000);
   };
@@ -469,6 +513,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
         playerName={playerName} onSubmit={doSubmit} flags={0}
         onClose={() => setModalOpen(false)} onNewGame={requestRematch} onExit={onExit}
         submitted={submitted} coinsAwarded={coinsAwarded} ratingDelta={ratingDelta}
+        rematchWaiting={rematchWaiting} rematchSecondsLeft={rematchSecondsLeft}
         noSubmit={false} mode={mode} lobbyResult={null} opponent={opponent} levelId={null}
       />
     </div>
