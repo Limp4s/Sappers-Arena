@@ -1065,12 +1065,35 @@ const DICTS = {
 };
 
 const KEY = 'mg_lang';
+
+const _detectSystemLang = () => {
+  try {
+    if (typeof navigator === 'undefined') return null;
+    const list = Array.isArray(navigator.languages) && navigator.languages.length
+      ? navigator.languages
+      : [navigator.language].filter(Boolean);
+    for (const raw of list) {
+      const code = String(raw || '').toLowerCase();
+      if (!code) continue;
+      if (DICTS[code]) return code;
+      const base = code.split(/[-_]/)[0];
+      if (base && DICTS[base]) return base;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 let CURRENT = (() => {
   try {
     const v = localStorage.getItem(KEY);
-    return v && DICTS[v] ? v : 'en';
+    if (v && DICTS[v]) return v;
+    const sys = _detectSystemLang();
+    return sys && DICTS[sys] ? sys : 'en';
   } catch {
-    return 'en';
+    const sys = _detectSystemLang();
+    return sys && DICTS[sys] ? sys : 'en';
   }
 })();
 
