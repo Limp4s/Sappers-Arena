@@ -155,7 +155,7 @@ const _offlinePlayerDoc = (u) => ({
   rating: u.rating ?? 1000,
 });
 
-const authHeaders = () => {
+export const authHeaders = () => {
   const t = getToken();
   return isOnlineToken(t) ? { 'X-Session-Token': t } : {};
 };
