@@ -122,13 +122,22 @@ async def _get_player(nick: str):
 
 
 async def _next_player_num() -> int:
-    doc = await db.counters.find_one_and_update(
-        {"_id": "player_num"},
-        {"$setOnInsert": {"seq": 0}, "$inc": {"seq": 1}},
-        upsert=True,
-        return_document=ReturnDocument.AFTER,
-    )
-    return int(doc.get("seq") or 0)
+    try:
+        doc = await db.counters.find_one_and_update(
+            {"_id": "player_num"},
+            {"$setOnInsert": {"seq": 0}, "$inc": {"seq": 1}},
+            upsert=True,
+            return_document=ReturnDocument.AFTER,
+        )
+        return int((doc or {}).get("seq") or 0)
+    except Exception as e:
+        # Fallback: keep registration working even if counters collection isn't writable.
+        # This is only used for display/debug; uniqueness isn't critical for core gameplay.
+        try:
+            print(f"_next_player_num failed: {e!r}")
+        except Exception:
+            pass
+        return int(datetime.now(timezone.utc).timestamp())
 
 
 async def _ensure_player_ids(player: dict) -> dict:
