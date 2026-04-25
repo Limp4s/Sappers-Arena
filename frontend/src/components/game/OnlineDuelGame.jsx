@@ -66,6 +66,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   const [submitted, setSubmitted] = useState(false);
   const [coinsAwarded, setCoinsAwarded] = useState(0);
   const [ratingDelta, setRatingDelta] = useState(0);
+  const [rematchWaiting, setRematchWaiting] = useState(false);
 
   useLang();
   const timerRef = useRef(null);
@@ -73,6 +74,8 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   const roleRef = useRef(null);
   const pingRef = useRef(null);
   const reconnectRef = useRef({ t: null, attempt: 0, stopped: false });
+  const rematchTimeoutRef = useRef(null);
+  const finishedRef = useRef(false);
 
   const minesLeft = useMemo(() => mines, [mines]);
   const gridStyle = useMemo(() => ({ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: '3px' }), [cols]);
@@ -94,6 +97,15 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   }, []);
 
   useEffect(() => () => stopTimer(), [stopTimer]);
+
+  useEffect(() => {
+    return () => {
+      if (rematchTimeoutRef.current) {
+        clearTimeout(rematchTimeoutRef.current);
+        rematchTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!wsError) {
@@ -169,12 +181,28 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
         if (msg.type === 'init') {
           setWsError(null);
           roleRef.current = msg.role;
+          finishedRef.current = false;
           const sNow = typeof msg.server_now === 'number' ? msg.server_now : null;
           const sStart = typeof msg.started_at === 'number' ? msg.started_at : null;
           if (sNow != null) setServerOffset(sNow - Math.floor(Date.now() / 1000));
           if (sStart != null) setStartedAt(sStart);
 
           setStatus(msg.status === 'playing' ? 'playing' : 'idle');
+          if (msg.status === 'playing') {
+            setWinner(null);
+            setResultText(null);
+            setModalOpen(false);
+            setSubmitted(false);
+            setCoinsAwarded(0);
+            setRatingDelta(0);
+            setRematchWaiting(false);
+            setLives(livesTotal);
+            setOppLives(livesTotal);
+            setSafe(0);
+            setOppSafe(0);
+            setMyBoard(makeEmptyBoard(rows, cols));
+            setOppBoard(makeEmptyBoard(rows, cols));
+          }
           setTotalSafe(rows * cols - mines);
           if (msg.status === 'playing') {
             stopTimer();
@@ -193,7 +221,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
             if (typeof msg.lives === 'number') setLives(msg.lives);
             if (typeof msg.safe === 'number') setSafe(msg.safe);
             if (typeof msg.total_safe === 'number') setTotalSafe(msg.total_safe);
-            if (msg.done) {
+            if (msg.done && !finishedRef.current) {
               setStatus(msg.won ? 'won' : 'lost');
               stopTimer();
               setTimeout(() => setModalOpen(true), 700);
@@ -208,10 +236,40 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
         if (msg.type === 'duel_over') {
           setWinner(msg.winner);
           const iWon = msg.winner && msg.winner === playerName;
-          setResultText(iWon ? t('game.victory') : t('game.defeat'));
+          finishedRef.current = true;
+          setResultText(iWon ? t('game.youWon') : t('game.youLost'));
           setStatus(iWon ? 'won' : 'lost');
           stopTimer();
           setTimeout(() => setModalOpen(true), 600);
+        }
+
+        if (msg.type === 'rematch_wait') {
+          setRematchWaiting(true);
+        }
+
+        if (msg.type === 'rematch_start') {
+          finishedRef.current = false;
+          const sNow = typeof msg.server_now === 'number' ? msg.server_now : null;
+          const sStart = typeof msg.started_at === 'number' ? msg.started_at : null;
+          if (sNow != null) setServerOffset(sNow - Math.floor(Date.now() / 1000));
+          if (sStart != null) setStartedAt(sStart);
+
+          setWinner(null);
+          setResultText(null);
+          setStatus('playing');
+          setModalOpen(false);
+          setSubmitted(false);
+          setCoinsAwarded(0);
+          setRatingDelta(0);
+          setRematchWaiting(false);
+          setLives(livesTotal);
+          setOppLives(livesTotal);
+          setSafe(0);
+          setOppSafe(0);
+          setMyBoard(makeEmptyBoard(rows, cols));
+          setOppBoard(makeEmptyBoard(rows, cols));
+          stopTimer();
+          startTimer();
         }
         },
       });
@@ -281,6 +339,20 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
     } catch {
       setSubmitted(true);
     }
+  };
+
+  const requestRematch = () => {
+    if (rematchWaiting) return;
+    const ready = wsRef.current?.ws?.readyState === WebSocket.OPEN;
+    if (!ready) return;
+    setRematchWaiting(true);
+    wsRef.current?.send?.({ type: 'rematch' });
+    if (rematchTimeoutRef.current) clearTimeout(rematchTimeoutRef.current);
+    rematchTimeoutRef.current = setTimeout(() => {
+      rematchTimeoutRef.current = null;
+      setRematchWaiting(false);
+      onExit?.();
+    }, 15000);
   };
 
   return (
@@ -380,7 +452,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
       <GameOverModal open={modalOpen} won={status === 'won'} score={safe} time={timer}
         livesRemaining={lives} livesTotal={livesTotal} difficulty={difficulty}
         playerName={playerName} onSubmit={doSubmit} flags={0}
-        onClose={() => setModalOpen(false)} onNewGame={() => {}} onExit={onExit}
+        onClose={() => setModalOpen(false)} onNewGame={requestRematch} onExit={onExit}
         submitted={submitted} coinsAwarded={coinsAwarded} ratingDelta={ratingDelta}
         noSubmit={false} mode={mode} lobbyResult={null} opponent={opponent} levelId={null}
       />

@@ -180,6 +180,7 @@ export const GameOverModal = ({
   useLang();
 
   const canContinueCampaign = mode === 'campaign' && won && Number(levelId) > 0 && Number(levelId) < 150 && typeof onExit === 'function';
+  const isOnlineDuel = !!lobbyResult || (typeof mode === 'string' && (mode.startsWith('battle_') || mode.startsWith('lobby')));
 
   const handleContinue = () => {
     try {
@@ -206,7 +207,7 @@ export const GameOverModal = ({
         <div className="flex items-center gap-3 mb-2">
           {won ? <Trophy size={28} className="neon-gold" /> : <Skull size={28} className="neon-coral" />}
           <h2 className={`font-display text-3xl font-black tracking-tight ${won ? 'neon-cyan' : 'neon-coral'}`}>
-            {won ? t('game.victory') : t('game.systemBreach')}
+            {isOnlineDuel ? (won ? t('game.youWon') : t('game.youLost')) : (won ? t('game.victory') : t('game.systemBreach'))}
           </h2>
         </div>
         <p className="text-xs text-slate-400 tracking-[0.2em] uppercase mb-6 font-display">
@@ -290,6 +291,13 @@ export const GameOverModal = ({
             <>
               <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={onExit} data-testid="modal-exit-btn">{t('common.back')}</button>
               <button className="neon-btn flex-1 min-w-[120px]" onClick={handleContinue} data-testid="continue-btn">{t('common.continue')}</button>
+            </>
+          ) : isOnlineDuel ? (
+            <>
+              {onExit && (
+                <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={onExit} data-testid="modal-exit-btn">{t('common.exit')}</button>
+              )}
+              <button className="neon-btn flex-1 min-w-[120px]" onClick={onNewGame} data-testid="new-game-btn">{t('game.playAgain')}</button>
             </>
           ) : (
             <>

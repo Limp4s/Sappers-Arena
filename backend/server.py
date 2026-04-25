@@ -1087,6 +1087,7 @@ class _LobbyGame:
         self.started_at = lobby.get("started_at") or datetime.now(timezone.utc).isoformat()
         self.started_at_epoch = _parse_iso_to_epoch_seconds(self.started_at) or int(datetime.now(timezone.utc).timestamp())
         self.finished = False
+        self.rematch_votes: set = set()
         self.players: Dict[str, _PlayerGame] = {}
 
     def role_of(self, nick: str) -> str:
@@ -1246,7 +1247,6 @@ async def ws_lobby(code: str, websocket: WebSocket):
                 res = game.players[nick].flag(r, c)
                 if not res.get("ok"):
                     continue
-                # Flags are private: only send flag updates to the player who placed them.
                 await WS_HUB.send(code, nick, {
                     "type": "player_update",
                     "player": nick,
@@ -1261,6 +1261,35 @@ async def ws_lobby(code: str, websocket: WebSocket):
 
             elif mtype == "ping":
                 await WS_HUB.send(code, nick, {"type": "pong"})
+
+            elif mtype == "rematch":
+                if game and not game.finished:
+                    await WS_HUB.send(code, nick, {"type": "error", "error": "Game not finished"})
+                    continue
+                if not game or nick not in (game.host, game.guest):
+                    await WS_HUB.send(code, nick, {"type": "error", "error": "Forbidden"})
+                    continue
+                game.rematch_votes.add(nick)
+                await WS_HUB.broadcast(code, {"type": "rematch_wait", "who": nick})
+                if game.host in game.rematch_votes and game.guest in game.rematch_votes:
+                    lobby = await db.lobbies.find_one({"code": code}, {"_id": 0})
+                    if not lobby:
+                        await WS_HUB.broadcast(code, {"type": "error", "error": "Lobby not found"})
+                        continue
+                    lobby["status"] = "playing"
+                    lobby["started_at"] = datetime.now(timezone.utc).isoformat()
+                    await db.lobbies.update_one({"code": code}, {"$set": {"status": "playing", "started_at": lobby["started_at"]}})
+
+                    new_game = _LobbyGame(code, lobby)
+                    ACTIVE_GAMES[code] = new_game
+                    new_game.ensure_player(new_game.host)
+                    new_game.ensure_player(new_game.guest)
+                    await WS_HUB.broadcast(code, {
+                        "type": "rematch_start",
+                        "server_now": int(datetime.now(timezone.utc).timestamp()),
+                        "started_at": int(new_game.started_at_epoch),
+                        "status": "playing",
+                    })
 
             else:
                 await WS_HUB.send(code, nick, {"type": "error", "error": "Unknown message"})
