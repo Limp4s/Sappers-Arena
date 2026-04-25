@@ -42,6 +42,19 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
     onLogout?.();
   };
 
+  const rankIconSrc = (league) => {
+    const map = {
+      wood: '/ranks/ranked1.png',
+      stone: '/ranks/ranked2.png',
+      bronze: '/ranks/ranked3.png',
+      iron: '/ranks/ranked4.png',
+      gold: '/ranks/ranked5.png',
+      diamond: '/ranks/ranked6.png',
+      top500: '/ranks/ranked_top500.png',
+    };
+    return map[String(league || '').toLowerCase()] || null;
+  };
+
   const handleExitGame = async () => {
     try {
       if (window.electron?.quitApp) {
@@ -60,7 +73,11 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
           <User size={26} /> {player?.nick}
           {(player?.league || player?.ranked_place) && (
             <span className="flex items-center gap-1 text-[11px] font-display tracking-[0.25em] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-200">
-              <Trophy size={11} className="neon-gold" />
+              {rankIconSrc(player?.league) ? (
+                <img src={rankIconSrc(player?.league)} alt="rank" className="w-4 h-4" />
+              ) : (
+                <Trophy size={11} className="neon-gold" />
+              )}
               {player?.league === 'top500' && player?.ranked_place ? `TOP ${player.ranked_place}` : String(player?.league || '').toUpperCase()}
             </span>
           )}
