@@ -12,6 +12,15 @@ const BACKEND_URL = (() => {
 })();
 const API = `${BACKEND_URL}/api`;
 
+const _isBackendReachable = async () => {
+  try {
+    const res = await fetch(`${API}/health`, { method: 'GET' });
+    return !!res && res.ok;
+  } catch {
+    return false;
+  }
+};
+
 const KEY_NICK = 'mg_player';
 const KEY_ADMIN = 'mg_is_admin';
 const KEY_TOKEN = 'mg_session_token';
@@ -247,6 +256,15 @@ export const loginNick = async (nick, password) => {
   try {
     return (await axios.post(`${API}/players/login`, { nickname: nick, password })).data;
   } catch (error) {
+    // If the server responded (4xx/5xx), do not silently fall back to offline.
+    // Offline fallback is reserved for network/unreachable scenarios.
+    if (error?.response) throw error;
+
+    // If the backend is reachable but the request failed, do NOT fall back to offline.
+    // This usually means CORS / HTTPS / proxy misconfiguration and should be surfaced.
+    const reachable = await _isBackendReachable();
+    if (reachable) throw error;
+
     const key = _userKey(nick);
     const users = _loadUsers();
     const u = users[key];

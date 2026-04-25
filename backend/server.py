@@ -28,15 +28,22 @@ def _get_cors_origins() -> List[str]:
     return parts or ['*']
 
 
+def _cors_allow_credentials(origins: List[str]) -> bool:
+    # Browsers require a specific Access-Control-Allow-Origin when credentials are enabled.
+    # If we allow '*', we must not enable credentials, otherwise CORS will be blocked.
+    return not (len(origins) == 1 and origins[0] == '*')
+
+
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
 db = client[os.environ['DB_NAME']]
 
 app = FastAPI()
+cors_origins = _get_cors_origins()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_get_cors_origins(),
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=_cors_allow_credentials(cors_origins),
     allow_methods=["*"],
     allow_headers=["*"],
 )
