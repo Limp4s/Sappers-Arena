@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Lock, Star, Play, CheckCircle2, Bomb, Heart, Grid3x3, Trophy, Infinity as InfinityIcon, Crown } from 'lucide-react';
-import { LEVELS, loadProgress, isLevelUnlocked } from '../../lib/levels';
+import { LEVELS, loadProgress, isLevelUnlocked, syncCampaignProgress } from '../../lib/levels';
 import { t, useLang } from '../../lib/i18n';
 
 export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onToggleInfiniteLives }) {
@@ -41,7 +41,12 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
     };
   }, []);
 
-  useEffect(() => { setProgress(loadProgress()); }, []);
+  useEffect(() => {
+    setProgress(loadProgress());
+    syncCampaignProgress().then((merged) => {
+      if (merged) setProgress(merged);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!scrollerRef.current) return;

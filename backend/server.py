@@ -295,11 +295,73 @@ class LobbyCreateRequest(BaseModel):
     lives: int = Field(default=3, ge=1, le=10)
 
 
+class CampaignLevelResultRequest(BaseModel):
+    level_id: int = Field(..., ge=1, le=10000)
+    stars: int = Field(default=0, ge=0, le=3)
+    bestScore: int = Field(default=0, ge=0, le=1_000_000_000)
+    bestTime: Optional[int] = Field(default=None, ge=0, le=1_000_000_000)
+    completed: bool = False
+
+
 # ---------------- Routes ----------------
 
 @api_router.get("/")
 async def root():
     return {"message": "Mine Grid API online"}
+
+
+@api_router.get("/campaign/progress")
+async def get_campaign_progress(nick: str = Depends(require_session)):
+    player = await db.players.find_one({"nickname_lower": (nick or "").lower()}, {"_id": 0, "campaign_progress": 1})
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found.")
+    return {"progress": player.get("campaign_progress") or {}}
+
+
+def _merge_campaign_entry(prev: Optional[dict], incoming: dict) -> dict:
+    prev = prev or {}
+    stars = max(int(prev.get("stars", 0) or 0), int(incoming.get("stars", 0) or 0))
+    best_score = max(int(prev.get("bestScore", 0) or 0), int(incoming.get("bestScore", 0) or 0))
+
+    prev_bt = prev.get("bestTime")
+    inc_bt = incoming.get("bestTime")
+    best_time = prev_bt
+    if inc_bt is not None:
+        if prev_bt is None:
+            best_time = int(inc_bt)
+        else:
+            best_time = min(int(prev_bt), int(inc_bt))
+
+    completed = bool(prev.get("completed") or incoming.get("completed"))
+    return {
+        "stars": stars,
+        "bestScore": best_score,
+        "bestTime": best_time,
+        "completed": completed,
+    }
+
+
+@api_router.post("/campaign/level_result")
+async def submit_campaign_level_result(payload: CampaignLevelResultRequest, nick: str = Depends(require_session)):
+    player = await db.players.find_one({"nickname_lower": (nick or "").lower()}, {"_id": 0, "campaign_progress": 1})
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found.")
+
+    progress = dict(player.get("campaign_progress") or {})
+    key = str(int(payload.level_id))
+    incoming = {
+        "stars": int(payload.stars or 0),
+        "bestScore": int(payload.bestScore or 0),
+        "bestTime": (int(payload.bestTime) if payload.bestTime is not None else None),
+        "completed": bool(payload.completed),
+    }
+    progress[key] = _merge_campaign_entry(progress.get(key), incoming)
+
+    await db.players.update_one(
+        {"nickname_lower": (nick or "").lower()},
+        {"$set": {"campaign_progress": progress}},
+    )
+    return {"ok": True, "progress": progress}
 
 
 # --- Auth / Players ---
