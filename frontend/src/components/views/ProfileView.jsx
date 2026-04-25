@@ -58,6 +58,12 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
         <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// identity</div>
         <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3">
           <User size={26} /> {player?.nick}
+          {(player?.league || player?.ranked_place) && (
+            <span className="flex items-center gap-1 text-[11px] font-display tracking-[0.25em] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-200">
+              <Trophy size={11} className="neon-gold" />
+              {player?.league === 'top500' && player?.ranked_place ? `TOP ${player.ranked_place}` : String(player?.league || '').toUpperCase()}
+            </span>
+          )}
           {player?.isAdmin && (
             <span className="flex items-center gap-1 text-[11px] neon-gold font-display tracking-[0.25em] bg-[#FFD700]/10 border border-[#FFD700]/50 px-2 py-0.5 rounded">
               <Shield size={11} /> {t('admin.title')}

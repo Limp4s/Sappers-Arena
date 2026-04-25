@@ -12,7 +12,6 @@ const SCOPES = [
   { key: 'battle_simple', mode: 'battle_simple' },
   { key: 'battle_ranked', mode: 'battle_ranked' },
   { key: 'custom', mode: 'custom' },
-  { key: 'all', mode: null },
 ];
 
 export default function LeaderboardView({ isAdmin = false }) {
@@ -60,7 +59,7 @@ export default function LeaderboardView({ isAdmin = false }) {
 
   const fetchRanked = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/leaderboard/ranked`, { params: { limit: 10 } });
+      const res = await axios.get(`${API}/leaderboard/ranked`, { params: { limit: 500 } });
       setRankedPlayers(res.data || []);
     } catch {}
   }, []);
@@ -212,9 +211,9 @@ export default function LeaderboardView({ isAdmin = false }) {
               <Shield size={14} className="neon-gold" />
               <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('leaderboard.topRanked')}</h3>
             </div>
-            <div className="space-y-1" data-testid="ranked-players-list">
+            <div className="space-y-1 max-h-[520px] overflow-auto pr-1" data-testid="ranked-players-list">
               {rankedPlayers.length === 0 && <div className="text-slate-500 text-[11px] text-center py-4">{t('leaderboard.noRankedRunsYet')}</div>}
-              {rankedPlayers.slice(0, 10).map((p, i) => (
+              {rankedPlayers.slice(0, 500).map((p, i) => (
                 <div key={p.nickname} className="flex items-center justify-between text-[11px] py-1.5 border-b border-white/5 last:border-0">
                   <div className="flex items-center gap-2 truncate">
                     <span className={`font-display font-bold ${getRankColor(i)} w-4`}>{i + 1}</span>

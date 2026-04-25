@@ -12,7 +12,7 @@ export default function BattlesView({ onStartBattle, player }) {
   useLang();
 
   const SIMPLE_CFG = { rows: 10, cols: 10, mines: 20, lives: 3, mode: 'battle_simple', public: true };
-  const RANKED_CFG = { rows: 14, cols: 14, mines: 42, lives: 3, mode: 'battle_ranked', public: true };
+  const RANKED_CFG = { rows: 10, cols: 10, mines: 20, lives: 2, mode: 'battle_ranked', public: true };
 
   const stopPolling = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
 

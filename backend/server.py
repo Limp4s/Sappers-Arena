@@ -252,11 +252,64 @@ def _compute_coins(mode: str, level_id, lives_remaining: int, lives_total: int, 
 
 
 def _compute_rating_delta(mode: str, won: bool, time_seconds: int, lives_remaining: int) -> int:
+    # Kept for backward compatibility (non-lobby ranked runs without lobby_code).
     if mode != "battle_ranked":
         return 0
     if won:
-        return 6 + lives_remaining * 1 + max(0, 180 - time_seconds) // 18
-    return -4
+        return 10
+    return -10
+
+
+def _compute_ranked_duel_rating_delta(
+    *,
+    won: bool,
+    lives_remaining: int,
+    lives_total: int,
+    time_seconds: int,
+    safe_revealed: int,
+    opp_safe_revealed: int,
+    correct_flags: int,
+    opp_correct_flags: int,
+    mines_total: int,
+    opp_time_seconds: Optional[int],
+) -> int:
+    # Winner: up to +50. Loser: at least -10.
+    # Factors: progress (safe cells), correct flags, lives, speed vs opponent, perfect run bonus.
+    lr = max(0, int(lives_remaining or 0))
+    lt = max(1, int(lives_total or 1))
+    sr = max(0, int(safe_revealed or 0))
+    osr = max(0, int(opp_safe_revealed or 0))
+    cf = max(0, int(correct_flags or 0))
+    ocf = max(0, int(opp_correct_flags or 0))
+    mt = max(1, int(mines_total or 1))
+
+    progress_adv = sr - osr
+    flag_adv = cf - ocf
+
+    life_score = int(round((lr / lt) * 6))  # 0..6
+    progress_score = max(-10, min(10, progress_adv // 4))
+    flags_score = max(-10, min(10, flag_adv))
+
+    speed_score = 0
+    if opp_time_seconds is not None:
+        try:
+            dt = int(opp_time_seconds) - int(time_seconds)
+            if dt > 0:
+                speed_score = min(6, dt // 10)
+        except Exception:
+            speed_score = 0
+
+    perfect = (cf >= mt) and (lr >= lt)
+    perfect_speed = (opp_time_seconds is not None) and (speed_score > 0)
+    perfect_bonus = 8 if (perfect and perfect_speed) else (4 if perfect else 0)
+
+    if won:
+        raw = 22 + life_score + max(0, progress_score) + max(0, flags_score) + speed_score + perfect_bonus
+        return int(min(50, max(10, raw)))
+
+    raw_loss = 12 + max(0, -progress_score) + max(0, -flags_score) + max(0, 6 - life_score)
+    loss = int(min(50, max(10, raw_loss)))
+    return -loss
 
 
 # ---------------- Models ----------------
@@ -512,7 +565,16 @@ async def change_password(payload: ChangePasswordRequest, nick: str = Depends(re
 async def me(nick: str = Depends(require_session)):
     player = await _get_player(nick)
     player = await _ensure_player_ids(player)
-    return _sanitize_player(player)
+    out = _sanitize_player(player)
+    try:
+        rating = int(out.get("rating", 1000) or 1000)
+        place = (await db.players.count_documents({"rating": {"$gt": rating}})) + 1
+        out["league"] = "top500" if (place <= 500 and rating > 10000) else _league_for_rating(rating)
+        out["ranked_place"] = int(place) if place <= 500 else None
+    except Exception:
+        out["league"] = _league_for_rating(int(out.get("rating", 1000) or 1000))
+        out["ranked_place"] = None
+    return out
 
 
 @api_router.get("/players/{nickname}")
@@ -563,6 +625,47 @@ async def submit_score(payload: ScoreCreate, nick: str = Depends(require_session
         payload.lives_total, payload.time_seconds, payload.flags, payload.won,
     )
     rating_delta = _compute_rating_delta(payload.mode, payload.won, payload.time_seconds, payload.lives_remaining)
+    # Ranked duels: performance-based rating change using server-side duel state.
+    if payload.mode == "battle_ranked" and payload.lobby_code:
+        try:
+            code = (payload.lobby_code or "").upper()
+            lobby = await db.lobbies.find_one({"code": code}, {"_id": 0, "host": 1, "guest": 1, "host_result": 1, "guest_result": 1, "config": 1})
+            game = ACTIVE_GAMES.get(code)
+            if lobby and game and nick in game.players:
+                other = (lobby.get("guest") if nick == lobby.get("host") else lobby.get("host"))
+                opp_res = None
+                if other == lobby.get("host"):
+                    opp_res = lobby.get("host_result")
+                elif other == lobby.get("guest"):
+                    opp_res = lobby.get("guest_result")
+
+                p = game.players.get(nick)
+                op = game.players.get(other) if other else None
+                correct_flags = len(set(p.flags) & set(p.mines)) if p else 0
+                opp_correct_flags = len(set(op.flags) & set(op.mines)) if op else 0
+                safe_revealed = p.safe_revealed() if p else 0
+                opp_safe_revealed = op.safe_revealed() if op else 0
+
+                opp_time = None
+                if isinstance(opp_res, dict):
+                    opp_time = opp_res.get("time_seconds")
+
+                mines_total = len(p.mines) if p else int((lobby.get("config") or {}).get("mines") or 1)
+
+                rating_delta = _compute_ranked_duel_rating_delta(
+                    won=bool(payload.won),
+                    lives_remaining=int(payload.lives_remaining or 0),
+                    lives_total=int(payload.lives_total or 1),
+                    time_seconds=int(payload.time_seconds or 0),
+                    safe_revealed=int(safe_revealed),
+                    opp_safe_revealed=int(opp_safe_revealed),
+                    correct_flags=int(correct_flags),
+                    opp_correct_flags=int(opp_correct_flags),
+                    mines_total=int(mines_total),
+                    opp_time_seconds=(int(opp_time) if opp_time is not None else None),
+                )
+        except Exception:
+            pass
     await db.leaderboard.insert_one(entry.model_dump())
     if entry.coins_awarded or rating_delta:
         await db.players.update_one(
@@ -598,7 +701,7 @@ async def get_recent_runs(limit: int = Query(default=10, ge=1, le=50)):
 
 
 @api_router.get("/leaderboard/ranked")
-async def get_ranked_leaderboard(limit: int = Query(default=20, ge=1, le=100)):
+async def get_ranked_leaderboard(limit: int = Query(default=20, ge=1, le=500)):
     cursor = db.players.find({"rating": {"$exists": True}}, {"_id": 0, "nickname_lower": 0, "password_hash": 0}).sort("rating", -1).limit(limit)
     return await cursor.to_list(length=limit)
 
@@ -708,6 +811,30 @@ def _sanitize_lobby(doc):
 
 
 DUEL_TIME_LIMIT_SECONDS = 5 * 60
+RANKED_DUEL_TIME_LIMIT_SECONDS = 20 * 60
+
+
+def _duel_time_limit_seconds(mode: Optional[str]) -> int:
+    if (mode or "") == "battle_ranked":
+        return RANKED_DUEL_TIME_LIMIT_SECONDS
+    return DUEL_TIME_LIMIT_SECONDS
+
+
+def _league_for_rating(rating: int) -> str:
+    r = int(rating or 0)
+    if r < 500:
+        return "wood"
+    if r < 1000:
+        return "stone"
+    if r < 2000:
+        return "bronze"
+    if r < 4000:
+        return "iron"
+    if r < 8000:
+        return "gold"
+    if r <= 10000:
+        return "diamond"
+    return "top"
 
 
 async def _ensure_lobby_playing(code: str) -> Optional[dict]:
@@ -1214,7 +1341,8 @@ async def ws_lobby(code: str, websocket: WebSocket):
             try:
                 now_epoch = int(datetime.now(timezone.utc).timestamp())
                 started_epoch = int(getattr(game, "started_at_epoch", 0) or 0)
-                if started_epoch and not game.finished and (now_epoch - started_epoch) >= DUEL_TIME_LIMIT_SECONDS:
+                time_limit = _duel_time_limit_seconds(lobby.get("mode"))
+                if started_epoch and not game.finished and (now_epoch - started_epoch) >= time_limit:
                     host_p = game.players.get(game.host)
                     guest_p = game.players.get(game.guest)
                     host_safe = host_p.safe_revealed() if host_p else 0
