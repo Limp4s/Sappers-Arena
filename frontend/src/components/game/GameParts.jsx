@@ -173,7 +173,7 @@ export const GameOverModal = ({
   difficulty, playerName, onSubmit, onClose, onNewGame, onExit, submitted,
   coinsAwarded = 0, ratingDelta = 0, noSubmit = false, mode, flags = 0,
   lobbyResult = null, opponent = null,
-  rematchWaiting = false, rematchSecondsLeft = 0,
+  rematchWaiting = false, rematchVoted = false, oppRematchVoted = false, rematchSecondsLeft = 0,
   levelId = null,
 }) => {
   const [submitting, setSubmitting] = React.useState(false);
@@ -298,8 +298,8 @@ export const GameOverModal = ({
               {onExit && (
                 <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={onExit} data-testid="modal-exit-btn">{t('common.exit')}</button>
               )}
-              <button className={`neon-btn flex-1 min-w-[120px] ${rematchWaiting ? 'opacity-70 pointer-events-none' : ''}`} onClick={onNewGame} data-testid="new-game-btn">
-                {t('game.playAgain')}{rematchWaiting ? ` (${Math.max(0, Number(rematchSecondsLeft) || 0)}s)` : ''}
+              <button className={`neon-btn flex-1 min-w-[120px] ${rematchVoted ? 'opacity-70 pointer-events-none' : ''}`} onClick={onNewGame} data-testid="new-game-btn">
+                {t('game.playAgain')}{rematchVoted ? ` (${Math.max(0, Number(rematchSecondsLeft) || 0)}s)` : ''}{!rematchVoted && rematchWaiting && oppRematchVoted ? ' (!)' : ''}
               </button>
             </>
           ) : (

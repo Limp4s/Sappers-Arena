@@ -67,6 +67,8 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   const [coinsAwarded, setCoinsAwarded] = useState(0);
   const [ratingDelta, setRatingDelta] = useState(0);
   const [rematchWaiting, setRematchWaiting] = useState(false);
+  const [rematchVoted, setRematchVoted] = useState(false);
+  const [oppRematchVoted, setOppRematchVoted] = useState(false);
   const [rematchSecondsLeft, setRematchSecondsLeft] = useState(0);
 
   useLang();
@@ -236,6 +238,10 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
           }
           setTotalSafe(rows * cols - mines);
           if (msg.status === 'playing') {
+            setRematchWaiting(false);
+            setRematchVoted(false);
+            setOppRematchVoted(false);
+            setRematchSecondsLeft(0);
             stopTimer();
             startTimer();
           }
@@ -276,6 +282,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
 
         if (msg.type === 'rematch_wait') {
           setRematchWaiting(true);
+          if (msg.who && msg.who !== playerName) setOppRematchVoted(true);
         }
 
         if (msg.type === 'rematch_start') {
@@ -293,6 +300,8 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
           setCoinsAwarded(0);
           setRatingDelta(0);
           setRematchWaiting(false);
+          setRematchVoted(false);
+          setOppRematchVoted(false);
           setRematchSecondsLeft(0);
           setLives(livesTotal);
           setOppLives(livesTotal);
@@ -374,9 +383,10 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   };
 
   const requestRematch = () => {
-    if (rematchWaiting) return;
+    if (rematchVoted) return;
     const ready = wsRef.current?.ws?.readyState === WebSocket.OPEN;
     setRematchWaiting(true);
+    setRematchVoted(true);
     setRematchSecondsLeft(15);
     if (rematchTickRef.current) clearInterval(rematchTickRef.current);
     rematchTickRef.current = setInterval(() => {
@@ -409,6 +419,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
     rematchTimeoutRef.current = setTimeout(() => {
       rematchTimeoutRef.current = null;
       setRematchWaiting(false);
+      setRematchVoted(false);
       setRematchSecondsLeft(0);
       onExit?.();
     }, 15000);
@@ -513,7 +524,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
         playerName={playerName} onSubmit={doSubmit} flags={0}
         onClose={() => setModalOpen(false)} onNewGame={requestRematch} onExit={onExit}
         submitted={submitted} coinsAwarded={coinsAwarded} ratingDelta={ratingDelta}
-        rematchWaiting={rematchWaiting} rematchSecondsLeft={rematchSecondsLeft}
+        rematchWaiting={rematchWaiting} rematchVoted={rematchVoted} oppRematchVoted={oppRematchVoted} rematchSecondsLeft={rematchSecondsLeft}
         noSubmit={false} mode={mode} lobbyResult={null} opponent={opponent} levelId={null}
       />
     </div>
