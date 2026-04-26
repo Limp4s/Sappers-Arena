@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus } from 'lucide-react';
-import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, getToken } from '../../lib/player';
+import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminDeletePlayer, getToken } from '../../lib/player';
 import { promoteToAdmin } from '../../lib/lobby';
 import InventoryModal from '../modals/InventoryModal';
+import PlayerProfileModal from '../modals/PlayerProfileModal';
 import { LANGUAGES, setLang, t, useLang } from '../../lib/i18n';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
@@ -14,8 +15,13 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   const [showInventory, setShowInventory] = useState(false);
   const [showChangePw, setShowChangePw] = useState(false);
   const [showPromote, setShowPromote] = useState(false);
+  const [viewQuery, setViewQuery] = useState('');
+  const [viewNick, setViewNick] = useState(null);
+  const [viewNum, setViewNum] = useState(null);
   const [adminPlayers, setAdminPlayers] = useState(null);
   const [adminPlayersQuery, setAdminPlayersQuery] = useState('');
+  const [adminBusy, setAdminBusy] = useState(false);
+  const [adminMsg, setAdminMsg] = useState(null);
   const [lang] = useLang();
   const [tab, setTab] = useState('account');
 
@@ -37,9 +43,64 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
       .catch(() => setAdminPlayers([]));
   }, [player?.isAdmin]);
 
+  const refreshAdminPlayers = async () => {
+    if (!player?.isAdmin) return;
+    try {
+      const r = await adminListPlayers({ limit: 500 });
+      setAdminPlayers(r?.players || []);
+    } catch {
+      setAdminPlayers([]);
+    }
+  };
+
+  const handleFixNegativeRatings = async () => {
+    setAdminBusy(true);
+    setAdminMsg(null);
+    try {
+      const res = await adminFixNegativeRatings();
+      setAdminMsg({ ok: true, text: `Fixed: ${res?.fixed ?? 0}` });
+      await refreshAdminPlayers();
+    } catch (e2) {
+      setAdminMsg({ ok: false, text: e2?.response?.data?.detail || 'Failed' });
+    } finally {
+      setAdminBusy(false);
+    }
+  };
+
+  const handleDeletePlayer = async (nickname) => {
+    const nickToDelete = String(nickname || '').trim();
+    if (!nickToDelete) return;
+    if (String(nickToDelete).toLowerCase() === String(player?.nick || '').toLowerCase()) return;
+    const ok = window.confirm(`Delete account: ${nickToDelete}?`);
+    if (!ok) return;
+    setAdminBusy(true);
+    setAdminMsg(null);
+    try {
+      const res = await adminDeletePlayer(nickToDelete);
+      setAdminMsg({ ok: true, text: `Deleted: ${res?.deleted || nickToDelete}` });
+      await refreshAdminPlayers();
+    } catch (e2) {
+      setAdminMsg({ ok: false, text: e2?.response?.data?.detail || 'Failed' });
+    } finally {
+      setAdminBusy(false);
+    }
+  };
+
   const handleLogout = async () => {
     try { await logout(); } catch {}
     onLogout?.();
+  };
+
+  const openOtherProfile = () => {
+    const q = String(viewQuery || '').trim();
+    if (!q) return;
+    if (/^\d+$/.test(q)) {
+      setViewNick(null);
+      setViewNum(parseInt(q, 10));
+      return;
+    }
+    setViewNum(null);
+    setViewNick(q);
   };
 
   const prettyPlayerId = (() => {
@@ -136,6 +197,21 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                 <Shield size={14} className="neon-gold" />
                 <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">ALL PLAYERS</h3>
               </div>
+              <div className="flex gap-2 mb-3">
+                <button
+                  onClick={handleFixNegativeRatings}
+                  disabled={adminBusy}
+                  className="neon-btn flex-1 py-2"
+                  style={{ borderColor: '#FFD700', color: '#FFD700' }}
+                >
+                  FIX NEGATIVE RATINGS
+                </button>
+              </div>
+              {adminMsg && (
+                <div className={`text-[11px] font-mono flex items-center gap-1.5 mb-3 ${adminMsg.ok ? 'neon-lime' : 'neon-coral'}`}>
+                  {adminMsg.ok ? <Check size={11} /> : <AlertCircle size={11} />}{adminMsg.text}
+                </div>
+              )}
               <input
                 className="neon-input mb-3"
                 placeholder="SEARCH NICKNAME"
@@ -157,6 +233,13 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                       <div key={`${p?.player_num}-${p?.nickname}`} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-b-0">
                         <div className="font-mono text-[11px] text-slate-300">#{p?.player_num ?? '—'}</div>
                         <div className="font-mono text-[11px] text-white">{p?.nickname || '—'}</div>
+                        <button
+                          onClick={() => handleDeletePlayer(p?.nickname)}
+                          disabled={adminBusy || !p?.nickname || String(p?.nickname || '').toLowerCase() === String(player?.nick || '').toLowerCase() || !!p?.is_admin}
+                          className="neon-btn neon-btn-coral px-2 py-1 text-[10px]"
+                        >
+                          DELETE
+                        </button>
                       </div>
                     ))}
                 </div>
@@ -192,6 +275,29 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                 <button onClick={() => setShowInventory(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-inventory-btn">
                   <Package size={14} /> {t('profile.inventory')}
                 </button>
+
+                <div className="glass-panel-light rounded-xl p-4">
+                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">VIEW PLAYER</div>
+                  <div className="flex gap-2">
+                    <input
+                      className="neon-input flex-1"
+                      placeholder="ID or nickname"
+                      value={viewQuery}
+                      onChange={(e) => setViewQuery(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') openOtherProfile(); }}
+                      maxLength={20}
+                      data-testid="view-player-input"
+                    />
+                    <button
+                      onClick={openOtherProfile}
+                      className="neon-btn px-4"
+                      data-testid="view-player-open-btn"
+                    >
+                      OPEN
+                    </button>
+                  </div>
+                </div>
+
                 {player?.isAdmin && (
                   <button onClick={() => setShowPromote(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3"
                     style={{ borderColor: '#FFD700', color: '#FFD700' }}
@@ -256,6 +362,13 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
       {showInventory && <InventoryModal player={player} onClose={() => setShowInventory(false)} />}
       {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}
       {showPromote && <PromoteModal onClose={() => setShowPromote(false)} />}
+      {(viewNick || viewNum != null) && (
+        <PlayerProfileModal
+          nickname={viewNick}
+          playerNum={viewNum}
+          onClose={() => { setViewNick(null); setViewNum(null); }}
+        />
+      )}
     </div>
   );
 }

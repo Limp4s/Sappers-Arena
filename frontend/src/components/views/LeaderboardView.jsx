@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Trophy, Clock, User, Search, Trash2, Crown, Shield, Sparkles } from 'lucide-react';
 import { getStoredNickname, adminHeaders, authHeaders, getToken } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
+import PlayerProfileModal from '../modals/PlayerProfileModal';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
 const API = `${BACKEND_URL}/api`;
@@ -25,6 +26,7 @@ export default function LeaderboardView({ isAdmin = false }) {
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const [serverOk, setServerOk] = useState(null);
+  const [viewNick, setViewNick] = useState(null);
   useLang();
 
   const ensureServer = useCallback(async () => {
@@ -248,11 +250,16 @@ export default function LeaderboardView({ isAdmin = false }) {
                     data-testid={`lb-entry-${i}`}
                   >
                     <div className={`font-display font-bold ${getRankColor(i)}`}>{String(i + 1).padStart(2, '0')}</div>
-                    <div className="truncate text-slate-200 flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setViewNick(name)}
+                      className="truncate text-slate-200 flex items-center gap-1.5 text-left hover:text-white"
+                      data-testid={`lb-open-profile-${i}`}
+                    >
                       {rankIconSrc(league) && <img src={rankIconSrc(league)} alt="rank" className="w-10 h-10 shrink-0" />}
                       {name}
                       {(name || '').toLowerCase() === 'limp4' && <Crown size={10} className="neon-gold shrink-0" />}
-                    </div>
+                    </button>
                     <div className="text-right text-slate-300 font-display text-[10px] tracking-[0.2em] uppercase">{String(league || '').replace('top500', 'top500')}</div>
                     <div className="text-right neon-gold">{rating}</div>
                     {isAdmin && (
@@ -279,10 +286,15 @@ export default function LeaderboardView({ isAdmin = false }) {
                   data-testid={`lb-entry-${i}`}
                 >
                   <div className={`font-display font-bold ${getRankColor(i)}`}>{String(i + 1).padStart(2, '0')}</div>
-                  <div className="truncate text-slate-200 flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setViewNick(e.player_name)}
+                    className="truncate text-slate-200 flex items-center gap-1.5 text-left hover:text-white"
+                    data-testid={`lb-open-profile-${i}`}
+                  >
                     {e.player_name}
                     {(e.player_name || '').toLowerCase() === 'limp4' && <Crown size={10} className="neon-gold shrink-0" />}
-                  </div>
+                  </button>
                   {showLevelCol && <div className="neon-lime text-[11px] font-bold">{e.level_id != null ? String(e.level_id).padStart(2, '0') : '—'}</div>}
                   <div className="text-right neon-cyan">{scoreText}</div>
                   {showLevelCol && (
@@ -322,7 +334,9 @@ export default function LeaderboardView({ isAdmin = false }) {
                   <div className="flex items-center gap-2 truncate">
                     <span className={`font-display font-bold ${getRankColor(i)} w-4`}>{i + 1}</span>
                     {icon && <img src={icon} alt="rank" className="w-9 h-9 shrink-0" />}
-                    <span className="truncate text-slate-200">{p.nickname}</span>
+                    <button type="button" onClick={() => setViewNick(p.nickname)} className="truncate text-slate-200 hover:text-white text-left">
+                      {p.nickname}
+                    </button>
                   </div>
                   <span className="neon-gold font-mono font-bold">{p.rating || 500}</span>
                 </div>
@@ -365,6 +379,13 @@ export default function LeaderboardView({ isAdmin = false }) {
 
         </aside>
       </div>
+
+      {viewNick && (
+        <PlayerProfileModal
+          nickname={viewNick}
+          onClose={() => setViewNick(null)}
+        />
+      )}
     </div>
   );
 }

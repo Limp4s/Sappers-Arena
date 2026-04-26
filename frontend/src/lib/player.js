@@ -548,3 +548,13 @@ export const sessionHeaders = () => authHeaders();
 export const adminListPlayers = async ({ limit = 200 } = {}) => {
   return (await axios.get(`${API}/admin/players`, { params: { limit }, headers: authHeaders() })).data;
 };
+
+export const adminFixNegativeRatings = async () => {
+  return (await axios.post(`${API}/admin/ratings/fix-negative`, {}, { headers: authHeaders() })).data;
+};
+
+export const adminDeletePlayer = async (nickname) => {
+  const nick = String(nickname || '').trim();
+  if (!nick) throw new Error('Missing nickname');
+  return (await axios.delete(`${API}/admin/player/${encodeURIComponent(nick)}`, { headers: authHeaders() })).data;
+};

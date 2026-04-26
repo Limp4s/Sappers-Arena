@@ -194,6 +194,10 @@ def _sanitize_player(doc: dict) -> dict:
     doc.setdefault("coins", STARTER_COINS)
     doc.setdefault("owned_items", [])
     doc.setdefault("rating", 500)
+    try:
+        doc["rating"] = max(0, int(doc.get("rating", 500) or 500))
+    except Exception:
+        doc["rating"] = 500
     return doc
 
 
@@ -567,14 +571,21 @@ async def me(nick: str = Depends(require_session)):
     player = await _ensure_player_ids(player)
     out = _sanitize_player(player)
     try:
-        rating = int(out.get("rating", 500) or 500)
+        rating = max(0, int(out.get("rating", 500) or 500))
         place = (await db.players.count_documents({"rating": {"$gt": rating}})) + 1
         out["league"] = "top500" if (place <= 500 and rating > 10000) else _league_for_rating(rating)
         out["ranked_place"] = int(place) if place <= 500 else None
     except Exception:
-        out["league"] = _league_for_rating(int(out.get("rating", 500) or 500))
+        out["league"] = _league_for_rating(max(0, int(out.get("rating", 500) or 500)))
         out["ranked_place"] = None
     return out
+
+
+async def _require_admin(nick: str):
+    me_player = await _get_player(nick)
+    if not me_player or not (me_player.get("is_admin") or _is_admin_nick(nick)):
+        raise HTTPException(status_code=403, detail="Admin privileges required.")
+    return me_player
 
 
 @api_router.get("/players/{nickname}")
@@ -582,6 +593,15 @@ async def get_player_public(nickname: str):
     doc = await _get_player(nickname)
     if not doc:
         raise HTTPException(status_code=404, detail="Player not found.")
+    return _sanitize_player(doc)
+
+
+@api_router.get("/players/by-num/{player_num}")
+async def get_player_by_num(player_num: int = Path(..., ge=0, le=2000000)):
+    doc = await db.players.find_one({"player_num": int(player_num)}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Player not found.")
+    doc = await _ensure_player_ids(doc)
     return _sanitize_player(doc)
 
 
@@ -670,7 +690,29 @@ async def submit_score(payload: ScoreCreate, nick: str = Depends(require_session
     if entry.coins_awarded or rating_delta:
         await db.players.update_one(
             {"nickname_lower": player["nickname_lower"]},
-            {"$inc": {"coins": entry.coins_awarded, "rating": rating_delta}},
+            [
+                {
+                    "$set": {
+                        "coins": {
+                            "$add": [
+                                {"$ifNull": ["$coins", 0]},
+                                int(entry.coins_awarded or 0),
+                            ]
+                        },
+                        "rating": {
+                            "$max": [
+                                0,
+                                {
+                                    "$add": [
+                                        {"$ifNull": ["$rating", 500]},
+                                        int(rating_delta or 0),
+                                    ]
+                                },
+                            ]
+                        },
+                    }
+                }
+            ],
         )
     return {
         "entry": entry.model_dump(),
@@ -714,6 +756,10 @@ async def get_ranked_leaderboard(limit: int = Query(default=20, ge=1, le=500)):
     out = []
     for p in rows:
         try:
+            p["rating"] = max(0, int(p.get("rating", 0) or 0))
+        except Exception:
+            p["rating"] = 0
+        try:
             if p.get("hidden_ranked") and int(p.get("hidden_ranked_rating") or 0) == int(p.get("rating") or 0):
                 continue
         except Exception:
@@ -753,9 +799,7 @@ class AdminHideRankedRequest(BaseModel):
 
 @api_router.post("/admin/promote")
 async def promote_to_admin(payload: AdminPromoteRequest, nick: str = Depends(require_session)):
-    me_player = await _get_player(nick)
-    if not me_player or not (me_player.get("is_admin") or _is_admin_nick(nick)):
-        raise HTTPException(status_code=403, detail="Admin privileges required.")
+    await _require_admin(nick)
     target = await _get_player(payload.nickname)
     if not target:
         raise HTTPException(status_code=404, detail="Target player not found.")
@@ -766,9 +810,7 @@ async def promote_to_admin(payload: AdminPromoteRequest, nick: str = Depends(req
 
 @api_router.post("/admin/ranked/hide")
 async def admin_hide_ranked(payload: AdminHideRankedRequest, nick: str = Depends(require_session)):
-    me_player = await _get_player(nick)
-    if not me_player or not (me_player.get("is_admin") or _is_admin_nick(nick)):
-        raise HTTPException(status_code=403, detail="Admin privileges required.")
+    await _require_admin(nick)
     target = await _get_player(payload.nickname)
     if not target:
         raise HTTPException(status_code=404, detail="Player not found.")
@@ -782,9 +824,7 @@ async def admin_hide_ranked(payload: AdminHideRankedRequest, nick: str = Depends
 
 @api_router.get("/admin/players")
 async def admin_list_players(limit: int = Query(default=200, ge=1, le=2000), nick: str = Depends(require_session)):
-    me_player = await _get_player(nick)
-    if not me_player or not (me_player.get("is_admin") or _is_admin_nick(nick)):
-        raise HTTPException(status_code=403, detail="Admin privileges required.")
+    await _require_admin(nick)
     cursor = db.players.find(
         {},
         {"_id": 0, "password_hash": 0},
@@ -804,9 +844,7 @@ async def admin_list_players(limit: int = Query(default=200, ge=1, le=2000), nic
 
 @api_router.post("/admin/demote")
 async def demote_admin(payload: AdminPromoteRequest, nick: str = Depends(require_session)):
-    me_player = await _get_player(nick)
-    if not me_player or not (me_player.get("is_admin") or _is_admin_nick(nick)):
-        raise HTTPException(status_code=403, detail="Admin privileges required.")
+    await _require_admin(nick)
     if _is_admin_nick(payload.nickname):
         raise HTTPException(status_code=403, detail="Cannot demote the root admin.")
     target = await _get_player(payload.nickname)
@@ -814,6 +852,45 @@ async def demote_admin(payload: AdminPromoteRequest, nick: str = Depends(require
         raise HTTPException(status_code=404, detail="Target player not found.")
     await db.players.update_one({"nickname_lower": target["nickname_lower"]}, {"$set": {"is_admin": False}})
     return {"ok": True}
+
+
+@api_router.post("/admin/ratings/fix-negative")
+async def admin_fix_negative_ratings(nick: str = Depends(require_session)):
+    await _require_admin(nick)
+    res = await db.players.update_many({"rating": {"$lt": 0}}, {"$set": {"rating": 0}})
+    return {"ok": True, "fixed": int(res.modified_count or 0)}
+
+
+@api_router.delete("/admin/player/{nickname}")
+async def admin_delete_player(nickname: str, nick: str = Depends(require_session)):
+    await _require_admin(nick)
+    target = await _get_player(nickname)
+    if not target:
+        raise HTTPException(status_code=404, detail="Player not found.")
+    if _is_admin_nick(target.get("nickname")):
+        raise HTTPException(status_code=403, detail="Cannot delete the root admin.")
+    if target.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Cannot delete an admin account.")
+
+    target_nick = target.get("nickname")
+    target_lower = (target.get("nickname_lower") or (target_nick or "").lower())
+
+    await db.sessions.delete_many({"nickname": target_nick})
+    await db.leaderboard.delete_many({"player_name": target_nick})
+    await db.lobbies.delete_many({"$or": [{"host": target_nick}, {"guest": target_nick}]})
+    await db.players.delete_one({"nickname_lower": target_lower})
+
+    try:
+        for code, game in list(ACTIVE_GAMES.items()):
+            try:
+                if target_nick in getattr(game, 'players', {}):
+                    ACTIVE_GAMES.pop(code, None)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    return {"ok": True, "deleted": target_nick}
 
 
 @api_router.get("/stats/player")
