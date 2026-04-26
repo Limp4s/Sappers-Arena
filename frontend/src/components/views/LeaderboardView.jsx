@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { Trophy, Clock, User, Search, Trash2, Crown, Shield, Sparkles } from 'lucide-react';
 import { getStoredNickname, adminHeaders, authHeaders, getToken } from '../../lib/player';
@@ -20,6 +20,7 @@ export default function LeaderboardView({ isAdmin = false }) {
   const [recent, setRecent] = useState([]);
   const [rankedPlayers, setRankedPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const lbReqIdRef = useRef(0);
   const [nameQuery, setNameQuery] = useState(() => getStoredNickname());
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -40,19 +41,24 @@ export default function LeaderboardView({ isAdmin = false }) {
   }, []);
 
   const fetchLeaderboard = useCallback(async (selectedScope) => {
+    const reqId = ++lbReqIdRef.current;
     setLoading(true);
     try {
       const def = SCOPES.find((s) => s.key === selectedScope);
       if (def?.mode === 'battle_ranked') {
         const res = await axios.get(`${API}/leaderboard/ranked`, { params: { limit: 500 } });
-        setEntries(res.data || []);
+        if (reqId === lbReqIdRef.current) setEntries(res.data || []);
       } else {
         const params = { limit: 20 };
         if (def?.mode) params.mode = def.mode;
         const res = await axios.get(`${API}/leaderboard`, { params });
-        setEntries(res.data || []);
+        if (reqId === lbReqIdRef.current) setEntries(res.data || []);
       }
-    } catch (e) { setEntries([]); } finally { setLoading(false); }
+    } catch (e) {
+      if (reqId === lbReqIdRef.current) setEntries([]);
+    } finally {
+      if (reqId === lbReqIdRef.current) setLoading(false);
+    }
   }, []);
 
   const fetchRecent = useCallback(async () => {
@@ -100,6 +106,30 @@ export default function LeaderboardView({ isAdmin = false }) {
       await fetchLeaderboard(scope);
       await fetchRecent();
     } catch (e) { alert('Delete failed: ' + (e?.response?.data?.detail || e.message)); }
+  };
+
+  const leagueForRating = (rating) => {
+    const r = Number(rating || 0);
+    if (r < 500) return 'wood';
+    if (r < 1000) return 'stone';
+    if (r < 2000) return 'bronze';
+    if (r < 4000) return 'iron';
+    if (r < 8000) return 'gold';
+    if (r <= 10000) return 'diamond';
+    return 'top500';
+  };
+
+  const rankIconSrc = (league) => {
+    const map = {
+      wood: '/ranks/wood.png',
+      stone: '/ranks/stone.png',
+      bronze: '/ranks/bronze.png',
+      iron: '/ranks/iron.png',
+      gold: '/ranks/gold.png',
+      diamond: '/ranks/diamond.png',
+      top500: '/ranks/top500.png',
+    };
+    return map[String(league || '').toLowerCase()] || null;
   };
 
   const getRankColor = (i) => i === 0 ? 'neon-gold' : i === 1 ? 'neon-cyan' : i === 2 ? 'neon-coral' : 'text-slate-500';
@@ -186,6 +216,7 @@ export default function LeaderboardView({ isAdmin = false }) {
               if (showRankedPlayersTable) {
                 const name = e.nickname || e.player_name || '';
                 const rating = e.rating || 1000;
+                const league = leagueForRating(rating);
                 return (
                   <div
                     key={e.nickname || e.player_name || i}
@@ -195,6 +226,7 @@ export default function LeaderboardView({ isAdmin = false }) {
                   >
                     <div className={`font-display font-bold ${getRankColor(i)}`}>{String(i + 1).padStart(2, '0')}</div>
                     <div className="truncate text-slate-200 flex items-center gap-1.5">
+                      {rankIconSrc(league) && <img src={rankIconSrc(league)} alt="rank" className="w-4 h-4 shrink-0" />}
                       {name}
                       {(name || '').toLowerCase() === 'limp4' && <Crown size={10} className="neon-gold shrink-0" />}
                     </div>
@@ -248,13 +280,20 @@ export default function LeaderboardView({ isAdmin = false }) {
             <div className="space-y-1 max-h-[520px] overflow-auto pr-1" data-testid="ranked-players-list">
               {rankedPlayers.length === 0 && <div className="text-slate-500 text-[11px] text-center py-4">{t('leaderboard.noRankedRunsYet')}</div>}
               {rankedPlayers.slice(0, 500).map((p, i) => (
+                (() => {
+                  const league = leagueForRating(p.rating || 0);
+                  const icon = rankIconSrc(league);
+                  return (
                 <div key={p.nickname} className="flex items-center justify-between text-[11px] py-1.5 border-b border-white/5 last:border-0">
                   <div className="flex items-center gap-2 truncate">
                     <span className={`font-display font-bold ${getRankColor(i)} w-4`}>{i + 1}</span>
+                    {icon && <img src={icon} alt="rank" className="w-4 h-4 shrink-0" />}
                     <span className="truncate text-slate-200">{p.nickname}</span>
                   </div>
                   <span className="neon-gold font-mono font-bold">{p.rating || 1000}</span>
                 </div>
+                  );
+                })()
               ))}
             </div>
           </div>

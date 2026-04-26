@@ -44,13 +44,13 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
 
   const rankIconSrc = (league) => {
     const map = {
-      wood: '/ranks/ranked1.png',
-      stone: '/ranks/ranked2.png',
-      bronze: '/ranks/ranked3.png',
-      iron: '/ranks/ranked4.png',
-      gold: '/ranks/ranked5.png',
-      diamond: '/ranks/ranked6.png',
-      top500: '/ranks/ranked_top500.png',
+      wood: '/ranks/wood.png',
+      stone: '/ranks/stone.png',
+      bronze: '/ranks/bronze.png',
+      iron: '/ranks/iron.png',
+      gold: '/ranks/gold.png',
+      diamond: '/ranks/diamond.png',
+      top500: '/ranks/top500.png',
     };
     return map[String(league || '').toLowerCase()] || null;
   };
