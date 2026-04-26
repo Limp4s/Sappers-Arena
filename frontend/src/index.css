@@ -407,30 +407,28 @@ body::after {
 }
 
 @keyframes explosionBloom {
-    0% { opacity: 0; transform: scale(0.85); filter: blur(2px); }
-    25% { opacity: 1; transform: scale(1); filter: blur(0px); }
-    100% { opacity: 0; transform: scale(1.25); filter: blur(10px); }
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.70); filter: blur(6px); }
+    22% { opacity: 1; transform: translate(-50%, -50%) scale(1.00); filter: blur(0px); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.35); filter: blur(12px); }
 }
 .explosion-bloom {
     position: fixed;
     width: 70vmin;
     height: 70vmin;
-    transform: translate(-50%, -50%);
     border-radius: 9999px;
     pointer-events: none;
     z-index: 41;
     mix-blend-mode: screen;
-    animation: explosionBloom 520ms ease-out;
+    animation: explosionBloom 620ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes shockwave {
-    0% { transform: translate(-50%, -50%) scale(0.15); opacity: 0.0; }
-    10% { opacity: 0.85; }
-    100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0.0; }
+    0% { transform: translate(-50%, -50%) scale(0.10); opacity: 0.0; }
+    12% { opacity: 0.9; }
+    100% { transform: translate(-50%, -50%) scale(2.35); opacity: 0.0; }
 }
 .explosion-shockwave {
     position: fixed;
-    transform: translate(-50%, -50%);
     width: 90vmin;
     height: 90vmin;
     border-radius: 9999px;
@@ -442,7 +440,7 @@ body::after {
         rgba(255, 255, 255, 0.0) 68%);
     mix-blend-mode: screen;
     filter: blur(0.2px);
-    animation: shockwave 520ms ease-out;
+    animation: shockwave 640ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Win sparkles container */

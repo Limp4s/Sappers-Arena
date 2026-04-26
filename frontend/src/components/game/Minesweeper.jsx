@@ -45,6 +45,18 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const totalSafe = rows * cols - mines;
   const displayLives = infiniteLives ? 99 : livesTotal;
 
+  const countRevealedSafe = useCallback((b) => {
+    let n = 0;
+    for (let rr = 0; rr < b.length; rr++) {
+      const row = b[rr];
+      for (let cc = 0; cc < row.length; cc++) {
+        const cl = row[cc];
+        if (cl && cl.revealed && !cl.mine) n++;
+      }
+    }
+    return n;
+  }, []);
+
   useEffect(() => {
     if (status === 'playing') {
       timerRef.current = setInterval(() => setTimer((t) => Math.min(t + 1, 999)), 1000);
@@ -145,8 +157,9 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     }
 
     const revealedNow = floodReveal(workingBoard, r, c);
-    const newSafeCount = safeRevealed + revealedNow;
-    setSafeRevealed(newSafeCount); setBoard(workingBoard);
+    const newSafeCount = countRevealedSafe(workingBoard);
+    setSafeRevealed(newSafeCount);
+    setBoard(workingBoard);
     sfx.reveal();
     setScore(calculateScore({ difficulty, safeRevealed: newSafeCount, timeSeconds: timer, livesRemaining: lives, won: false }));
     if (newSafeCount >= totalSafe) endGame(true, workingBoard, newSafeCount, lives);
