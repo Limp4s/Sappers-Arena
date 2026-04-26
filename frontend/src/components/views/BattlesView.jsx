@@ -11,6 +11,7 @@ export default function BattlesView({ onStartBattle, player }) {
   const startedRef = useRef(false);
   const lobbyCodeRef = useRef(null);
   const searchingRef = useRef(null);
+  const cancelOnUnmountRef = useRef(false);
   useLang();
 
   const SIMPLE_CFG = { rows: 10, cols: 10, mines: 20, lives: 3, mode: 'battle_simple', public: true };
@@ -31,13 +32,14 @@ export default function BattlesView({ onStartBattle, player }) {
       stopPolling();
       const code = lobbyCodeRef.current;
       const stillSearching = !!searchingRef.current;
-      if (stillSearching && code) {
+      if (cancelOnUnmountRef.current && stillSearching && code) {
         cancelLobby(code).catch(() => {});
       }
     };
   }, []);
 
   const beginSearch = async (kind) => {
+    cancelOnUnmountRef.current = true;
     setError(null); setSearching(kind);
     const cfg = kind === 'simple' ? SIMPLE_CFG : RANKED_CFG;
     try {
@@ -64,11 +66,13 @@ export default function BattlesView({ onStartBattle, player }) {
       }, 1500);
     } catch (e) {
       setError(e?.response?.data?.detail || 'Matchmaking failed.');
+      cancelOnUnmountRef.current = false;
       setSearching(null);
     }
   };
 
   const launchFromLobby = (lob, kind, cfg) => {
+    cancelOnUnmountRef.current = false;
     onStartBattle({
       ...cfg,
       difficulty: 'battle',
@@ -91,6 +95,7 @@ export default function BattlesView({ onStartBattle, player }) {
   };
 
   const cancelSearch = async () => {
+    cancelOnUnmountRef.current = false;
     stopPolling();
     if (lobby) { try { await cancelLobby(lobby.code); } catch {} }
     setLobby(null); setSearching(null); setError(null);
