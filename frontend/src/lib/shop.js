@@ -1,5 +1,5 @@
 // Cosmetics catalog.
-import { Bomb, Skull, Zap, Cat, Ghost, Flame, MousePointer2, Crosshair, Target, Biohazard, Radiation, Crown, Gem } from 'lucide-react';
+import { Bomb, Skull, Zap, Cat, Ghost, Flame, Biohazard, Radiation, Crown, Gem } from 'lucide-react';
 import { getStoredNickname } from './player';
 
 export const MINE_ICONS = {
@@ -43,20 +43,6 @@ export const FX_EFFECTS = {
   fx_lime:      { name: 'Lime Burst', price: 1400, color: 'rgba(0, 255, 157, 0.45)' },
 };
 
-export const CURSORS = {
-  cursor_default:   { name: 'Default',     icon: MousePointer2, free: true, css: 'auto' },
-  cursor_crosshair: { name: 'Crosshair',   icon: Crosshair,     price: 600,
-    css: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="10" stroke="%2300E5FF" stroke-width="2" fill="none"/><line x1="14" y1="0" x2="14" y2="8" stroke="%2300E5FF" stroke-width="2"/><line x1="14" y1="20" x2="14" y2="28" stroke="%2300E5FF" stroke-width="2"/><line x1="0" y1="14" x2="8" y2="14" stroke="%2300E5FF" stroke-width="2"/><line x1="20" y1="14" x2="28" y2="14" stroke="%2300E5FF" stroke-width="2"/></svg>') 14 14, crosshair` },
-  cursor_target:    { name: 'Target Lock', icon: Target,        price: 800,
-    css: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" stroke="%23FF2A6D" stroke-width="2" fill="none"/><circle cx="16" cy="16" r="7" stroke="%23FF2A6D" stroke-width="1.5" fill="none"/><circle cx="16" cy="16" r="2" fill="%23FF2A6D"/></svg>') 16 16, crosshair` },
-  cursor_neon:      { name: 'Neon Pointer', icon: MousePointer2, price: 1200,
-    css: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M4 4 L4 22 L10 18 L14 26 L18 24 L14 16 L22 14 Z" stroke="%23FFD700" stroke-width="1.5" fill="%23000" fill-opacity="0.8"/></svg>') 4 4, auto` },
-  cursor_coral:     { name: 'Coral Pointer', icon: MousePointer2, price: 1500,
-    css: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M4 4 L4 22 L10 18 L14 26 L18 24 L14 16 L22 14 Z" stroke="%23FF2A6D" stroke-width="1.8" fill="%23000" fill-opacity="0.8"/></svg>') 4 4, auto` },
-  cursor_lime:      { name: 'Lime Pointer', icon: MousePointer2, price: 1500,
-    css: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M4 4 L4 22 L10 18 L14 26 L18 24 L14 16 L22 14 Z" stroke="%2300FF9D" stroke-width="1.8" fill="%23000" fill-opacity="0.8"/></svg>') 4 4, auto` },
-};
-
 const EQUIP_KEY = 'mg_equipped_v2';
 
 const equipKeyForNick = (nick) => {
@@ -68,11 +54,11 @@ export const loadEquipped = (nick) => {
   try {
     const key = equipKeyForNick(nick ?? getStoredNickname());
     const raw = localStorage.getItem(key) ?? localStorage.getItem(EQUIP_KEY);
-    const base = { mine: 'mine_default', cell: 'cell_default', fx: 'fx_default', cursor: 'cursor_default' };
+    const base = { mine: 'mine_default', cell: 'cell_default', fx: 'fx_default' };
     if (!raw) return base;
     return { ...base, ...JSON.parse(raw) };
   } catch {
-    return { mine: 'mine_default', cell: 'cell_default', fx: 'fx_default', cursor: 'cursor_default' };
+    return { mine: 'mine_default', cell: 'cell_default', fx: 'fx_default' };
   }
 };
 
@@ -81,18 +67,11 @@ export const saveEquipped = (equipped, nick) => {
     const key = equipKeyForNick(nick ?? getStoredNickname());
     localStorage.setItem(key, JSON.stringify(equipped));
   } catch {}
-  applyCursor(equipped.cursor);
-};
-
-export const applyCursor = (cursorId) => {
-  const def = CURSORS[cursorId] || CURSORS.cursor_default;
-  document.documentElement.style.cursor = def.css;
 };
 
 export const getItemCategory = (id) => {
   if (id.startsWith('mine_')) return 'mine';
   if (id.startsWith('cell_')) return 'cell';
   if (id.startsWith('fx_')) return 'explosion';
-  if (id.startsWith('cursor_')) return 'cursor';
   return null;
 };

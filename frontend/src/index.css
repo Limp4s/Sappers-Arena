@@ -406,6 +406,43 @@ body::after {
     animation: redFlash 600ms ease-out;
 }
 
+@keyframes explosionBloom {
+    0% { opacity: 0; transform: scale(0.85); filter: blur(2px); }
+    25% { opacity: 1; transform: scale(1); filter: blur(0px); }
+    100% { opacity: 0; transform: scale(1.25); filter: blur(10px); }
+}
+.explosion-bloom {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 41;
+    mix-blend-mode: screen;
+    animation: explosionBloom 520ms ease-out;
+}
+
+@keyframes shockwave {
+    0% { transform: translate(-50%, -50%) scale(0.15); opacity: 0.0; }
+    10% { opacity: 0.85; }
+    100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0.0; }
+}
+.explosion-shockwave {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    width: 90vmin;
+    height: 90vmin;
+    border-radius: 9999px;
+    pointer-events: none;
+    z-index: 42;
+    background: radial-gradient(circle at center,
+        rgba(255, 255, 255, 0.0) 58%,
+        rgba(255, 255, 255, 0.25) 62%,
+        rgba(255, 255, 255, 0.0) 68%);
+    mix-blend-mode: screen;
+    filter: blur(0.2px);
+    animation: shockwave 520ms ease-out;
+}
+
 /* Win sparkles container */
 @keyframes sparkle {
     0% { transform: translateY(0) scale(0); opacity: 1; }

@@ -99,12 +99,6 @@ SHOP_CATALOG = {
     "fx_shockwave":    {"price": 1600, "category": "explosion", "name": "Shockwave"},
     "fx_void":         {"price": 1800, "category": "explosion", "name": "Void"},
     "fx_lime":         {"price": 1400, "category": "explosion", "name": "Lime Burst"},
-    # cursors
-    "cursor_crosshair":{"price": 600, "category": "cursor",    "name": "Crosshair"},
-    "cursor_target":   {"price": 800, "category": "cursor",    "name": "Target Lock"},
-    "cursor_neon":     {"price": 1200, "category": "cursor",   "name": "Neon Pointer"},
-    "cursor_coral":    {"price": 1500, "category": "cursor",   "name": "Coral Pointer"},
-    "cursor_lime":     {"price": 1500, "category": "cursor",   "name": "Lime Pointer"},
 }
 
 

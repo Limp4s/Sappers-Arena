@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Package, Bomb, Sparkles, MousePointer2, Palette, X, Check, Lock } from 'lucide-react';
-import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, CURSORS, loadEquipped, saveEquipped } from '../../lib/shop';
+import { Package, Bomb, Sparkles, Palette, X, Check, Lock } from 'lucide-react';
+import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, loadEquipped, saveEquipped } from '../../lib/shop';
 import { t, useLang } from '../../lib/i18n';
 
 const TABS = [
   { key: 'bomb',   labelKey: 'inventory.tabs.bombs',     icon: Bomb,          items: MINE_ICONS,  slot: 'mine' },
   { key: 'fx',     labelKey: 'inventory.tabs.explosions', icon: Sparkles,      items: FX_EFFECTS, slot: 'fx' },
-  { key: 'cursor', labelKey: 'inventory.tabs.cursors',   icon: MousePointer2, items: CURSORS,    slot: 'cursor' },
   { key: 'theme',  labelKey: 'inventory.tabs.themes',    icon: Palette,       items: CELL_THEMES, slot: 'cell' },
 ];
 
@@ -16,7 +15,7 @@ export default function InventoryModal({ player, onClose }) {
   useLang();
 
   const owned = new Set(player?.owned_items || []);
-  Object.keys(MINE_ICONS).concat(Object.keys(CELL_THEMES), Object.keys(FX_EFFECTS), Object.keys(CURSORS))
+  Object.keys(MINE_ICONS).concat(Object.keys(CELL_THEMES), Object.keys(FX_EFFECTS))
     .forEach(id => { const cat = TABS.find(t => Object.prototype.hasOwnProperty.call(t.items, id)); if (cat?.items[id]?.free) owned.add(id); });
 
   const handleEquip = (slot, id) => {

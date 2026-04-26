@@ -181,7 +181,13 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
   return (
     <div className="min-h-screen w-full relative flex flex-col" data-testid="game-screen">
-      {fxFlash && <div className="red-flash" style={{ background: fxColor }} data-testid="fx-flash" />}
+      {fxFlash && (
+        <>
+          <div className="red-flash" style={{ background: fxColor }} data-testid="fx-flash" />
+          <div className="explosion-bloom" style={{ background: fxColor }} />
+          <div className="explosion-shockwave" />
+        </>
+      )}
 
       <header className="relative z-10 max-w-[1600px] mx-auto w-full px-4 md:px-6 pt-5 pb-3">
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -214,7 +220,6 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
         <div className={`glass-panel rounded-xl p-4 md:p-6 flex-1 flex items-center justify-center relative overflow-hidden ${shaking ? 'shake' : ''}`}
           style={{ borderColor: `${cellTheme.accent}33` }}>
-          {victory && <div className="scanline" />}
           <div className="w-full" style={{ maxWidth: `min(100%, ${cols * 48}px)` }} data-testid="game-grid">
             <div style={gridStyle}>
               {board.map((row, r) =>

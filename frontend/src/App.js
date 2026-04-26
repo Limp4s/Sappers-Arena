@@ -12,7 +12,6 @@ import MinesweeperGame from './components/game/Minesweeper';
 import OnlineDuelGame from './components/game/OnlineDuelGame';
 import AuthGate from './components/auth/NicknameGate';
 import { getStoredNickname, isAuthed, isAdmin as getIsAdmin, isAdminNick, fetchMe } from "@/lib/player";
-import { applyCursor, loadEquipped } from "@/lib/shop";
 
 const TERMS_KEY = 'mg_terms_accepted_v1';
 const TERMS_TEXT = `The game is in early testing.
@@ -36,10 +35,6 @@ function Home() {
     }
     return null;
   });
-
-  useEffect(() => {
-    applyCursor(loadEquipped(player?.nick).cursor);
-  }, [player?.nick]);
 
   const refreshPlayer = useCallback(async () => {
     if (!player?.nick || !isAuthed()) return;
