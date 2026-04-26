@@ -851,18 +851,23 @@ def _norm_lobby_code(code: str) -> str:
     return (code or "").strip().upper()
 
 
-async def _player_rating_and_last_opponent(nick: str) -> tuple[int, Optional[str]]:
+async def _player_rating_and_last_opponent(nick: str) -> tuple[int, tuple[Optional[str], Optional[int]]]:
     try:
         doc = await _get_player(nick)
         if not doc:
-            return (500, None)
+            return (500, (None, None))
         rating = int(doc.get("rating", 500) or 500)
         last_opp = doc.get("last_opponent")
+        last_opp_at = doc.get("last_opponent_at")
+        try:
+            last_opp_at = int(last_opp_at) if last_opp_at is not None else None
+        except Exception:
+            last_opp_at = None
         if isinstance(last_opp, str) and last_opp.strip():
-            return (rating, last_opp)
-        return (rating, None)
+            return (rating, (last_opp, last_opp_at))
+        return (rating, (None, None))
     except Exception:
-        return (500, None)
+        return (500, (None, None))
 
 
 def _sanitize_lobby(doc):
@@ -1025,8 +1030,15 @@ async def submit_lobby_result(code: str, payload: Dict[str, Any], nick: str = De
             host = updated.get("host")
             guest = updated.get("guest")
             if host and guest:
-                await db.players.update_one({"nickname_lower": str(host).lower()}, {"$set": {"last_opponent": guest}})
-                await db.players.update_one({"nickname_lower": str(guest).lower()}, {"$set": {"last_opponent": host}})
+                now_ts = int(datetime.now(timezone.utc).timestamp())
+                await db.players.update_one(
+                    {"nickname_lower": str(host).lower()},
+                    {"$set": {"last_opponent": guest, "last_opponent_at": now_ts}},
+                )
+                await db.players.update_one(
+                    {"nickname_lower": str(guest).lower()},
+                    {"$set": {"last_opponent": host, "last_opponent_at": now_ts}},
+                )
         except Exception:
             pass
     return _sanitize_lobby(await db.lobbies.find_one({"code": code}))
@@ -1058,7 +1070,10 @@ async def report_progress(code: str, payload: Dict[str, Any], nick: str = Depend
 @api_router.post("/matchmaking/find")
 async def matchmaking_find(payload: LobbyCreateRequest, nick: str = Depends(require_session)):
     """Find a public waiting lobby matching mode, else create one."""
-    my_rating, last_opp = await _player_rating_and_last_opponent(nick)
+    my_rating, last_opp_info = await _player_rating_and_last_opponent(nick)
+    last_opp, last_opp_at = last_opp_info if isinstance(last_opp_info, tuple) else (None, None)
+    now_ts = int(datetime.now(timezone.utc).timestamp())
+    cooldown_ok = (last_opp_at is None) or ((now_ts - int(last_opp_at)) >= 120)
 
     query = {
         "mode": payload.mode,
@@ -1087,20 +1102,21 @@ async def matchmaking_find(payload: LobbyCreateRequest, nick: str = Depends(requ
             except Exception:
                 hrn = 500
             diff = abs(hrn - int(my_rating or 500))
-            repeat_penalty = 1 if (last_opp and host and str(host).lower() == str(last_opp).lower()) else 0
+            same_as_last = last_opp and host and str(host).lower() == str(last_opp).lower()
+            repeat_penalty = 1 if (same_as_last and not cooldown_ok) else 0
             return (repeat_penalty, diff)
 
         candidates.sort(key=_score)
         best = candidates[0]
-        if last_opp and (best.get("host") or "") and str(best.get("host")).lower() == str(last_opp).lower():
-            # If the best candidate is the same opponent as last time, try to pick the next closest.
+        if last_opp and (best.get("host") or "") and str(best.get("host")).lower() == str(last_opp).lower() and not cooldown_ok:
+            # If the best candidate is the same opponent as last time and cooldown hasn't passed, try to pick the next closest.
             for cand in candidates[1:]:
                 if str((cand.get("host") or "")).lower() != str(last_opp).lower():
                     best = cand
                     break
 
-        if last_opp and str((best.get("host") or "")).lower() == str(last_opp).lower():
-            # Only the last opponent is available right now; do not rematch consecutively.
+        if last_opp and str((best.get("host") or "")).lower() == str(last_opp).lower() and not cooldown_ok:
+            # Only the last opponent is available right now and cooldown hasn't passed; wait for someone else.
             return await create_lobby(payload, nick)
 
         await db.lobbies.update_one({"code": best["code"], "guest": None, "status": "waiting"}, {"$set": {"guest": nick}})
