@@ -413,7 +413,10 @@ body::after {
 }
 .explosion-bloom {
     position: fixed;
-    inset: 0;
+    width: 70vmin;
+    height: 70vmin;
+    transform: translate(-50%, -50%);
+    border-radius: 9999px;
     pointer-events: none;
     z-index: 41;
     mix-blend-mode: screen;
@@ -427,8 +430,7 @@ body::after {
 }
 .explosion-shockwave {
     position: fixed;
-    left: 50%;
-    top: 50%;
+    transform: translate(-50%, -50%);
     width: 90vmin;
     height: 90vmin;
     border-radius: 9999px;

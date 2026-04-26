@@ -31,6 +31,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const [score, setScore] = useState(0);
   const [shaking, setShaking] = useState(false);
   const [fxFlash, setFxFlash] = useState(false);
+  const [explosionPt, setExplosionPt] = useState(null);
   const [victory, setVictory] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -75,6 +76,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     setBoard(createEmptyBoard(rows, cols));
     setMinesPlaced(false); setLives(livesTotal); setFlagsCount(0); setSafeRevealed(0);
     setStatus('idle'); setTimer(0); setScore(0); setShaking(false); setFxFlash(false);
+    setExplosionPt(null);
     setVictory(false); setModalOpen(false); setSubmitted(false);
     setCoinsAwarded(0); setRatingDelta(0); setLobbyResult(null);
     setFlagMode(false);
@@ -122,9 +124,22 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
       const newLives = infiniteLives ? lives : lives - 1;
       if (!infiniteLives) setLives(newLives);
       sfx.explosion();
+
+      try {
+        const el = document.querySelector(`[data-testid="grid-cell-${r}-${c}"]`);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          setExplosionPt({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+        } else {
+          setExplosionPt({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+        }
+      } catch {
+        setExplosionPt({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+      }
+
       setShaking(true); setFxFlash(true);
       setTimeout(() => setShaking(false), 520);
-      setTimeout(() => setFxFlash(false), 620);
+      setTimeout(() => { setFxFlash(false); setExplosionPt(null); }, 620);
       if (!infiniteLives && newLives <= 0) { endGame(false, workingBoard, safeRevealed, 0); return; }
       sfx.lifeLost(); setBoard(workingBoard); return;
     }
@@ -183,9 +198,15 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     <div className="min-h-screen w-full relative flex flex-col" data-testid="game-screen">
       {fxFlash && (
         <>
-          <div className="red-flash" style={{ background: fxColor }} data-testid="fx-flash" />
-          <div className="explosion-bloom" style={{ background: fxColor }} />
-          <div className="explosion-shockwave" />
+          <div
+            className="explosion-bloom"
+            style={{ left: `${(explosionPt?.x ?? window.innerWidth / 2)}px`, top: `${(explosionPt?.y ?? window.innerHeight / 2)}px`, background: fxColor }}
+            data-testid="fx-flash"
+          />
+          <div
+            className="explosion-shockwave"
+            style={{ left: `${(explosionPt?.x ?? window.innerWidth / 2)}px`, top: `${(explosionPt?.y ?? window.innerHeight / 2)}px` }}
+          />
         </>
       )}
 
