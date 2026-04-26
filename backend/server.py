@@ -906,7 +906,7 @@ def _league_for_rating(rating: int) -> str:
 
 async def _ensure_lobby_playing(code: str) -> Optional[dict]:
     """Server-authoritative start (matchmaking only): if lobby is PUBLIC and both players are present and lobby is waiting, start it."""
-    code = (code or "").upper()
+    code = _norm_lobby_code(code)
     lobby = await db.lobbies.find_one({"code": code}, {"_id": 0})
     if not lobby:
         return None
@@ -1395,7 +1395,7 @@ async def _nick_from_token(token: str) -> Optional[str]:
 
 @app.websocket("/api/ws/lobbies/{code}")
 async def ws_lobby(code: str, websocket: WebSocket):
-    code = (code or "").upper()
+    code = _norm_lobby_code(code)
     await websocket.accept()
     token = websocket.query_params.get("token")
     nick = await _nick_from_token(token)
