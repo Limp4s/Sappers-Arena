@@ -16,7 +16,14 @@ export default function BattlesView({ onStartBattle, player }) {
 
   const stopPolling = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
 
-  useEffect(() => () => stopPolling(), []);
+  useEffect(() => {
+    return () => {
+      stopPolling();
+      if (lobby?.code) {
+        cancelLobby(lobby.code).catch(() => {});
+      }
+    };
+  }, [lobby?.code]);
 
   const beginSearch = async (kind) => {
     setError(null); setSearching(kind);
@@ -187,7 +194,7 @@ function BattleCard({ title, subtitle, color, config, onFind, testid, rating, di
       {rating !== undefined && (
         <div className="glass-panel-light rounded-lg px-4 py-2 mb-4 flex items-center justify-between">
           <span className="text-[10px] tracking-[0.25em] uppercase text-slate-400 font-display">{t('battles.yourRating')}</span>
-          <span className="neon-gold font-mono text-lg font-bold">{rating || 1000}</span>
+          <span className="neon-gold font-mono text-lg font-bold">{rating || 500}</span>
         </div>
       )}
       <button onClick={onFind} disabled={disabled} className="neon-btn w-full flex items-center justify-center gap-2 py-3 disabled:opacity-50" data-testid={testid}>

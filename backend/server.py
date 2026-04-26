@@ -929,6 +929,7 @@ async def create_lobby(payload: LobbyCreateRequest, nick: str = Depends(require_
             break
     else:
         raise HTTPException(status_code=500, detail="Could not generate unique code.")
+    now_ts = int(datetime.now(timezone.utc).timestamp())
     seed = secrets.randbits(32)
     host_rating, _ = await _player_rating_and_last_opponent(nick)
     lobby = {
@@ -947,6 +948,7 @@ async def create_lobby(payload: LobbyCreateRequest, nick: str = Depends(require_
         "host_result": None,
         "guest_result": None,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at_epoch": now_ts,
     }
     await db.lobbies.insert_one(lobby)
     return _sanitize_lobby(lobby)
@@ -1075,12 +1077,17 @@ async def matchmaking_find(payload: LobbyCreateRequest, nick: str = Depends(requ
     now_ts = int(datetime.now(timezone.utc).timestamp())
     cooldown_ok = (last_opp_at is None) or ((now_ts - int(last_opp_at)) >= 120)
 
+    # Only match against lobbies that were created recently.
+    # This prevents pairing with a host who stopped searching (closed page/app) leaving a stale waiting lobby behind.
+    MM_LOBBY_TTL_SECONDS = 90
+
     query = {
         "mode": payload.mode,
         "public": True,
         "status": "waiting",
         "host": {"$ne": nick},
         "guest": None,
+        "created_at_epoch": {"$gte": int(now_ts - MM_LOBBY_TTL_SECONDS)},
         "config.rows": payload.rows,
         "config.cols": payload.cols,
         "config.mines": payload.mines,
