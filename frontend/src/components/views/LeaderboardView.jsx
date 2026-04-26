@@ -129,11 +129,11 @@ export default function LeaderboardView({ isAdmin = false }) {
 
   const leagueForRating = (rating) => {
     const r = Number(rating || 0);
-    if (r < 500) return 'wood';
-    if (r < 1000) return 'stone';
-    if (r < 2000) return 'bronze';
-    if (r < 4000) return 'iron';
-    if (r < 8000) return 'gold';
+    if (r < 1000) return 'wood';
+    if (r < 1500) return 'stone';
+    if (r < 2500) return 'bronze';
+    if (r < 4500) return 'iron';
+    if (r < 8500) return 'gold';
     if (r <= 10000) return 'diamond';
     return 'top500';
   };
@@ -238,7 +238,7 @@ export default function LeaderboardView({ isAdmin = false }) {
             {!loading && entries.map((e, i) => {
               if (showRankedPlayersTable) {
                 const name = e.nickname || e.player_name || '';
-                const rating = e.rating || 1000;
+                const rating = e.rating || 500;
                 const league = leagueForRating(rating);
                 return (
                   <div
@@ -249,7 +249,7 @@ export default function LeaderboardView({ isAdmin = false }) {
                   >
                     <div className={`font-display font-bold ${getRankColor(i)}`}>{String(i + 1).padStart(2, '0')}</div>
                     <div className="truncate text-slate-200 flex items-center gap-1.5">
-                      {rankIconSrc(league) && <img src={rankIconSrc(league)} alt="rank" className="w-7 h-7 shrink-0" />}
+                      {rankIconSrc(league) && <img src={rankIconSrc(league)} alt="rank" className="w-10 h-10 shrink-0" />}
                       {name}
                       {(name || '').toLowerCase() === 'limp4' && <Crown size={10} className="neon-gold shrink-0" />}
                     </div>
@@ -321,10 +321,10 @@ export default function LeaderboardView({ isAdmin = false }) {
                 <div key={p.nickname} className="flex items-center justify-between text-[11px] py-1.5 border-b border-white/5 last:border-0">
                   <div className="flex items-center gap-2 truncate">
                     <span className={`font-display font-bold ${getRankColor(i)} w-4`}>{i + 1}</span>
-                    {icon && <img src={icon} alt="rank" className="w-6 h-6 shrink-0" />}
+                    {icon && <img src={icon} alt="rank" className="w-9 h-9 shrink-0" />}
                     <span className="truncate text-slate-200">{p.nickname}</span>
                   </div>
-                  <span className="neon-gold font-mono font-bold">{p.rating || 1000}</span>
+                  <span className="neon-gold font-mono font-bold">{p.rating || 500}</span>
                 </div>
                   );
                 })()

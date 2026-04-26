@@ -193,7 +193,7 @@ def _sanitize_player(doc: dict) -> dict:
     doc.setdefault("player_num", None)
     doc.setdefault("coins", STARTER_COINS)
     doc.setdefault("owned_items", [])
-    doc.setdefault("rating", 1000)
+    doc.setdefault("rating", 500)
     return doc
 
 
@@ -499,7 +499,7 @@ async def register_player(payload: RegisterRequest):
         "is_admin": _is_admin_nick(nick),
         "coins": STARTER_COINS,
         "owned_items": [],
-        "rating": 1000,
+        "rating": 500,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.players.insert_one(doc)
@@ -567,12 +567,12 @@ async def me(nick: str = Depends(require_session)):
     player = await _ensure_player_ids(player)
     out = _sanitize_player(player)
     try:
-        rating = int(out.get("rating", 1000) or 1000)
+        rating = int(out.get("rating", 500) or 500)
         place = (await db.players.count_documents({"rating": {"$gt": rating}})) + 1
         out["league"] = "top500" if (place <= 500 and rating > 10000) else _league_for_rating(rating)
         out["ranked_place"] = int(place) if place <= 500 else None
     except Exception:
-        out["league"] = _league_for_rating(int(out.get("rating", 1000) or 1000))
+        out["league"] = _league_for_rating(int(out.get("rating", 500) or 500))
         out["ranked_place"] = None
     return out
 
@@ -847,6 +847,10 @@ def _gen_code() -> str:
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 
+def _norm_lobby_code(code: str) -> str:
+    return (code or "").strip().upper()
+
+
 def _sanitize_lobby(doc):
     if not doc: return None
     doc = dict(doc)
@@ -866,15 +870,15 @@ def _duel_time_limit_seconds(mode: Optional[str]) -> int:
 
 def _league_for_rating(rating: int) -> str:
     r = int(rating or 0)
-    if r < 500:
-        return "wood"
     if r < 1000:
+        return "wood"
+    if r < 1500:
         return "stone"
-    if r < 2000:
+    if r < 2500:
         return "bronze"
-    if r < 4000:
+    if r < 4500:
         return "iron"
-    if r < 8000:
+    if r < 8500:
         return "gold"
     if r <= 10000:
         return "diamond"
@@ -929,7 +933,8 @@ async def create_lobby(payload: LobbyCreateRequest, nick: str = Depends(require_
 
 @api_router.post("/lobbies/{code}/join")
 async def join_lobby(code: str, nick: str = Depends(require_session)):
-    lobby = await db.lobbies.find_one({"code": code.upper()})
+    code = _norm_lobby_code(code)
+    lobby = await db.lobbies.find_one({"code": code})
     if not lobby:
         raise HTTPException(status_code=404, detail="Lobby not found.")
     if lobby["status"] != "waiting":
@@ -938,16 +943,17 @@ async def join_lobby(code: str, nick: str = Depends(require_session)):
         return _sanitize_lobby(lobby)
     if lobby.get("guest") and lobby["guest"] != nick:
         raise HTTPException(status_code=409, detail="Lobby full.")
-    await db.lobbies.update_one({"code": code.upper()}, {"$set": {"guest": nick}})
+    await db.lobbies.update_one({"code": code}, {"$set": {"guest": nick}})
     # Auto-start only for PUBLIC matchmaking duels. Friend-code lobbies remain host-started.
     if lobby.get("public"):
         await _ensure_lobby_playing(code)
-    return _sanitize_lobby(await db.lobbies.find_one({"code": code.upper()}))
+    return _sanitize_lobby(await db.lobbies.find_one({"code": code}))
 
 
 @api_router.get("/lobbies/{code}")
 async def get_lobby(code: str):
-    lobby = await db.lobbies.find_one({"code": code.upper()}, {"_id": 0})
+    code = _norm_lobby_code(code)
+    lobby = await db.lobbies.find_one({"code": code}, {"_id": 0})
     if not lobby:
         raise HTTPException(status_code=404, detail="Lobby not found.")
     return lobby
@@ -955,7 +961,8 @@ async def get_lobby(code: str):
 
 @api_router.post("/lobbies/{code}/start")
 async def start_lobby(code: str, nick: str = Depends(require_session)):
-    lobby = await db.lobbies.find_one({"code": code.upper()})
+    code = _norm_lobby_code(code)
+    lobby = await db.lobbies.find_one({"code": code})
     if not lobby:
         raise HTTPException(status_code=404, detail="Lobby not found.")
 
@@ -973,13 +980,14 @@ async def start_lobby(code: str, nick: str = Depends(require_session)):
         raise HTTPException(status_code=403, detail="Only host can start.")
     if not lobby.get("guest"):
         raise HTTPException(status_code=409, detail="No opponent yet.")
-    await db.lobbies.update_one({"code": code.upper()}, {"$set": {"status": "playing", "started_at": datetime.now(timezone.utc).isoformat()}})
-    return _sanitize_lobby(await db.lobbies.find_one({"code": code.upper()}))
+    await db.lobbies.update_one({"code": code}, {"$set": {"status": "playing", "started_at": datetime.now(timezone.utc).isoformat()}})
+    return _sanitize_lobby(await db.lobbies.find_one({"code": code}))
 
 
 @api_router.post("/lobbies/{code}/result")
 async def submit_lobby_result(code: str, payload: Dict[str, Any], nick: str = Depends(require_session)):
-    lobby = await db.lobbies.find_one({"code": code.upper()})
+    code = _norm_lobby_code(code)
+    lobby = await db.lobbies.find_one({"code": code})
     if not lobby:
         raise HTTPException(status_code=404, detail="Lobby not found.")
     result = {
@@ -993,32 +1001,33 @@ async def submit_lobby_result(code: str, payload: Dict[str, Any], nick: str = De
     field = "host_result" if lobby["host"] == nick else "guest_result" if lobby.get("guest") == nick else None
     if not field:
         raise HTTPException(status_code=403, detail="You are not in this lobby.")
-    await db.lobbies.update_one({"code": code.upper()}, {"$set": {field: result}})
-    updated = await db.lobbies.find_one({"code": code.upper()})
+    await db.lobbies.update_one({"code": code}, {"$set": {field: result}})
+    updated = await db.lobbies.find_one({"code": code})
     if updated.get("host_result") and updated.get("guest_result"):
-        await db.lobbies.update_one({"code": code.upper()}, {"$set": {"status": "finished"}})
-    return _sanitize_lobby(await db.lobbies.find_one({"code": code.upper()}))
+        await db.lobbies.update_one({"code": code}, {"$set": {"status": "finished"}})
+    return _sanitize_lobby(await db.lobbies.find_one({"code": code}))
 
 
 @api_router.post("/lobbies/{code}/progress")
 async def report_progress(code: str, payload: Dict[str, Any], nick: str = Depends(require_session)):
     """Report live progress during a lobby game. Other player can poll."""
-    lobby = await db.lobbies.find_one({"code": code.upper()})
+    code = _norm_lobby_code(code)
+    lobby = await db.lobbies.find_one({"code": code})
     if not lobby:
         raise HTTPException(status_code=404, detail="Lobby not found.")
     field = "host_progress" if lobby["host"] == nick else "guest_progress" if lobby.get("guest") == nick else None
     if not field:
         raise HTTPException(status_code=403, detail="Not in lobby.")
     progress = {
-        "safe_revealed": int(payload.get("safe_revealed", 0)),
-        "total_safe": int(payload.get("total_safe", 0)),
-        "lives": int(payload.get("lives", 0)),
-        "time": int(payload.get("time", 0)),
-        "flags": int(payload.get("flags", 0)),
+        "safe_revealed": int(payload.get("safe_revealed") or 0),
+        "total_safe": int(payload.get("total_safe") or 0),
+        "lives": int(payload.get("lives") or 0),
+        "time": int(payload.get("time") or 0),
+        "flags": int(payload.get("flags") or 0),
         "done": bool(payload.get("done", False)),
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    await db.lobbies.update_one({"code": code.upper()}, {"$set": {field: progress}})
+    await db.lobbies.update_one({"code": code}, {"$set": {field: progress}})
     return {"ok": True}
 
 
@@ -1044,15 +1053,16 @@ async def matchmaking_find(payload: LobbyCreateRequest, nick: str = Depends(requ
 
 @api_router.post("/lobbies/{code}/cancel")
 async def cancel_lobby(code: str, nick: str = Depends(require_session)):
-    lobby = await db.lobbies.find_one({"code": code.upper()})
+    code = _norm_lobby_code(code)
+    lobby = await db.lobbies.find_one({"code": code})
     if not lobby:
         return {"ok": True}
     if lobby["host"] != nick and lobby.get("guest") != nick:
         raise HTTPException(status_code=403, detail="Not in this lobby.")
     if lobby["host"] == nick and lobby["status"] == "waiting":
-        await db.lobbies.delete_one({"code": code.upper()})
+        await db.lobbies.delete_one({"code": code})
     elif lobby.get("guest") == nick:
-        await db.lobbies.update_one({"code": code.upper()}, {"$set": {"guest": None}})
+        await db.lobbies.update_one({"code": code}, {"$set": {"guest": None}})
     return {"ok": True}
 
 
@@ -1068,11 +1078,11 @@ class _WsHub:
         self._conns: Dict[str, Dict[str, WebSocket]] = {}
 
     async def connect(self, code: str, nick: str, ws: WebSocket):
-        code = (code or "").upper()
+        code = _norm_lobby_code(code)
         self._conns.setdefault(code, {})[nick] = ws
 
     def disconnect(self, code: str, nick: str):
-        code = (code or "").upper()
+        code = _norm_lobby_code(code)
         try:
             room = self._conns.get(code)
             if not room:
@@ -1084,7 +1094,7 @@ class _WsHub:
             pass
 
     async def send(self, code: str, nick: str, payload: dict):
-        code = (code or "").upper()
+        code = _norm_lobby_code(code)
         ws = self._conns.get(code, {}).get(nick)
         if not ws:
             return
@@ -1094,7 +1104,7 @@ class _WsHub:
             pass
 
     async def broadcast(self, code: str, payload: dict):
-        code = (code or "").upper()
+        code = _norm_lobby_code(code)
         room = self._conns.get(code, {})
         for ws in list(room.values()):
             try:
@@ -1256,12 +1266,12 @@ class _PlayerGame:
 
 class _LobbyGame:
     def __init__(self, code: str, lobby: dict):
-        self.code = code.upper()
+        self.code = _norm_lobby_code(code)
         cfg = lobby.get("config") or {}
         self.rows = int(cfg.get("rows") or 10)
         self.cols = int(cfg.get("cols") or 10)
-        self.mines = int(cfg.get("mines") or 15)
-        self.lives = int(cfg.get("lives") or 3)
+        self.mines = int(cfg.get("mines") or 10)
+        self.lives = int(cfg.get("lives") or 1)
         self.seed = int(lobby.get("seed") or 0)
         self.host = lobby.get("host")
         self.guest = lobby.get("guest")
