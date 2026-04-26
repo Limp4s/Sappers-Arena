@@ -40,9 +40,15 @@ export default function LeaderboardView({ isAdmin = false }) {
     }
   }, []);
 
+  useEffect(() => {
+    // Prevent rendering crashes when switching tabs quickly (data shape differs between scopes).
+    setEntries([]);
+  }, [scope]);
+
   const fetchLeaderboard = useCallback(async (selectedScope) => {
     const reqId = ++lbReqIdRef.current;
     setLoading(true);
+    setEntries([]);
     try {
       const def = SCOPES.find((s) => s.key === selectedScope);
       if (def?.mode === 'battle_ranked') {
@@ -108,6 +114,19 @@ export default function LeaderboardView({ isAdmin = false }) {
     } catch (e) { alert('Delete failed: ' + (e?.response?.data?.detail || e.message)); }
   };
 
+  const hideRankedPlayer = async (nickname) => {
+    if (!isAdmin) return;
+    if (!nickname) return;
+    if (!window.confirm(`Hide ${nickname} from ranked leaderboard?`)) return;
+    try {
+      await axios.post(`${API}/admin/ranked/hide`, { nickname }, { headers: adminHeaders() });
+      await fetchLeaderboard(scope);
+      await fetchRanked();
+    } catch (e) {
+      alert('Hide failed: ' + (e?.response?.data?.detail || e.message));
+    }
+  };
+
   const leagueForRating = (rating) => {
     const r = Number(rating || 0);
     if (r < 500) return 'wood';
@@ -137,7 +156,7 @@ export default function LeaderboardView({ isAdmin = false }) {
   const showRankedPlayersTable = scope === 'battle_ranked';
   const showLevelCol = scope === 'campaign' && !showRankedPlayersTable;
   const cols = showRankedPlayersTable
-    ? '28px 1fr 80px'
+    ? (isAdmin ? '28px 1fr 72px 80px 26px' : '28px 1fr 72px 80px')
     : (isAdmin
       ? (showLevelCol ? '28px 1fr 50px 70px 50px 56px 26px' : '28px 1fr 70px 56px 26px')
       : (showLevelCol ? '28px 1fr 50px 70px 50px 56px'     : '28px 1fr 70px 56px'));
@@ -194,7 +213,11 @@ export default function LeaderboardView({ isAdmin = false }) {
               <div>#</div>
               <div>{t('leaderboard.name')}</div>
               {showRankedPlayersTable ? (
-                <div className="text-right">{t('common.rating')}</div>
+                <>
+                  <div className="text-right">RANK</div>
+                  <div className="text-right">{t('common.rating')}</div>
+                  {isAdmin && <div />}
+                </>
               ) : (
                 <>
                   {showLevelCol && <div>{t('leaderboard.lvl')}</div>}
@@ -226,17 +249,28 @@ export default function LeaderboardView({ isAdmin = false }) {
                   >
                     <div className={`font-display font-bold ${getRankColor(i)}`}>{String(i + 1).padStart(2, '0')}</div>
                     <div className="truncate text-slate-200 flex items-center gap-1.5">
-                      {rankIconSrc(league) && <img src={rankIconSrc(league)} alt="rank" className="w-4 h-4 shrink-0" />}
+                      {rankIconSrc(league) && <img src={rankIconSrc(league)} alt="rank" className="w-7 h-7 shrink-0" />}
                       {name}
                       {(name || '').toLowerCase() === 'limp4' && <Crown size={10} className="neon-gold shrink-0" />}
                     </div>
+                    <div className="text-right text-slate-300 font-display text-[10px] tracking-[0.2em] uppercase">{String(league || '').replace('top500', 'top500')}</div>
                     <div className="text-right neon-gold">{rating}</div>
+                    {isAdmin && (
+                      <button
+                        onClick={() => hideRankedPlayer(name)}
+                        className="text-slate-600 hover:text-[#FF2A6D] transition-colors justify-self-end"
+                        title="Hide player"
+                        data-testid={`admin-hide-ranked-${i}`}
+                      ><Trash2 size={13} /></button>
+                    )}
                   </div>
                 );
               }
 
               const livesRem = e.lives_remaining ?? 0;
               const livesTotalVal = e.lives_total ?? 3;
+              const scoreVal = e?.score;
+              const scoreText = (typeof scoreVal === 'number') ? scoreVal.toLocaleString() : '—';
               return (
                 <div
                   key={e.id}
@@ -250,7 +284,7 @@ export default function LeaderboardView({ isAdmin = false }) {
                     {(e.player_name || '').toLowerCase() === 'limp4' && <Crown size={10} className="neon-gold shrink-0" />}
                   </div>
                   {showLevelCol && <div className="neon-lime text-[11px] font-bold">{e.level_id != null ? String(e.level_id).padStart(2, '0') : '—'}</div>}
-                  <div className="text-right neon-cyan">{e.score.toLocaleString()}</div>
+                  <div className="text-right neon-cyan">{scoreText}</div>
                   {showLevelCol && (
                     <div className="text-right text-[11px]" data-testid={`lb-lives-remaining-${i}`}>
                       <span className="neon-lime">{livesRem}</span>
@@ -287,7 +321,7 @@ export default function LeaderboardView({ isAdmin = false }) {
                 <div key={p.nickname} className="flex items-center justify-between text-[11px] py-1.5 border-b border-white/5 last:border-0">
                   <div className="flex items-center gap-2 truncate">
                     <span className={`font-display font-bold ${getRankColor(i)} w-4`}>{i + 1}</span>
-                    {icon && <img src={icon} alt="rank" className="w-4 h-4 shrink-0" />}
+                    {icon && <img src={icon} alt="rank" className="w-6 h-6 shrink-0" />}
                     <span className="truncate text-slate-200">{p.nickname}</span>
                   </div>
                   <span className="neon-gold font-mono font-bold">{p.rating || 1000}</span>
@@ -321,7 +355,7 @@ export default function LeaderboardView({ isAdmin = false }) {
                   <StatLine label={t('stats.wins')} value={stats.wins} color="lime" />
                   <StatLine label={t('stats.losses')} value={stats.losses} color="coral" />
                   <StatLine label={t('stats.winRate')} value={`${(stats.win_rate * 100).toFixed(1)}%`} color="gold" />
-                  <StatLine label={t('stats.bestScore')} value={stats.best_score.toLocaleString()} color="cyan" />
+                  <StatLine label={t('stats.bestScore')} value={(typeof stats.best_score === 'number') ? stats.best_score.toLocaleString() : '—'} color="cyan" />
                   <StatLine label={t('stats.bestTime')} value={stats.best_time ? `${stats.best_time}s` : '—'} color="gold" />
                 </div>
               )}

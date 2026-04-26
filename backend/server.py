@@ -713,6 +713,11 @@ async def get_ranked_leaderboard(limit: int = Query(default=20, ge=1, le=500)):
     seen = set()
     out = []
     for p in rows:
+        try:
+            if p.get("hidden_ranked") and int(p.get("hidden_ranked_rating") or 0) == int(p.get("rating") or 0):
+                continue
+        except Exception:
+            pass
         key = (p.get("player_uuid") or p.get("nickname") or "").lower()
         if not key:
             continue
@@ -742,6 +747,10 @@ class AdminPromoteRequest(BaseModel):
     nickname: str = Field(..., min_length=3, max_length=20)
 
 
+class AdminHideRankedRequest(BaseModel):
+    nickname: str = Field(..., min_length=3, max_length=20)
+
+
 @api_router.post("/admin/promote")
 async def promote_to_admin(payload: AdminPromoteRequest, nick: str = Depends(require_session)):
     me_player = await _get_player(nick)
@@ -753,6 +762,22 @@ async def promote_to_admin(payload: AdminPromoteRequest, nick: str = Depends(req
     await db.players.update_one({"nickname_lower": target["nickname_lower"]}, {"$set": {"is_admin": True}})
     updated = await _get_player(payload.nickname)
     return {"ok": True, "player": _sanitize_player(updated)}
+
+
+@api_router.post("/admin/ranked/hide")
+async def admin_hide_ranked(payload: AdminHideRankedRequest, nick: str = Depends(require_session)):
+    me_player = await _get_player(nick)
+    if not me_player or not (me_player.get("is_admin") or _is_admin_nick(nick)):
+        raise HTTPException(status_code=403, detail="Admin privileges required.")
+    target = await _get_player(payload.nickname)
+    if not target:
+        raise HTTPException(status_code=404, detail="Player not found.")
+    rating = int(target.get("rating", 0) or 0)
+    await db.players.update_one(
+        {"nickname_lower": target["nickname_lower"]},
+        {"$set": {"hidden_ranked": True, "hidden_ranked_rating": rating}},
+    )
+    return {"ok": True, "nickname": target.get("nickname"), "hidden_ranked": True, "hidden_ranked_rating": rating}
 
 
 @api_router.get("/admin/players")

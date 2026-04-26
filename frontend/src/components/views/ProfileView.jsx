@@ -74,7 +74,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
           {(player?.league || player?.ranked_place) && (
             <span className="flex items-center gap-1 text-[11px] font-display tracking-[0.25em] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-200">
               {rankIconSrc(player?.league) ? (
-                <img src={rankIconSrc(player?.league)} alt="rank" className="w-4 h-4" />
+                <img src={rankIconSrc(player?.league)} alt="rank" className="w-7 h-7" />
               ) : (
                 <Trophy size={11} className="neon-gold" />
               )}
