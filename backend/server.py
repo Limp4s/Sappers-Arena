@@ -1075,7 +1075,11 @@ async def matchmaking_find(payload: LobbyCreateRequest, nick: str = Depends(requ
     my_rating, last_opp_info = await _player_rating_and_last_opponent(nick)
     last_opp, last_opp_at = last_opp_info if isinstance(last_opp_info, tuple) else (None, None)
     now_ts = int(datetime.now(timezone.utc).timestamp())
-    cooldown_ok = (last_opp_at is None) or ((now_ts - int(last_opp_at)) >= 120)
+    is_ranked = (payload.mode or "") == "battle_ranked"
+    cooldown_ok = True if not is_ranked else ((last_opp_at is None) or ((now_ts - int(last_opp_at)) >= 120))
+    if not is_ranked:
+        # Simple duels: allow immediate rematch with the same opponent.
+        last_opp = None
 
     # Only match against lobbies that were created recently.
     # This prevents pairing with a host who stopped searching (closed page/app) leaving a stale waiting lobby behind.

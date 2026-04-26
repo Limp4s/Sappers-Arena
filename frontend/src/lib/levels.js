@@ -1,18 +1,52 @@
-export const LEVELS = Array.from({ length: 150 }, (_, i) => {
+export const LEVELS = Array.from({ length: 200 }, (_, i) => {
   const id = i + 1;
-  const segment = Math.floor((id - 1) / 10);
   const isMilestone = id % 10 === 0;
 
-  const baseRows = 5 + Math.floor((id - 1) / 6);
-  const baseCols = 5 + Math.floor((id - 1) / 5);
-  const rows = Math.min(26 + segment, baseRows + (isMilestone ? 1 : 0));
-  const cols = Math.min(30 + segment, baseCols + (isMilestone ? 1 : 0));
+  const prog = (id - 1) / 199; // 0..1
+
+  const minRows = id <= 10 ? 6 : id <= 30 ? 8 : id <= 60 ? 10 : id <= 120 ? 12 : 14;
+  const minCols = id <= 10 ? 6 : id <= 30 ? 9 : id <= 60 ? 12 : id <= 120 ? 14 : 16;
+
+  let rows = Math.round(minRows + prog * 14 + (isMilestone ? 1 : 0)); // up to ~29-30
+  let cols = Math.round(minCols + prog * 18 + (isMilestone ? 1 : 0)); // up to ~34-35
+
+  rows = Math.max(minRows, Math.min(30, rows));
+  cols = Math.max(minCols, Math.min(36, cols));
+
+  // Gradual mine density ramp; keep it bounded so boards stay playable.
+  const densityBase = 0.12 + prog * 0.10 + (isMilestone ? 0.005 : 0); // ~0.12..0.225
+  const density = Math.max(0.12, Math.min(0.24, densityBase));
+
+  const minSafe = id <= 10 ? 30 : id <= 30 ? 60 : id <= 80 ? 90 : id <= 140 ? 120 : 150;
+  const minCells = minSafe + Math.max(10, Math.round(minSafe * 0.18));
+
+  // Ensure campaign levels cannot be completed in a couple of clicks by enforcing a minimum number of safe cells.
+  // If the board is too small, grow it within caps.
+  const growBoard = () => {
+    if (rows < 30) rows += 1;
+    if (cols < 36) cols += 1;
+  };
+
+  let guard = 0;
+  while (guard < 25) {
+    guard += 1;
+    const cells = rows * cols;
+    if (cells >= minCells) break;
+    if (rows >= 30 && cols >= 36) break;
+    growBoard();
+  }
 
   const cells = rows * cols;
-  const density = Math.min(0.26, 0.14 + segment * 0.01 + (isMilestone ? 0.01 : 0));
-  const mines = Math.max(2, Math.min(cells - 1, Math.round(cells * density)));
+  let mines = Math.max(10, Math.min(cells - 1, Math.round(cells * density)));
 
-  const lives = id <= 10 ? 5 : id <= 30 ? 4 : id <= 60 ? 3 : id <= 100 ? 2 : 1;
+  // Final clamp: make sure safe cells are at least minSafe by reducing mines if needed.
+  // (We prefer larger boards, but we still keep the constraint if we're at caps.)
+  const safeCells = Math.max(0, cells - mines);
+  if (safeCells < minSafe) {
+    mines = Math.max(10, Math.min(cells - 1, cells - minSafe));
+  }
+
+  const lives = id <= 10 ? 5 : id <= 30 ? 4 : id <= 70 ? 3 : id <= 130 ? 2 : 1;
 
   return {
     id,
