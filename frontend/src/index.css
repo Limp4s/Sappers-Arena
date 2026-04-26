@@ -406,44 +406,21 @@ body::after {
     animation: redFlash 600ms ease-out;
 }
 
-@keyframes explosionBloom {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.70); filter: blur(6px); }
-    22% { opacity: 1; transform: translate(-50%, -50%) scale(1.00); filter: blur(0px); }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.35); filter: blur(12px); }
+@keyframes explosionFlash {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.80) rotate(0deg); filter: blur(6px); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.00) rotate(6deg); filter: blur(1px); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.18) rotate(10deg); filter: blur(14px); }
 }
-.explosion-bloom {
+.explosion-flash {
     position: fixed;
-    width: clamp(180px, 42vmin, 520px);
-    height: clamp(180px, 42vmin, 520px);
-    border-radius: 9999px;
+    width: 320px;
+    height: 220px;
+    border-radius: 22px;
     pointer-events: none;
     z-index: 41;
     mix-blend-mode: screen;
     will-change: transform, opacity, filter;
-    animation: explosionBloom 520ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes shockwave {
-    0% { transform: translate(-50%, -50%) scale(0.10); opacity: 0.0; }
-    12% { opacity: 0.9; }
-    45% { transform: translate(-50%, -50%) scale(1.55); opacity: 0.0; }
-    100% { transform: translate(-50%, -50%) scale(2.0); opacity: 0.0; }
-}
-.explosion-shockwave {
-    position: fixed;
-    width: clamp(220px, 55vmin, 760px);
-    height: clamp(220px, 55vmin, 760px);
-    border-radius: 9999px;
-    pointer-events: none;
-    z-index: 42;
-    background: radial-gradient(circle at center,
-        rgba(255, 255, 255, 0.0) 58%,
-        rgba(255, 255, 255, 0.25) 62%,
-        rgba(255, 255, 255, 0.0) 68%);
-    mix-blend-mode: screen;
-    filter: blur(0.2px);
-    will-change: transform, opacity;
-    animation: shockwave 420ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: explosionFlash 460ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Win sparkles container */

@@ -214,31 +214,16 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
           {(() => {
             const x = explosionPt?.x ?? window.innerWidth / 2;
             const y = explosionPt?.y ?? window.innerHeight / 2;
-            const edge = Math.min(x, y, window.innerWidth - x, window.innerHeight - y);
-            const waveR = Math.max(120, edge);
-            const shockSize = Math.min(760, Math.max(220, waveR * 2));
-            const bloomSize = Math.min(520, Math.max(180, waveR * 1.35));
             return (
               <>
                 <div
-                  className="explosion-bloom"
+                  className="explosion-flash"
                   style={{
                     left: `${x}px`,
                     top: `${y}px`,
-                    width: `${bloomSize}px`,
-                    height: `${bloomSize}px`,
                     background: fxColor,
                   }}
                   data-testid="fx-flash"
-                />
-                <div
-                  className="explosion-shockwave"
-                  style={{
-                    left: `${x}px`,
-                    top: `${y}px`,
-                    width: `${shockSize}px`,
-                    height: `${shockSize}px`,
-                  }}
                 />
               </>
             );
