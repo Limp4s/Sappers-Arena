@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Users, Copy, Check, X, Loader2, Play, LogIn } from 'lucide-react';
 import { createLobby, joinLobby, getLobby, startLobby, cancelLobby } from '../../lib/lobby';
 import { t, useLang } from '../../lib/i18n';
@@ -10,7 +10,12 @@ export default function FriendLobbyModal({ config, onClose, onStartWithLobby, pl
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const lobbyRef = useRef(null);
   useLang();
+
+  useEffect(() => {
+    lobbyRef.current = lobby;
+  }, [lobby]);
 
   useEffect(() => {
     if (!lobby || lobby.status !== 'waiting') return;
@@ -28,9 +33,14 @@ export default function FriendLobbyModal({ config, onClose, onStartWithLobby, pl
     return () => clearInterval(t);
   }, [lobby, config, onStartWithLobby, onClose]);
 
-  useEffect(() => () => {
-    if (lobby?.status === 'waiting') { cancelLobby(lobby.code).catch(() => {}); }
-  }, [lobby]);
+  useEffect(() => {
+    return () => {
+      const cur = lobbyRef.current;
+      if (cur?.status === 'waiting' && cur?.host === player?.nick) {
+        cancelLobby(cur.code).catch(() => {});
+      }
+    };
+  }, [player?.nick]);
 
   const hostCreate = async () => {
     setBusy(true); setError(null);
