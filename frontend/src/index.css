@@ -416,11 +416,14 @@ body::after {
     width: 320px;
     height: 220px;
     border-radius: 22px;
+    opacity: 0;
+    transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 41;
     mix-blend-mode: screen;
     will-change: transform, opacity, filter;
     animation: explosionFlash 460ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: both;
 }
 
 /* Win sparkles container */
