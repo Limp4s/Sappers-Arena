@@ -13,6 +13,8 @@ const BACKEND_URL = (() => {
 })();
 const API = `${BACKEND_URL}/api`;
 
+const normLobbyCode = (code) => (code || '').trim().toUpperCase();
+
 const ensureLobbyAuth = async () => {
   const t = getToken();
   if (!t || (t || '').startsWith('offline-')) throw new Error('Not logged in.');
@@ -24,14 +26,14 @@ const authedPost = async (url, body) => {
 };
 
 export const createLobby = async (cfg) => (await authedPost(`${API}/lobbies`, cfg)).data;
-export const joinLobby = async (code) => (await authedPost(`${API}/lobbies/${code}/join`, null)).data;
-export const getLobby = async (code) => (await axios.get(`${API}/lobbies/${code}`)).data;
-export const startLobby = async (code) => (await authedPost(`${API}/lobbies/${code}/start`, null)).data;
-export const submitLobbyResult = async (code, result) => (await authedPost(`${API}/lobbies/${code}/result`, result)).data;
-export const cancelLobby = async (code) => (await authedPost(`${API}/lobbies/${code}/cancel`, null)).data;
+export const joinLobby = async (code) => (await authedPost(`${API}/lobbies/${normLobbyCode(code)}/join`, null)).data;
+export const getLobby = async (code) => (await axios.get(`${API}/lobbies/${normLobbyCode(code)}`)).data;
+export const startLobby = async (code) => (await authedPost(`${API}/lobbies/${normLobbyCode(code)}/start`, null)).data;
+export const submitLobbyResult = async (code, result) => (await authedPost(`${API}/lobbies/${normLobbyCode(code)}/result`, result)).data;
+export const cancelLobby = async (code) => (await authedPost(`${API}/lobbies/${normLobbyCode(code)}/cancel`, null)).data;
 export const matchmakingFind = async (cfg) => (await authedPost(`${API}/matchmaking/find`, cfg)).data;
 
-export const reportProgress = async (code, progress) => (await authedPost(`${API}/lobbies/${code}/progress`, progress)).data;
+export const reportProgress = async (code, progress) => (await authedPost(`${API}/lobbies/${normLobbyCode(code)}/progress`, progress)).data;
 export const promoteToAdmin = async (nickname) => (await axios.post(`${API}/admin/promote`, { nickname }, { headers: sessionHeaders() })).data;
 
 // Simple xorshift seeded RNG for deterministic board generation

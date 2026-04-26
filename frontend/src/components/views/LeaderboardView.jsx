@@ -27,7 +27,18 @@ export default function LeaderboardView({ isAdmin = false }) {
   const [statsLoading, setStatsLoading] = useState(false);
   const [serverOk, setServerOk] = useState(null);
   const [viewNick, setViewNick] = useState(null);
+  const [isNarrow, setIsNarrow] = useState(() => {
+    try { return (window?.innerWidth || 9999) < 640; } catch { return false; }
+  });
   useLang();
+
+  useEffect(() => {
+    const onResize = () => {
+      try { setIsNarrow((window?.innerWidth || 9999) < 640); } catch {}
+    };
+    try { window.addEventListener('resize', onResize); } catch {}
+    return () => { try { window.removeEventListener('resize', onResize); } catch {} };
+  }, []);
 
   const ensureServer = useCallback(async () => {
     try {
@@ -157,11 +168,27 @@ export default function LeaderboardView({ isAdmin = false }) {
 
   const showRankedPlayersTable = scope === 'battle_ranked';
   const showLevelCol = scope === 'campaign' && !showRankedPlayersTable;
+  const showAdminCol = isAdmin;
+  const showLeagueCol = showRankedPlayersTable;
+  const showLevelColEffective = showLevelCol;
+  const showLivesCol = showLevelCol;
+
+  const rowPad = isNarrow ? 'px-2 py-1.5' : 'px-3 py-2';
+  const rowText = isNarrow ? 'text-[10px]' : 'text-[12px]';
+  const headerText = isNarrow ? 'text-[9px]' : 'text-[10px]';
+  const rankIconSizeClass = isNarrow ? 'w-7 h-7' : 'w-10 h-10';
+
   const cols = showRankedPlayersTable
-    ? (isAdmin ? '28px 1fr 72px 80px 26px' : '28px 1fr 72px 80px')
-    : (isAdmin
-      ? (showLevelCol ? '28px 1fr 50px 70px 50px 56px 26px' : '28px 1fr 70px 56px 26px')
-      : (showLevelCol ? '28px 1fr 50px 70px 50px 56px'     : '28px 1fr 70px 56px'));
+    ? (isNarrow
+      ? (showAdminCol ? '20px 1fr 44px 56px 20px' : '20px 1fr 44px 56px')
+      : (showAdminCol ? '28px 1fr 72px 80px 26px' : '28px 1fr 72px 80px'))
+    : (isNarrow
+      ? (showAdminCol
+        ? (showLevelColEffective ? '20px 1fr 34px 50px 40px 44px 20px' : '20px 1fr 50px 44px 20px')
+        : (showLevelColEffective ? '20px 1fr 34px 50px 40px 44px' : '20px 1fr 50px 44px'))
+      : (showAdminCol
+        ? (showLevelColEffective ? '28px 1fr 50px 70px 50px 56px 26px' : '28px 1fr 70px 56px 26px')
+        : (showLevelColEffective ? '28px 1fr 50px 70px 50px 56px' : '28px 1fr 70px 56px')));
 
   return (
     <div className="max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-10" data-testid="leaderboard-view">
@@ -211,22 +238,22 @@ export default function LeaderboardView({ isAdmin = false }) {
           </div>
 
           <div className="space-y-1" data-testid="leaderboard-list">
-            <div className="grid gap-2 text-slate-500 text-[10px] tracking-[0.2em] uppercase border-b border-white/5 pb-2 mb-1 px-3" style={{ gridTemplateColumns: cols }}>
+            <div className={`grid gap-2 text-slate-500 ${headerText} tracking-[0.2em] uppercase border-b border-white/5 pb-2 mb-1 ${isNarrow ? 'px-2' : 'px-3'}`} style={{ gridTemplateColumns: cols }}>
               <div>#</div>
               <div>{t('leaderboard.name')}</div>
               {showRankedPlayersTable ? (
                 <>
-                  <div className="text-right">RANK</div>
+                  {showLeagueCol && <div className="text-right">RANK</div>}
                   <div className="text-right">{t('common.rating')}</div>
-                  {isAdmin && <div />}
+                  {showAdminCol && <div />}
                 </>
               ) : (
                 <>
-                  {showLevelCol && <div>{t('leaderboard.lvl')}</div>}
+                  {showLevelColEffective && <div>{t('leaderboard.lvl')}</div>}
                   <div className="text-right">{t('leaderboard.score')}</div>
-                  {showLevelCol && <div className="text-right">LIVES LEFT</div>}
+                  {showLivesCol && <div className="text-right">LIVES</div>}
                   <div className="text-right">{t('leaderboard.time')}</div>
-                  {isAdmin && <div />}
+                  {showAdminCol && <div />}
                 </>
               )}
             </div>
@@ -245,7 +272,7 @@ export default function LeaderboardView({ isAdmin = false }) {
                 return (
                   <div
                     key={e.nickname || e.player_name || i}
-                    className="grid gap-2 px-3 py-2 rounded items-center text-[12px] font-mono hover:bg-[rgba(0,229,255,0.06)] transition-colors"
+                    className={`grid gap-2 ${rowPad} rounded items-center ${rowText} font-mono hover:bg-[rgba(0,229,255,0.06)] transition-colors`}
                     style={{ gridTemplateColumns: cols }}
                     data-testid={`lb-entry-${i}`}
                   >
@@ -256,19 +283,21 @@ export default function LeaderboardView({ isAdmin = false }) {
                       className="truncate text-slate-200 flex items-center gap-1.5 text-left hover:text-white"
                       data-testid={`lb-open-profile-${i}`}
                     >
-                      {rankIconSrc(league) && <img src={rankIconSrc(league)} alt="rank" className="w-10 h-10 shrink-0" />}
+                      {rankIconSrc(league) && <img src={rankIconSrc(league)} alt="rank" className={`${rankIconSizeClass} shrink-0`} />}
                       {name}
                       {(name || '').toLowerCase() === 'limp4' && <Crown size={10} className="neon-gold shrink-0" />}
                     </button>
-                    <div className="text-right text-slate-300 font-display text-[10px] tracking-[0.2em] uppercase">{String(league || '').replace('top500', 'top500')}</div>
+                    {showLeagueCol && (
+                      <div className={`text-right text-slate-300 font-display ${isNarrow ? 'text-[9px]' : 'text-[10px]'} tracking-[0.2em] uppercase`}>{String(league || '').replace('top500', 'top500')}</div>
+                    )}
                     <div className="text-right neon-gold">{rating}</div>
-                    {isAdmin && (
+                    {showAdminCol && (
                       <button
                         onClick={() => hideRankedPlayer(name)}
                         className="text-slate-600 hover:text-[#FF2A6D] transition-colors justify-self-end"
                         title="Hide player"
                         data-testid={`admin-hide-ranked-${i}`}
-                      ><Trash2 size={13} /></button>
+                      ><Trash2 size={isNarrow ? 12 : 13} /></button>
                     )}
                   </div>
                 );
@@ -281,7 +310,7 @@ export default function LeaderboardView({ isAdmin = false }) {
               return (
                 <div
                   key={e.id}
-                  className="grid gap-2 px-3 py-2 rounded items-center text-[12px] font-mono hover:bg-[rgba(0,229,255,0.06)] transition-colors"
+                  className={`grid gap-2 ${rowPad} rounded items-center ${rowText} font-mono hover:bg-[rgba(0,229,255,0.06)] transition-colors`}
                   style={{ gridTemplateColumns: cols }}
                   data-testid={`lb-entry-${i}`}
                 >
@@ -295,20 +324,20 @@ export default function LeaderboardView({ isAdmin = false }) {
                     {e.player_name}
                     {(e.player_name || '').toLowerCase() === 'limp4' && <Crown size={10} className="neon-gold shrink-0" />}
                   </button>
-                  {showLevelCol && <div className="neon-lime text-[11px] font-bold">{e.level_id != null ? String(e.level_id).padStart(2, '0') : '—'}</div>}
+                  {showLevelColEffective && <div className="neon-lime text-[11px] font-bold">{e.level_id != null ? String(e.level_id).padStart(2, '0') : '—'}</div>}
                   <div className="text-right neon-cyan">{scoreText}</div>
-                  {showLevelCol && (
+                  {showLivesCol && (
                     <div className="text-right text-[11px]" data-testid={`lb-lives-remaining-${i}`}>
                       <span className="neon-lime">{livesRem}</span>
                       <span className="text-slate-600">/{livesTotalVal}</span>
                     </div>
                   )}
                   <div className="text-right text-slate-400">{String(e.time_seconds).padStart(3, '0')}s</div>
-                  {isAdmin && (
+                  {showAdminCol && (
                     <button onClick={() => handleDelete(e.id)}
                       className="text-slate-600 hover:text-[#FF2A6D] transition-colors justify-self-end"
                       title="Delete entry" data-testid={`admin-delete-${i}`}
-                    ><Trash2 size={13} /></button>
+                    ><Trash2 size={isNarrow ? 12 : 13} /></button>
                   )}
                 </div>
               );

@@ -180,7 +180,7 @@ export const GameOverModal = ({
   const [autoSubmitted, setAutoSubmitted] = React.useState(false);
   useLang();
 
-  const canContinueCampaign = mode === 'campaign' && won && Number(levelId) > 0 && Number(levelId) < 150 && typeof onExit === 'function';
+  const canContinueCampaign = mode === 'campaign' && won && Number(levelId) > 0 && Number(levelId) < 200 && typeof onExit === 'function';
   const isOnlineDuel = !!lobbyResult || (typeof mode === 'string' && (mode.startsWith('battle_') || mode.startsWith('lobby')));
   const allowOnlineRematch = isOnlineDuel && mode !== 'battle_ranked';
 
@@ -206,6 +206,7 @@ export const GameOverModal = ({
     <div className="modal-backdrop" data-testid="game-over-modal">
       <div className="glass-panel slide-up rounded-2xl p-8 max-w-md w-[92%] relative overflow-hidden">
         {won && <div className="scanline" />}
+        {won && <div className="victory-edges" />}
         <div className="flex items-center gap-3 mb-2">
           {won ? <Trophy size={28} className="neon-gold" /> : <Skull size={28} className="neon-coral" />}
           <h2 className={`font-display text-3xl font-black tracking-tight ${won ? 'neon-cyan' : 'neon-coral'}`}>
@@ -233,7 +234,7 @@ export const GameOverModal = ({
           </div>
         )}
 
-        {mode === 'campaign' && won && Number(levelId) === 150 && (
+        {mode === 'campaign' && won && Number(levelId) === 200 && (
           <div className="text-center text-[12px] neon-lime font-display font-black tracking-[0.2em] mb-4" data-testid="campaign-finished">
             ТЫ ЗАКОНЧИЛ КОМПАНИЮ
           </div>
