@@ -9,6 +9,8 @@ export default function BattlesView({ onStartBattle, player }) {
   const [error, setError] = useState(null);
   const pollRef = useRef(null);
   const startedRef = useRef(false);
+  const lobbyCodeRef = useRef(null);
+  const searchingRef = useRef(null);
   useLang();
 
   const SIMPLE_CFG = { rows: 10, cols: 10, mines: 20, lives: 3, mode: 'battle_simple', public: true };
@@ -17,13 +19,23 @@ export default function BattlesView({ onStartBattle, player }) {
   const stopPolling = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
 
   useEffect(() => {
+    lobbyCodeRef.current = lobby?.code || null;
+  }, [lobby?.code]);
+
+  useEffect(() => {
+    searchingRef.current = searching;
+  }, [searching]);
+
+  useEffect(() => {
     return () => {
       stopPolling();
-      if (lobby?.code) {
-        cancelLobby(lobby.code).catch(() => {});
+      const code = lobbyCodeRef.current;
+      const stillSearching = !!searchingRef.current;
+      if (stillSearching && code) {
+        cancelLobby(code).catch(() => {});
       }
     };
-  }, [lobby?.code]);
+  }, []);
 
   const beginSearch = async (kind) => {
     setError(null); setSearching(kind);
