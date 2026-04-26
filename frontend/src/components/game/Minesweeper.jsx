@@ -30,8 +30,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const [timer, setTimer] = useState(0);
   const [score, setScore] = useState(0);
   const [shaking, setShaking] = useState(false);
-  const [fxFlash, setFxFlash] = useState(false);
-  const [explosionPt, setExplosionPt] = useState(null);
+  const [explosionFx, setExplosionFx] = useState(null);
   const [victory, setVictory] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -87,8 +86,8 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const reset = useCallback(() => {
     setBoard(createEmptyBoard(rows, cols));
     setMinesPlaced(false); setLives(livesTotal); setFlagsCount(0); setSafeRevealed(0);
-    setStatus('idle'); setTimer(0); setScore(0); setShaking(false); setFxFlash(false);
-    setExplosionPt(null);
+    setStatus('idle'); setTimer(0); setScore(0); setShaking(false);
+    setExplosionFx(null);
     setVictory(false); setModalOpen(false); setSubmitted(false);
     setCoinsAwarded(0); setRatingDelta(0); setLobbyResult(null);
     setFlagMode(false);
@@ -141,17 +140,17 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
         const el = document.querySelector(`[data-testid="grid-cell-${r}-${c}"]`);
         if (el) {
           const rect = el.getBoundingClientRect();
-          setExplosionPt({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+          setExplosionFx({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
         } else {
-          setExplosionPt({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+          setExplosionFx({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
         }
       } catch {
-        setExplosionPt({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+        setExplosionFx({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
       }
 
-      setShaking(true); setFxFlash(true);
+      setShaking(true);
       setTimeout(() => setShaking(false), 520);
-      setTimeout(() => { setFxFlash(false); setExplosionPt(null); }, 620);
+      setTimeout(() => { setExplosionFx(null); }, 620);
       if (!infiniteLives && newLives <= 0) { endGame(false, workingBoard, safeRevealed, 0); return; }
       sfx.lifeLost(); setBoard(workingBoard); return;
     }
@@ -209,11 +208,11 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
   return (
     <div className="min-h-screen w-full relative flex flex-col" data-testid="game-screen">
-      {fxFlash && (
+      {explosionFx && (
         <>
           {(() => {
-            const x = explosionPt?.x ?? window.innerWidth / 2;
-            const y = explosionPt?.y ?? window.innerHeight / 2;
+            const x = explosionFx.x;
+            const y = explosionFx.y;
             return (
               <>
                 <div
