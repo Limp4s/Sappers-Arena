@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Coins, Check, Lock, ShoppingBag, Bomb } from 'lucide-react';
 import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, loadEquipped, saveEquipped, getItemCategory } from '../../lib/shop';
-import { purchaseItem, fetchPlayer } from '../../lib/player';
+import { purchaseItem, fetchPlayer, rewardWatchAd } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
@@ -13,6 +13,7 @@ export default function ShopView({ player, onPlayerUpdate }) {
   const [loading, setLoading] = useState(true);
   const [equipped, setEquipped] = useState(() => loadEquipped(player?.nick));
   const [buying, setBuying] = useState(null);
+  const [watchingAd, setWatchingAd] = useState(false);
   const [msg, setMsg] = useState(null);
   useLang();
 
@@ -82,6 +83,25 @@ export default function ShopView({ player, onPlayerUpdate }) {
     setMsg({ type: 'ok', text: t('shop.equippedMsg').replace('{id}', itemId) });
   };
 
+  const handleWatchAd = async () => {
+    if (!player) return;
+    setWatchingAd(true);
+    setMsg(null);
+    try {
+      const res = await rewardWatchAd();
+      if (res?.player) onPlayerUpdate(res.player);
+      const c = res?.coins_awarded ?? 0;
+      const left = res?.remaining_today;
+      const suffix = typeof left === 'number' ? ` (${left} left today)` : '';
+      setMsg({ type: 'ok', text: `+${c} coins${suffix}` });
+    } catch (e) {
+      const detail = e?.response?.data?.detail || 'Ad reward failed.';
+      setMsg({ type: 'err', text: detail });
+    } finally {
+      setWatchingAd(false);
+    }
+  };
+
   const renderMeta = (id) => {
     if (id.startsWith('mine_')) {
       const def = MINE_ICONS[id];
@@ -141,10 +161,20 @@ export default function ShopView({ player, onPlayerUpdate }) {
             {t('shop.blurb')}
           </p>
         </div>
-        <div className="flex items-center gap-2 glass-panel-light rounded-full px-5 py-2.5" data-testid="shop-coin-balance">
-          <Coins size={16} className="neon-gold" />
-          <span className="font-mono text-xl font-bold neon-gold">{(player?.coins ?? 0).toLocaleString()}</span>
-          <span className="text-[10px] text-slate-500 tracking-[0.2em] uppercase font-display">{t('shop.coins')}</span>
+        <div className="flex items-center gap-2" data-testid="shop-coin-balance">
+          <div className="flex items-center gap-2 glass-panel-light rounded-full px-5 py-2.5">
+            <Coins size={16} className="neon-gold" />
+            <span className="font-mono text-xl font-bold neon-gold">{(player?.coins ?? 0).toLocaleString()}</span>
+            <span className="text-[10px] text-slate-500 tracking-[0.2em] uppercase font-display">{t('shop.coins')}</span>
+          </div>
+          <button
+            className="neon-btn py-2 px-4 text-[11px]"
+            onClick={handleWatchAd}
+            disabled={watchingAd}
+            data-testid="watch-ad-btn"
+          >
+            {watchingAd ? 'Loading…' : 'Watch Ad (+50)'}
+          </button>
         </div>
       </div>
 
@@ -156,35 +186,46 @@ export default function ShopView({ player, onPlayerUpdate }) {
 
       {loading && <div className="text-center text-slate-500 text-xs py-8">{t('shop.loading')}</div>}
 
-      {!loading && GROUPS.map(group => (
-        <section key={group.key} className="mb-6">
-          <h3 className="font-display text-xs font-bold tracking-[0.3em] uppercase text-slate-300 mb-3">
-            // {group.label}
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {/* Default (free) item */}
-            <ItemCard
-              item={group.defaultItem}
-              isOwned={true}
-              isEquipped={equipped[group.key === 'explosion' ? 'fx' : group.key] === group.defaultItem.id}
-              preview={renderMeta(group.defaultItem.id)}
-              onEquip={() => handleEquip(group.defaultItem.id)}
-            />
-            {groupedItems[group.key].map(item => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                isOwned={owned.has(item.id)}
-                isEquipped={equipped[group.key === 'explosion' ? 'fx' : group.key] === item.id}
-                preview={renderMeta(item.id)}
-                disabled={buying === item.id}
-                onBuy={() => handleBuy(item.id, item.price)}
-                onEquip={() => handleEquip(item.id)}
-              />
+      {!loading && (
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+          <div>
+            {GROUPS.map(group => (
+              <section key={group.key} className="mb-6">
+                <h3 className="font-display text-xs font-bold tracking-[0.3em] uppercase text-slate-300 mb-3">
+                  // {group.label}
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {/* Default (free) item */}
+                  <ItemCard
+                    item={group.defaultItem}
+                    isOwned={true}
+                    isEquipped={equipped[group.key === 'explosion' ? 'fx' : group.key] === group.defaultItem.id}
+                    preview={renderMeta(group.defaultItem.id)}
+                    onEquip={() => handleEquip(group.defaultItem.id)}
+                  />
+                  {groupedItems[group.key].map(item => (
+                    <ItemCard
+                      key={item.id}
+                      item={item}
+                      isOwned={owned.has(item.id)}
+                      isEquipped={equipped[group.key === 'explosion' ? 'fx' : group.key] === item.id}
+                      preview={renderMeta(item.id)}
+                      disabled={buying === item.id}
+                      onBuy={() => handleBuy(item.id, item.price)}
+                      onEquip={() => handleEquip(item.id)}
+                    />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
-        </section>
-      ))}
+
+          <aside className="glass-panel rounded-xl p-3 h-[600px]" data-testid="shop-ad-slot">
+            <div className="text-[10px] tracking-[0.3em] uppercase text-slate-500 font-display mb-2">// advertisement</div>
+            <div className="glass-panel-light rounded-lg w-full h-full" />
+          </aside>
+        </div>
+      )}
     </div>
   );
 }

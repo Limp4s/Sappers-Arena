@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <title>Политика конфиденциальности — Sappers Arena</title>
+
+  <style>
+    :root {
+      --bg: #000000;
+      --panel: #0b0f1a;
+      --panel2: #070a12;
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.7);
+      --muted2: rgba(255,255,255,0.55);
+      --border: rgba(255,255,255,0.12);
+      --accent: #38bdf8;
+      --accent2: #0ea5e9;
+      --danger: #fb7185;
+      --shadow: 0 18px 60px rgba(0,0,0,0.7);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent); }
+
+    .wrap {
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 28px 16px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 980px;
+      background: radial-gradient(1200px 700px at 20% 0%, rgba(56,189,248,0.10), transparent 55%),
+                  linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(56,189,248,0.12);
+      border: 1px solid rgba(56,189,248,0.25);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .titleblock {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .title {
+      font-size: 16px;
+      font-weight: 800;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.35);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .content {
+      padding: 22px 22px 10px 22px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin: 4px 0 8px 0;
+    }
+
+    .date {
+      color: var(--muted);
+      margin-bottom: 18px;
+      font-size: 14px;
+    }
+
+    h2 {
+      margin-top: 22px;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      font-size: 18px;
+    }
+
+    ul { margin: 10px 0 10px 18px; }
+
+    .muted { color: var(--muted2); }
+
+    .notice {
+      margin: 14px 0 0 0;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .footer {
+      padding: 14px 22px 18px 22px;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.4);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 800;
+      transition: 0.18s;
+    }
+
+    .btn:hover { transform: translateY(-1px); border-color: rgba(56,189,248,0.35); }
+
+    .btn.primary {
+      background: linear-gradient(180deg, rgba(56,189,248,0.95), rgba(14,165,233,0.95));
+      border-color: rgba(56,189,248,0.45);
+      color: #001018;
+    }
+
+    .btn.primary:hover { border-color: rgba(56,189,248,0.75); }
+
+    .btn.ghost {
+      background: transparent;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 16px 0;
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    .panel {
+      background: rgba(0,0,0,0.35);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .panel h3 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      color: #fff;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    input {
+      background: rgba(0,0,0,0.55);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 12px;
+      color: #fff;
+      outline: none;
+      font-size: 14px;
+    }
+
+    input:focus {
+      border-color: rgba(56,189,248,0.55);
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.10);
+    }
+
+    .login-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 10px 0 0 0;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 860px) {
+      .two { grid-template-columns: 1fr; }
+      .login-actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo">SA</div>
+          <div class="titleblock">
+            <p class="title">Sappers Arena</p>
+            <p class="subtitle">Политика конфиденциальности и вход</p>
+          </div>
+        </div>
+        <div class="pill" id="statePill">Требуется принятие политики</div>
+      </div>
+
+      <div class="content">
+        <!-- POLICY VIEW -->
+        <section id="policyView">
+          <h1>Политика конфиденциальности</h1>
+          <div class="date">Дата обновления: 26 апреля 2026 г.</div>
+
+          <p>
+            Настоящая Политика конфиденциальности описывает, как сервис <strong>Sappers Arena</strong>
+            (далее — «Игра», «Сервис», «мы», «нас», «наш») собирает, использует, хранит и защищает информацию пользователей.
+          </p>
+
+          <p>Используя Игру, вы соглашаетесь с условиями данной Политики.</p>
+
+          <h2>1. Какие данные мы собираем</h2>
+
+          <p><strong>Данные аккаунта:</strong></p>
+          <ul>
+            <li>Никнейм (имя пользователя)</li>
+            <li>Данные авторизации и сессии</li>
+            <li>Идентификаторы аккаунта (если применимо)</li>
+          </ul>
+
+          <p><strong>Игровые данные:</strong></p>
+          <ul>
+            <li>Очки, достижения, статистика</li>
+            <li>Прогресс в игре</li>
+            <li>Настройки пользователя</li>
+            <li>Данные таблиц лидеров</li>
+          </ul>
+
+          <p><strong>Технические данные:</strong></p>
+          <ul>
+            <li>IP-адрес</li>
+            <li>Тип устройства, ОС и браузер</li>
+            <li>Язык системы</li>
+            <li>Дата и время доступа</li>
+            <li>Логи ошибок</li>
+          </ul>
+
+          <p><strong>Хранилище:</strong></p>
+          <ul>
+            <li>Cookies</li>
+            <li>localStorage</li>
+          </ul>
+
+          <h2>2. Как мы используем данные</h2>
+          <ul>
+            <li>Предоставление доступа к Игре</li>
+            <li>Сохранение прогресса</li>
+            <li>Работа таблиц лидеров</li>
+            <li>Улучшение функциональности</li>
+            <li>Безопасность и защита от мошенничества</li>
+            <li>Техническая поддержка</li>
+          </ul>
+
+          <h2>3. Правовые основания (ЕЭЗ/Великобритания)</h2>
+          <ul>
+            <li><strong>Исполнение договора</strong></li>
+            <li><strong>Законные интересы</strong></li>
+            <li><strong>Согласие</strong></li>
+          </ul>
+
+          <h2>4. Передача данных третьим лицам</h2>
+          <p>
+            Мы не продаём данные. Передача возможна только техническим поставщикам (хостинг, серверы).
+          </p>
+
+          <h2>5. Международная передача данных</h2>
+          <p>
+            Данные могут обрабатываться за пределами вашей страны с соблюдением мер защиты.
+          </p>
+
+          <h2>6. Срок хранения данных</h2>
+          <p>
+            Данные хранятся столько, сколько необходимо для работы Игры или по закону.
+          </p>
+
+          <h2>7. Ваши права</h2>
+          <ul>
+            <li>Доступ к данным</li>
+            <li>Исправление</li>
+            <li>Удаление</li>
+            <li>Ограничение обработки</li>
+            <li>Возражение против обработки</li>
+            <li>Переносимость данных</li>
+          </ul>
+
+          <h2>8. Безопасность данных</h2>
+          <p>
+            Мы принимаем разумные меры защиты, но не можем гарантировать абсолютную безопасность.
+          </p>
+
+          <h2>9. Дети</h2>
+          <p>
+            Игра не предназначена для детей младше 13 лет.
+          </p>
+
+          <h2>10. Изменения политики</h2>
+          <p>
+            Мы можем обновлять Политику. Актуальная версия всегда доступна на странице.
+          </p>
+
+          <h2>11. Контакты</h2>
+          <div class="panel">
+            <div><span class="muted">Email:</span> <strong>limp976@gmail.com</strong></div>
+          </div>
+
+          <div class="notice">
+            Чтобы продолжить, нажмите «Принять и продолжить».
+          </div>
+        </section>
+
+        <!-- LOGIN VIEW -->
+        <section id="loginView" class="hidden">
+          <h1>Вход</h1>
+          <div class="date">Вы приняли Политику конфиденциальности. Переходим в игру…</div>
+
+          <div class="two">
+            <div class="panel">
+              <h3>Войти в аккаунт</h3>
+
+              <div class="field">
+                <div class="label">Никнейм</div>
+                <input id="nick" type="text" placeholder="Введите никнейм" autocomplete="nickname" />
+              </div>
+
+              <div class="field">
+                <div class="label">Пароль (если используется)</div>
+                <input id="pass" type="password" placeholder="Введите пароль" autocomplete="current-password" />
+              </div>
+
+              <div class="login-actions">
+                <button class="btn" id="registerBtn" type="button">Зарегистрироваться</button>
+                <button class="btn primary" id="loginBtn" type="button">Войти</button>
+              </div>
+
+              <p class="small" id="loginHint">
+                Сейчас вы будете перенаправлены на страницу входа в самом приложении.
+              </p>
+            </div>
+
+            <div class="panel">
+              <h3>Что дальше</h3>
+              <p class="muted">
+                После интеграции ты сможешь:
+              </p>
+              <ul class="muted">
+                <li>делать редирект на приложение</li>
+                <li>отправлять логин/регистрацию на сервер</li>
+                <li>показывать эту страницу только до первого принятия</li>
+              </ul>
+              <div class="divider"></div>
+              <button class="btn ghost" id="resetBtn" type="button">Сбросить принятие политики</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="footer">
+        <div class="muted" id="footerText">Чтобы продолжить, нужно принять политику</div>
+        <div class="actions" id="policyActions">
+          <button class="btn primary" id="acceptBtn" type="button">Принять и продолжить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PRIVACY_KEY = 'sa_privacy_accepted_v1';
+
+    const policyView = document.getElementById('policyView');
+    const loginView = document.getElementById('loginView');
+    const acceptBtn = document.getElementById('acceptBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const statePill = document.getElementById('statePill');
+    const footerText = document.getElementById('footerText');
+    const policyActions = document.getElementById('policyActions');
+
+    const loginBtn = document.getElementById('loginBtn');
+    const registerBtn = document.getElementById('registerBtn');
+
+    function redirectToApp() {
+      // React app uses HashRouter, so we redirect to index.html#/
+      // Using a relative URL keeps it working locally and in static hosting.
+      window.location.href = './index.html#/';
+    }
+
+    function showLogin() {
+      policyView.classList.add('hidden');
+      loginView.classList.remove('hidden');
+
+      statePill.textContent = 'Политика принята';
+      footerText.textContent = 'Перенаправляем в игру…';
+      policyActions.classList.add('hidden');
+
+      setTimeout(() => redirectToApp(), 300);
+    }
+
+    function showPolicy() {
+      loginView.classList.add('hidden');
+      policyView.classList.remove('hidden');
+
+      statePill.textContent = 'Требуется принятие политики';
+      footerText.textContent = 'Чтобы продолжить, нужно принять политику';
+      policyActions.classList.remove('hidden');
+    }
+
+    function isAccepted() {
+      return localStorage.getItem(PRIVACY_KEY) === '1';
+    }
+
+    function acceptPolicy() {
+      localStorage.setItem(PRIVACY_KEY, '1');
+      showLogin();
+    }
+
+    function resetAcceptance() {
+      localStorage.removeItem(PRIVACY_KEY);
+      showPolicy();
+    }
+
+    acceptBtn.addEventListener('click', acceptPolicy);
+    resetBtn.addEventListener('click', resetAcceptance);
+
+    loginBtn.addEventListener('click', () => {
+      redirectToApp();
+    });
+
+    registerBtn.addEventListener('click', () => {
+      redirectToApp();
+    });
+
+    if (isAccepted()) redirectToApp();
+    else showPolicy();
+  </script>
+</body>
+</html>
