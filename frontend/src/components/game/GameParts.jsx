@@ -182,6 +182,7 @@ export const GameOverModal = ({
 
   const canContinueCampaign = mode === 'campaign' && won && Number(levelId) > 0 && Number(levelId) < 150 && typeof onExit === 'function';
   const isOnlineDuel = !!lobbyResult || (typeof mode === 'string' && (mode.startsWith('battle_') || mode.startsWith('lobby')));
+  const allowOnlineRematch = isOnlineDuel && mode !== 'battle_ranked';
 
   const handleContinue = () => {
     try {
@@ -298,9 +299,11 @@ export const GameOverModal = ({
               {onExit && (
                 <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={onExit} data-testid="modal-exit-btn">{t('common.exit')}</button>
               )}
-              <button className={`neon-btn flex-1 min-w-[120px] ${rematchVoted ? 'opacity-70 pointer-events-none' : ''}`} onClick={onNewGame} data-testid="new-game-btn">
-                {t('game.playAgain')}{rematchVoted ? ` (${Math.max(0, Number(rematchSecondsLeft) || 0)}s)` : ''}{!rematchVoted && rematchWaiting && oppRematchVoted ? ' (!)' : ''}
-              </button>
+              {allowOnlineRematch && (
+                <button className={`neon-btn flex-1 min-w-[120px] ${rematchVoted ? 'opacity-70 pointer-events-none' : ''}`} onClick={onNewGame} data-testid="new-game-btn">
+                  {t('game.playAgain')}{rematchVoted ? ` (${Math.max(0, Number(rematchSecondsLeft) || 0)}s)` : ''}{!rematchVoted && rematchWaiting && oppRematchVoted ? ' (!)' : ''}
+                </button>
+              )}
             </>
           ) : (
             <>

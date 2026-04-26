@@ -851,6 +851,20 @@ def _norm_lobby_code(code: str) -> str:
     return (code or "").strip().upper()
 
 
+async def _player_rating_and_last_opponent(nick: str) -> tuple[int, Optional[str]]:
+    try:
+        doc = await _get_player(nick)
+        if not doc:
+            return (500, None)
+        rating = int(doc.get("rating", 500) or 500)
+        last_opp = doc.get("last_opponent")
+        if isinstance(last_opp, str) and last_opp.strip():
+            return (rating, last_opp)
+        return (rating, None)
+    except Exception:
+        return (500, None)
+
+
 def _sanitize_lobby(doc):
     if not doc: return None
     doc = dict(doc)
@@ -911,11 +925,13 @@ async def create_lobby(payload: LobbyCreateRequest, nick: str = Depends(require_
     else:
         raise HTTPException(status_code=500, detail="Could not generate unique code.")
     seed = secrets.randbits(32)
+    host_rating, _ = await _player_rating_and_last_opponent(nick)
     lobby = {
         "code": code,
         "mode": payload.mode,
         "public": payload.public,
         "host": nick,
+        "host_rating": host_rating,
         "guest": None,
         "config": {
             "rows": payload.rows, "cols": payload.cols,
@@ -1005,6 +1021,14 @@ async def submit_lobby_result(code: str, payload: Dict[str, Any], nick: str = De
     updated = await db.lobbies.find_one({"code": code})
     if updated.get("host_result") and updated.get("guest_result"):
         await db.lobbies.update_one({"code": code}, {"$set": {"status": "finished"}})
+        try:
+            host = updated.get("host")
+            guest = updated.get("guest")
+            if host and guest:
+                await db.players.update_one({"nickname_lower": str(host).lower()}, {"$set": {"last_opponent": guest}})
+                await db.players.update_one({"nickname_lower": str(guest).lower()}, {"$set": {"last_opponent": host}})
+        except Exception:
+            pass
     return _sanitize_lobby(await db.lobbies.find_one({"code": code}))
 
 
@@ -1034,20 +1058,55 @@ async def report_progress(code: str, payload: Dict[str, Any], nick: str = Depend
 @api_router.post("/matchmaking/find")
 async def matchmaking_find(payload: LobbyCreateRequest, nick: str = Depends(require_session)):
     """Find a public waiting lobby matching mode, else create one."""
+    my_rating, last_opp = await _player_rating_and_last_opponent(nick)
+
     query = {
-        "mode": payload.mode, "public": True, "status": "waiting",
+        "mode": payload.mode,
+        "public": True,
+        "status": "waiting",
         "host": {"$ne": nick},
         "guest": None,
-        "config.rows": payload.rows, "config.cols": payload.cols, "config.mines": payload.mines,
+        "config.rows": payload.rows,
+        "config.cols": payload.cols,
+        "config.mines": payload.mines,
     }
-    lobby = await db.lobbies.find_one(query)
-    if lobby:
-        await db.lobbies.update_one(
-            {"code": lobby["code"]},
-            {"$set": {"guest": nick}},
-        )
-        await _ensure_lobby_playing(lobby["code"])
-        return _sanitize_lobby(await db.lobbies.find_one({"code": lobby["code"]}))
+
+    candidates: List[dict] = []
+    try:
+        cursor = db.lobbies.find(query, {"_id": 0}).limit(50)
+        candidates = await cursor.to_list(length=50)
+    except Exception:
+        candidates = []
+
+    if candidates:
+        def _score(l: dict) -> tuple[int, int]:
+            host = (l.get("host") or "")
+            hr = l.get("host_rating")
+            try:
+                hrn = int(hr) if hr is not None else 500
+            except Exception:
+                hrn = 500
+            diff = abs(hrn - int(my_rating or 500))
+            repeat_penalty = 1 if (last_opp and host and str(host).lower() == str(last_opp).lower()) else 0
+            return (repeat_penalty, diff)
+
+        candidates.sort(key=_score)
+        best = candidates[0]
+        if last_opp and (best.get("host") or "") and str(best.get("host")).lower() == str(last_opp).lower():
+            # If the best candidate is the same opponent as last time, try to pick the next closest.
+            for cand in candidates[1:]:
+                if str((cand.get("host") or "")).lower() != str(last_opp).lower():
+                    best = cand
+                    break
+
+        if last_opp and str((best.get("host") or "")).lower() == str(last_opp).lower():
+            # Only the last opponent is available right now; do not rematch consecutively.
+            return await create_lobby(payload, nick)
+
+        await db.lobbies.update_one({"code": best["code"], "guest": None, "status": "waiting"}, {"$set": {"guest": nick}})
+        await _ensure_lobby_playing(best["code"])
+        return _sanitize_lobby(await db.lobbies.find_one({"code": best["code"]}))
+
     return await create_lobby(payload, nick)
 
 
