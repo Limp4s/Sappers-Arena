@@ -48,6 +48,12 @@ input, textarea, [contenteditable="true"], .allow-select {
     user-select: text;
 }
 
+img {
+    -webkit-user-drag: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
 body::before {
     content: "";
     position: fixed;
