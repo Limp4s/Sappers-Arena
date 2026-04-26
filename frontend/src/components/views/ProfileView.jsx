@@ -160,7 +160,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
         </h2>
         <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display mt-2">
           {t('profile.playerId')}
-          <span className="ml-2 font-mono text-[14px] font-black text-white tracking-[0.12em] shadow-[0_0_10px_rgba(255,255,255,0.55)]">
+          <span className="ml-2 font-mono text-[14px] font-black text-white tracking-[0.12em]">
             {prettyPlayerId}
           </span>
         </div>
