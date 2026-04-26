@@ -1,18 +1,18 @@
-from fastapi import FastAPI, APIRouter, Query, HTTPException, Header, Depends, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, APIRouter, Query, HTTPException, Header, Depends, WebSocket, WebSocketDisconnect, Path as FPath
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ReturnDocument
 import os, logging, re, random, string, hashlib, secrets
 import certifi
-from pathlib import Path
+from pathlib import Path as PathlibPath
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone, timedelta
 
 
-ROOT_DIR = Path(__file__).parent
+ROOT_DIR = PathlibPath(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 
@@ -597,7 +597,7 @@ async def get_player_public(nickname: str):
 
 
 @api_router.get("/players/by-num/{player_num}")
-async def get_player_by_num(player_num: int = Path(..., ge=0, le=2000000)):
+async def get_player_by_num(player_num: int = FPath(..., ge=0, le=2000000)):
     doc = await db.players.find_one({"player_num": int(player_num)}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Player not found.")
