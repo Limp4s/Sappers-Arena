@@ -81,6 +81,8 @@ body::after {
 .font-display { font-family: 'Orbitron', sans-serif; letter-spacing: 0.02em; }
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 
+.no-text-shadow { text-shadow: none !important; }
+
 /* Glass panel */
 .glass-panel {
     background: rgba(6, 10, 16, 0.55);
