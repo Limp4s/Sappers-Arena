@@ -42,6 +42,16 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
     onLogout?.();
   };
 
+  const prettyPlayerId = (() => {
+    const n = player?.player_num;
+    if (typeof n === 'number' && Number.isFinite(n)) {
+      const v = Math.max(0, Math.floor(n) - 1);
+      return String(v).padStart(3, '0');
+    }
+    const legacy = getPlayerId(player?.nick);
+    return legacy ?? '—';
+  })();
+
   const rankIconSrc = (league) => {
     const map = {
       wood: '/ranks/wood.png',
@@ -74,7 +84,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
           {(player?.league || player?.ranked_place) && (
             <span className="flex items-center gap-1 text-[11px] font-display tracking-[0.25em] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-200">
               {rankIconSrc(player?.league) ? (
-                <img src={rankIconSrc(player?.league)} alt="rank" className="w-7 h-7" />
+                <img src={rankIconSrc(player?.league)} alt="rank" className="w-10 h-10" />
               ) : (
                 <Trophy size={11} className="neon-gold" />
               )}
@@ -90,7 +100,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
         <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display mt-2">
           {t('profile.playerId')}
           <span className="ml-2 font-mono text-[14px] font-black text-white tracking-[0.12em] shadow-[0_0_10px_rgba(255,255,255,0.55)]">
-            {player?.player_num ?? getPlayerId(player?.nick) ?? '—'}
+            {prettyPlayerId}
           </span>
         </div>
       </div>
