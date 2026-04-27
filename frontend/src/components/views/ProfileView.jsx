@@ -173,12 +173,11 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
       <AchievementsModal open={showAchievements} onClose={() => setShowAchievements(false)} />
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5">
         <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// identity</div>
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3 min-w-0">
-            <User size={26} />
-            <span className="truncate">{player?.nick}</span>
+        <div className="flex items-center gap-3">
+          <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3">
+            <User size={26} /> {player?.nick}
             {(player?.league || player?.ranked_place) && (
-              <span className="flex items-center gap-1 text-[11px] font-display tracking-[0.25em] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-200 shrink-0">
+              <span className="flex items-center gap-1 text-[11px] font-display tracking-[0.25em] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-200">
                 {rankIconSrc(player?.league) ? (
                   <img src={rankIconSrc(player?.league)} alt="rank" className="w-10 h-10" />
                 ) : (
@@ -188,14 +187,14 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               </span>
             )}
             {player?.isAdmin && (
-              <span className="flex items-center gap-1 text-[11px] neon-gold font-display tracking-[0.25em] bg-[#FFD700]/10 border border-[#FFD700]/50 px-2 py-0.5 rounded shrink-0">
+              <span className="flex items-center gap-1 text-[11px] neon-gold font-display tracking-[0.25em] bg-[#FFD700]/10 border border-[#FFD700]/50 px-2 py-0.5 rounded">
                 <Shield size={11} /> {t('admin.title')}
               </span>
             )}
           </h2>
           <button
             onClick={() => setShowAchievements(true)}
-            className={`w-12 h-12 rounded-xl border transition-all flex items-center justify-center shrink-0 ${
+            className={`ml-auto w-12 h-12 rounded-xl border transition-all flex items-center justify-center ${
               showAchievements
                 ? 'border-[#FFD700]/60 bg-[rgba(255,215,0,0.10)] shadow-[0_0_18px_rgba(255,215,0,0.25)]'
                 : 'border-[#FFD700]/30 bg-[rgba(255,215,0,0.05)] hover:border-[#FFD700]/60 hover:bg-[rgba(255,215,0,0.08)] hover:shadow-[0_0_14px_rgba(255,215,0,0.18)]'
