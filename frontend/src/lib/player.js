@@ -587,6 +587,13 @@ export async function adminGrantRatingWin() {
   return res?.data;
 }
 
+export async function adminResetAchievements(nickname) {
+  const nick = String(nickname || '').trim();
+  if (!nick) throw new Error('Missing nickname');
+  const res = await axios.post(`${API}/admin/achievements/reset`, { nickname: nick }, { headers: authHeaders() });
+  return res?.data;
+}
+
 export const adminDeletePlayer = async (nickname) => {
   const nick = String(nickname || '').trim();
   if (!nick) throw new Error('Missing nickname');

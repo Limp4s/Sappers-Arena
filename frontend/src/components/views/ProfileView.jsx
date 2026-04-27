@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2, Award } from 'lucide-react';
-import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminDeletePlayer, getToken, authHeaders } from '../../lib/player';
+import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminResetAchievements, adminDeletePlayer, getToken, authHeaders } from '../../lib/player';
 import { promoteToAdmin } from '../../lib/lobby';
 import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
 import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
@@ -78,6 +78,26 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
     } catch {
       setAdminPlayers([]);
     }
+  };
+
+  const handleResetAchievements = async (nickname) => {
+    const targetNick = String(nickname || '').trim();
+    if (!targetNick) return;
+    const ok = window.confirm(`Reset achievements for: ${targetNick}?`);
+    if (!ok) return;
+    setAdminBusy(true);
+    setAdminMsg(null);
+    try {
+      const res = await adminResetAchievements(targetNick);
+      setAdminMsg({ ok: true, text: `Achievements reset: ${targetNick}` });
+      if (String(targetNick).toLowerCase() === String(player?.nick || '').toLowerCase() && res?.player) {
+        onPlayerUpdate?.(res.player);
+      }
+      await refreshAdminPlayers();
+    } catch (e2) {
+      setAdminMsg({ ok: false, text: e2?.response?.data?.detail || 'Failed' });
+    }
+    setAdminBusy(false);
   };
 
   const handleFixNegativeRatings = async () => {
@@ -291,13 +311,22 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                     .filter((p) => {
                       const q = (adminPlayersQuery || '').trim().toLowerCase();
                       if (!q) return true;
-                      return String(p?.nickname || '').toLowerCase().includes(q);
+                      const nn = String(p?.nickname || '').toLowerCase();
+                      const pn = String(p?.player_num ?? '').toLowerCase();
+                      return nn.includes(q) || pn.includes(q);
                     })
-                    .slice(0, 200)
                     .map((p) => (
-                      <div key={`${p?.player_num}-${p?.nickname}`} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-b-0">
+                      <div key={String(p?.player_num || p?.nickname || Math.random())} className="flex items-center justify-between gap-3 py-2 border-b border-white/5 last:border-b-0">
                         <div className="font-mono text-[11px] text-slate-300">#{p?.player_num ?? '—'}</div>
                         <div className="font-mono text-[11px] text-white">{p?.nickname || '—'}</div>
+                        <button
+                          onClick={() => handleResetAchievements(p?.nickname)}
+                          disabled={adminBusy || !p?.nickname}
+                          className="neon-btn px-2 py-1 text-[10px]"
+                          style={{ borderColor: '#FFD700', color: '#FFD700' }}
+                        >
+                          RESET
+                        </button>
                         <button
                           onClick={() => handleDeletePlayer(p?.nickname)}
                           disabled={adminBusy || !p?.nickname || String(p?.nickname || '').toLowerCase() === String(player?.nick || '').toLowerCase() || !!p?.is_admin}

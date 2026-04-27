@@ -1349,6 +1349,10 @@ class AdminHideRankedRequest(BaseModel):
     nickname: str = Field(..., min_length=3, max_length=20)
 
 
+class AdminResetAchievementsRequest(BaseModel):
+    nickname: str = Field(..., min_length=3, max_length=20)
+
+
 @api_router.post("/admin/promote")
 async def promote_to_admin(payload: AdminPromoteRequest, nick: str = Depends(require_session)):
     await _require_admin(nick)
@@ -1431,6 +1435,21 @@ async def admin_grant_rating_win(nick: str = Depends(require_session)):
     )
     updated = await _get_player(nick)
     return {"ok": True, "rating_delta": delta, "player": _sanitize_player(updated)}
+
+
+@api_router.post("/admin/achievements/reset")
+async def admin_reset_achievements(payload: AdminResetAchievementsRequest, nick: str = Depends(require_session)):
+    await _require_admin(nick)
+    target = await _get_player(payload.nickname)
+    if not target:
+        raise HTTPException(status_code=404, detail="Player not found.")
+
+    await db.players.update_one(
+        {"nickname_lower": target.get("nickname_lower")},
+        {"$set": {"achievements_unlocked": {}, "achievements_stats": {}}},
+    )
+    updated = await _get_player(payload.nickname)
+    return {"ok": True, "player": _sanitize_player(updated)}
 
 
 @api_router.delete("/admin/player/{nickname}")
