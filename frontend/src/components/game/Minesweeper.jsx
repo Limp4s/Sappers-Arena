@@ -8,6 +8,7 @@ import { computeStars, recordLevelResult } from '../../lib/levels';
 import { submitScore, sessionHeaders } from '../../lib/player';
 import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, loadEquipped } from '../../lib/shop';
 import { submitLobbyResult, createSeededRandom, getLobby } from '../../lib/lobby';
+import { recordDailyProgress } from '../../lib/dailies';
 import { t, useLang } from '../../lib/i18n';
 
 export default function MinesweeperGame({ config, onCoinsEarned }) {
@@ -99,6 +100,16 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     if (timerRef.current) clearInterval(timerRef.current);
     const finalScore = calculateScore({ difficulty, safeRevealed: finalSafe, timeSeconds: timer, livesRemaining: finalLives, won });
     setScore(finalScore);
+
+    try {
+      recordDailyProgress({
+        played: 1,
+        won: won ? 1 : 0,
+        flags: flagsCount,
+        safe: finalSafe,
+      });
+    } catch {}
+
     if (won) {
       setVictory(true); sfx.victory();
       if (mode === 'campaign' && levelId != null) {
@@ -114,7 +125,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     const revealed = finalBoard.map((row) => row.map((c) => ({ ...c, revealed: c.mine ? true : c.revealed })));
     setBoard(revealed);
     setTimeout(() => setModalOpen(true), 900);
-  }, [difficulty, timer, mode, levelId, livesTotal]);
+  }, [difficulty, timer, mode, levelId, livesTotal, flagsCount]);
 
   const revealCell = (r, c) => {
     if (status === 'won' || status === 'lost') return;
@@ -183,6 +194,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
         level_id: levelId ?? null, rows, cols, mines,
         flags: flagsCount,
         score, time_seconds: timer,
+        safe_revealed: safeRevealed,
         lives_remaining: lives, lives_total: livesTotal,
         won: status === 'won',
         lobby_code: lobbyCode || null,

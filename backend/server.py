@@ -310,6 +310,78 @@ def _compute_ranked_duel_rating_delta(
     return -loss
 
 
+DAILY_TZ_OFFSET_HOURS = 2  # UTC+2 windows: 00:00-12:00-00:00
+DAILY_QUESTS = [
+    {"id": "play_1", "type": "gamesPlayed", "target": 1, "rewardCoins": 10},
+    {"id": "win_1", "type": "gamesWon", "target": 1, "rewardCoins": 15},
+    {"id": "flags_10", "type": "flagsPlaced", "target": 10, "rewardCoins": 10},
+    {"id": "safe_50", "type": "safeRevealed", "target": 50, "rewardCoins": 15},
+]
+
+
+def _daily_now_local() -> datetime:
+    return datetime.now(timezone.utc) + timedelta(hours=DAILY_TZ_OFFSET_HOURS)
+
+
+def _daily_window_key(now_local: Optional[datetime] = None) -> str:
+    d = now_local or _daily_now_local()
+    w = 0 if d.hour < 12 else 1
+    return f"{d.year:04d}-{d.month:02d}-{d.day:02d}-{w}"
+
+
+def _daily_seconds_until_reset(now_local: Optional[datetime] = None) -> int:
+    d = now_local or _daily_now_local()
+    next_hour = 12 if d.hour < 12 else 24
+    if next_hour == 24:
+        nxt = datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=d.tzinfo) + timedelta(days=1)
+    else:
+        nxt = datetime(d.year, d.month, d.day, 12, 0, 0, tzinfo=d.tzinfo)
+    return max(0, int((nxt - d).total_seconds()))
+
+
+def _daily_blank_state(window_key: str) -> dict:
+    return {
+        "daily_window": window_key,
+        "daily_progress": {
+            "gamesPlayed": 0,
+            "gamesWon": 0,
+            "flagsPlaced": 0,
+            "safeRevealed": 0,
+        },
+        "daily_claimed": {},
+    }
+
+
+async def _ensure_daily_window(player: dict) -> dict:
+    now_local = _daily_now_local()
+    wk = _daily_window_key(now_local)
+    if not player:
+        return player
+    if player.get("daily_window") != wk:
+        patch = _daily_blank_state(wk)
+        await db.players.update_one(
+            {"nickname_lower": player.get("nickname_lower")},
+            {"$set": patch},
+        )
+        player = {**player, **patch}
+    if not isinstance(player.get("daily_progress"), dict):
+        player["daily_progress"] = _daily_blank_state(wk)["daily_progress"]
+    if not isinstance(player.get("daily_claimed"), dict):
+        player["daily_claimed"] = {}
+    return player
+
+
+def _daily_quest_progress(state: dict, quest: dict) -> dict:
+    st = state or {}
+    q = quest or {}
+    prog = st.get("daily_progress") or {}
+    cur = int(prog.get(q.get("type"), 0) or 0)
+    target = max(1, int(q.get("target", 1) or 1))
+    done = cur >= target
+    claimed = bool((st.get("daily_claimed") or {}).get(q.get("id")))
+    return {"cur": cur, "target": target, "done": done, "claimed": claimed}
+
+
 # ---------------- Models ----------------
 
 class ScoreCreate(BaseModel):
@@ -327,6 +399,7 @@ class ScoreCreate(BaseModel):
     lives_total: int = Field(default=3, ge=1, le=99)
     won: bool
     lobby_code: Optional[str] = Field(default=None, max_length=16)
+    safe_revealed: Optional[int] = Field(default=None, ge=0, le=5000)
 
 
 class Score(BaseModel):
@@ -346,8 +419,13 @@ class Score(BaseModel):
     lives_total: int = 3
     won: bool
     lobby_code: Optional[str] = None
+    safe_revealed: Optional[int] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     coins_awarded: int = 0
+
+
+class DailyClaimRequest(BaseModel):
+    quest_id: str = Field(..., min_length=1, max_length=40)
 
 
 class RegisterRequest(BaseModel):
@@ -633,6 +711,8 @@ async def submit_score(payload: ScoreCreate, nick: str = Depends(require_session
     player = await _get_player(nick)
     if not player:
         raise HTTPException(status_code=403, detail="Player not registered.")
+
+    player = await _ensure_daily_window(player)
     entry = Score(**payload.model_dump())
     entry.coins_awarded = _compute_coins(
         payload.mode, payload.level_id, payload.lives_remaining,
@@ -681,6 +761,24 @@ async def submit_score(payload: ScoreCreate, nick: str = Depends(require_session
         except Exception:
             pass
     await db.leaderboard.insert_one(entry.model_dump())
+
+    # Update daily progress (UTC+2 12-hour windows)
+    try:
+        inc: Dict[str, int] = {
+            "daily_progress.gamesPlayed": 1,
+            "daily_progress.gamesWon": 1 if bool(payload.won) else 0,
+            "daily_progress.flagsPlaced": int(payload.flags or 0),
+        }
+        if payload.safe_revealed is not None:
+            inc["daily_progress.safeRevealed"] = int(payload.safe_revealed or 0)
+        else:
+            inc["daily_progress.safeRevealed"] = 0
+        await db.players.update_one(
+            {"nickname_lower": player["nickname_lower"]},
+            {"$inc": inc},
+        )
+    except Exception:
+        pass
     if entry.coins_awarded or rating_delta:
         await db.players.update_one(
             {"nickname_lower": player["nickname_lower"]},
@@ -712,6 +810,80 @@ async def submit_score(payload: ScoreCreate, nick: str = Depends(require_session
         "entry": entry.model_dump(),
         "coins_awarded": entry.coins_awarded,
         "rating_delta": rating_delta,
+    }
+
+
+@api_router.get("/daily/state")
+async def get_daily_state(nick: str = Depends(require_session)):
+    player = await _get_player(nick)
+    if not player:
+        raise HTTPException(status_code=403, detail="Player not registered.")
+    player = await _ensure_daily_window(player)
+    now_local = _daily_now_local()
+    claimed = player.get("daily_claimed") or {}
+    claimed_coins = 0
+    try:
+        for q in DAILY_QUESTS:
+            if claimed.get(q.get("id")):
+                claimed_coins += max(0, int(q.get("rewardCoins") or 0))
+    except Exception:
+        claimed_coins = 0
+    return {
+        "window_key": player.get("daily_window") or _daily_window_key(now_local),
+        "progress": player.get("daily_progress") or {},
+        "claimed": claimed,
+        "claimed_coins": claimed_coins,
+        "seconds_until_reset": _daily_seconds_until_reset(now_local),
+        "quests": DAILY_QUESTS,
+    }
+
+
+@api_router.post("/daily/claim")
+async def claim_daily(req: DailyClaimRequest, nick: str = Depends(require_session)):
+    qid = (req.quest_id or "").strip()
+    q = next((x for x in DAILY_QUESTS if x.get("id") == qid), None)
+    if not q:
+        raise HTTPException(status_code=404, detail="Quest not found.")
+
+    player = await _get_player(nick)
+    if not player:
+        raise HTTPException(status_code=403, detail="Player not registered.")
+
+    player = await _ensure_daily_window(player)
+    qp = _daily_quest_progress(player, q)
+    if not qp.get("done"):
+        raise HTTPException(status_code=409, detail="Quest not completed.")
+    if qp.get("claimed"):
+        raise HTTPException(status_code=409, detail="Already claimed.")
+
+    coins = max(0, int(q.get("rewardCoins") or 0))
+    update_doc: Dict[str, Any] = {"$set": {f"daily_claimed.{qid}": True}}
+    if coins:
+        update_doc["$inc"] = {"coins": coins}
+    await db.players.update_one({"nickname_lower": player["nickname_lower"]}, update_doc)
+    updated = await _get_player(nick)
+    updated = await _ensure_daily_window(updated)
+    now_local = _daily_now_local()
+    claimed = updated.get("daily_claimed") or {}
+    claimed_coins = 0
+    try:
+        for q2 in DAILY_QUESTS:
+            if claimed.get(q2.get("id")):
+                claimed_coins += max(0, int(q2.get("rewardCoins") or 0))
+    except Exception:
+        claimed_coins = 0
+    return {
+        "ok": True,
+        "quest_id": qid,
+        "coins_awarded": coins,
+        "player": _sanitize_player(updated),
+        "daily": {
+            "window_key": updated.get("daily_window") or _daily_window_key(now_local),
+            "progress": updated.get("daily_progress") or {},
+            "claimed": claimed,
+            "claimed_coins": claimed_coins,
+            "seconds_until_reset": _daily_seconds_until_reset(now_local),
+        },
     }
 
 

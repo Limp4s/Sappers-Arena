@@ -6,6 +6,7 @@ import { connectLobbyWs } from '../../lib/lobby_ws';
 import { submitScore } from '../../lib/player';
 import { submitLobbyResult } from '../../lib/lobby';
 import { loadEquipped, MINE_ICONS, CELL_THEMES, FX_EFFECTS } from '../../lib/shop';
+import { recordDailyProgress } from '../../lib/dailies';
 
 const makeEmptyBoard = (rows, cols) => Array.from({ length: rows }, () => Array.from({ length: cols }, () => ({
   revealed: false,
@@ -259,6 +260,11 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
             if (typeof msg.safe === 'number') setSafe(msg.safe);
             if (typeof msg.total_safe === 'number') setTotalSafe(msg.total_safe);
             if (msg.done && !finishedRef.current) {
+              try {
+                const iWon = !!msg.won;
+                recordDailyProgress({ played: 1, won: iWon ? 1 : 0, flags: 0, safe: Number(msg.safe || 0) });
+              } catch {}
+              finishedRef.current = true;
               setStatus(msg.won ? 'won' : 'lost');
               stopTimer();
               setTimeout(() => setModalOpen(true), 700);
@@ -273,7 +279,12 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
         if (msg.type === 'duel_over') {
           setWinner(msg.winner);
           const iWon = msg.winner && msg.winner === playerName;
-          finishedRef.current = true;
+          if (!finishedRef.current) {
+            try {
+              recordDailyProgress({ played: 1, won: iWon ? 1 : 0, flags: 0, safe: safe });
+            } catch {}
+            finishedRef.current = true;
+          }
           setResultText(iWon ? t('game.youWon') : t('game.youLost'));
           setStatus(iWon ? 'won' : 'lost');
           stopTimer();
@@ -364,6 +375,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
         flags: 0,
         score,
         time_seconds: timer,
+        safe_revealed: safe,
         lives_remaining: lives,
         lives_total: livesTotal,
         won,

@@ -13,6 +13,7 @@ import MinesweeperGame from './components/game/Minesweeper';
 import OnlineDuelGame from './components/game/OnlineDuelGame';
 import AuthGate from './components/auth/NicknameGate';
 import { getStoredNickname, isAuthed, isAdmin as getIsAdmin, isAdminNick, fetchMe } from "@/lib/player";
+import { t } from '@/lib/i18n';
 
 const TERMS_KEY = 'mg_terms_accepted_v1';
 const PRIVACY_KEY = 'mg_privacy_accepted_v1';
@@ -218,27 +219,27 @@ function OnboardingModal({ step, onBack, onNext, onSkip, onDone }) {
   const STEPS = [
     {
       key: 'welcome',
-      title: 'WELCOME TO SAPPERS ARENA',
+      title: t('onboarding.welcomeTitle'),
       icon: <Sparkles size={18} className="neon-cyan" />,
-      body: 'A quick 30-second walkthrough. You can skip it and open the game immediately.',
+      body: t('onboarding.welcomeBody'),
     },
     {
       key: 'lives',
-      title: 'LIVES',
+      title: t('onboarding.livesTitle'),
       icon: <Heart size={18} className="neon-coral" fill="currentColor" />,
-      body: 'You start with several lives. Hitting a mine costs 1 life. The game ends when lives reach 0.',
+      body: t('onboarding.livesBody'),
     },
     {
       key: 'flags',
-      title: 'FLAGS',
+      title: t('onboarding.flagsTitle'),
       icon: <Flag size={18} className="neon-gold" />,
-      body: 'Use flags to mark mines. Correct flags help you play faster and safer.',
+      body: t('onboarding.flagsBody'),
     },
     {
       key: 'duels',
-      title: 'DUELS',
+      title: t('onboarding.duelsTitle'),
       icon: <Swords size={18} className="neon-lime" />,
-      body: 'In battles, your goal is to finish with more progress (and lives) than your opponent. Speed matters.',
+      body: t('onboarding.duelsBody'),
     },
   ];
 
@@ -250,7 +251,7 @@ function OnboardingModal({ step, onBack, onNext, onSkip, onDone }) {
     <div className="modal-backdrop" data-testid="onboarding-modal">
       <div className="glass-panel slide-up rounded-2xl p-7 max-w-md w-[92%] relative overflow-hidden">
         <div className="scanline" />
-        <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// onboarding</div>
+        <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// {t('onboarding.label')}</div>
         <h2 className="font-display text-xl md:text-2xl font-black tracking-tight neon-cyan mb-3 flex items-center gap-2">
           {s.icon} {s.title}
         </h2>
@@ -260,9 +261,9 @@ function OnboardingModal({ step, onBack, onNext, onSkip, onDone }) {
 
         <div className="flex items-center justify-between mt-4">
           <div className="text-[10px] text-slate-500 font-display tracking-[0.2em] uppercase" data-testid="onboarding-progress">
-            STEP {String(idx + 1).padStart(2, '0')} / 04
+            {t('onboarding.stepLabel')} {String(idx + 1).padStart(2, '0')} / 04
           </div>
-          <button className="pill" onClick={onSkip} data-testid="onboarding-skip">SKIP</button>
+          <button className="pill" onClick={onSkip} data-testid="onboarding-skip">{t('onboarding.skip')}</button>
         </div>
 
         <div className="flex gap-2 mt-4">
@@ -273,12 +274,12 @@ function OnboardingModal({ step, onBack, onNext, onSkip, onDone }) {
             disabled={idx <= 0}
             data-testid="onboarding-back"
           >
-            BACK
+            {t('common.back')}
           </button>
           {!isLast ? (
-            <button type="button" className="neon-btn flex-1" onClick={onNext} data-testid="onboarding-next">NEXT</button>
+            <button type="button" className="neon-btn flex-1" onClick={onNext} data-testid="onboarding-next">{t('onboarding.next')}</button>
           ) : (
-            <button type="button" className="neon-btn flex-1" onClick={onDone} data-testid="onboarding-done">DONE</button>
+            <button type="button" className="neon-btn flex-1" onClick={onDone} data-testid="onboarding-done">{t('onboarding.done')}</button>
           )}
         </div>
       </div>

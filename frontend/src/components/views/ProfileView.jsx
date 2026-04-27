@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2 } from 'lucide-react';
-import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminDeletePlayer, getToken } from '../../lib/player';
+import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminDeletePlayer, getToken, authHeaders } from '../../lib/player';
 import { promoteToAdmin } from '../../lib/lobby';
 import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
+import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
 import InventoryModal from '../modals/InventoryModal';
 import PlayerProfileModal from '../modals/PlayerProfileModal';
 import { LANGUAGES, setLang, t, useLang } from '../../lib/i18n';
@@ -26,6 +27,11 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   const [adminMsg, setAdminMsg] = useState(null);
   const [lang] = useLang();
   const [tab, setTab] = useState('account');
+  const [dailyState, setDailyState] = useState(() => getDailyState());
+  const [dailyCoins, setDailyCoins] = useState(() => getDailyCoins());
+  const [dailyMsg, setDailyMsg] = useState(null);
+  const [dailyOnline, setDailyOnline] = useState(false);
+  const [dailyOnlineState, setDailyOnlineState] = useState(null);
 
   useEffect(() => {
     if (!player?.nick) return;
@@ -34,6 +40,24 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
       .then(r => setStats(r.data))
       .catch(() => setStats({ offline: true }));
   }, [player?.nick]);
+
+  useEffect(() => {
+    setDailyState(getDailyState());
+    setDailyCoins(getDailyCoins());
+    setDailyMsg(null);
+  }, [tab]);
+
+  useEffect(() => {
+    if (tab !== 'daily') return;
+    const tok = getToken?.();
+    const online = !!tok && !(tok || '').startsWith('offline-');
+    setDailyOnline(online);
+    if (!online) { setDailyOnlineState(null); return; }
+    setDailyOnlineState(null);
+    axios.get(`${API}/daily/state`, { headers: authHeaders() })
+      .then((r) => setDailyOnlineState(r.data))
+      .catch(() => setDailyOnlineState({ offline: true }));
+  }, [tab]);
 
   useEffect(() => {
     if (!player?.isAdmin) return;
@@ -270,6 +294,13 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               >
                 {t('common.settings')}
               </button>
+              <button
+                onClick={() => setTab('daily')}
+                className={`pill ${tab === 'daily' ? 'pill-active' : ''}`}
+                data-testid="profile-tab-daily"
+              >
+                {t('daily.title')}
+              </button>
             </div>
 
             {tab === 'account' ? (
@@ -315,7 +346,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                   <LogOut size={14} /> {t('common.exit')}
                 </button>
               </>
-            ) : (
+            ) : tab === 'settings' ? (
               <>
                 <div className="glass-panel-light rounded-xl p-4">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('common.language')}</div>
@@ -336,7 +367,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                 <div className="glass-panel-light rounded-xl p-4" data-testid="settings-sfx-volume">
                   <div className="flex items-center gap-2 mb-2">
                     <Volume2 size={14} className="neon-gold" />
-                    <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">SOUND</div>
+                    <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">{t('settings.sound')}</div>
                     <div className="ml-auto text-[10px] font-mono text-slate-400">{Math.round((sfxVolume || 0) * 100)}%</div>
                   </div>
                   <input
@@ -358,6 +389,102 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                 <button onClick={() => setShowChangePw(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-change-password-btn">
                   <KeyRound size={14} /> {t('profile.changePassword')}
                 </button>
+              </>
+            ) : (
+              <>
+                <div className="glass-panel-light rounded-xl p-4" data-testid="daily-quests">
+                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">
+                    {t('daily.subtitle')}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="text-[11px] font-mono text-slate-400">
+                      {t('daily.coins')}: <span className="neon-gold">{(
+                        dailyOnline && dailyOnlineState && !dailyOnlineState.offline
+                          ? (dailyOnlineState.claimed_coins || 0)
+                          : (dailyCoins || 0)
+                      ).toLocaleString()}</span>
+                    </div>
+                    <div className="text-[11px] font-mono text-slate-500">
+                      {t('daily.resetIn')}: {(() => {
+                        const s = dailyOnline && dailyOnlineState && !dailyOnlineState.offline
+                          ? (dailyOnlineState.seconds_until_reset || 0)
+                          : secondsUntilDailyReset();
+                        const hh = Math.floor(s / 3600);
+                        const mm = Math.floor((s % 3600) / 60);
+                        return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+                      })()}
+                    </div>
+                  </div>
+
+                  {dailyMsg && (
+                    <div className={`text-[11px] font-mono flex items-center gap-1.5 mb-3 ${dailyMsg.ok ? 'neon-lime' : 'neon-coral'}`}>
+                      {dailyMsg.ok ? <Check size={11} /> : <AlertCircle size={11} />}{dailyMsg.text}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {DAILY_QUESTS.map((q) => {
+                      const baseState = dailyOnline && dailyOnlineState && !dailyOnlineState.offline
+                        ? { progress: dailyOnlineState.progress || {}, claimed: dailyOnlineState.claimed || {} }
+                        : dailyState;
+                      const qp = getQuestProgress(baseState, q);
+                      const labelKey = `daily.quests.${q.id}`;
+                      return (
+                        <div key={q.id} className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3">
+                          <div className={`text-[11px] font-mono ${qp.done ? 'neon-lime' : 'text-slate-300'}`}>
+                            {qp.cur}/{qp.target}
+                          </div>
+                          <div className="flex-1 text-[11px] text-slate-200">
+                            {t(labelKey)}
+                            <span className="ml-2 text-[10px] font-mono text-slate-500">+{q.rewardCoins || 0} {t('daily.coinsShort')}</span>
+                          </div>
+                          {qp.claimed ? (
+                            <div className="text-[11px] font-mono neon-gold">{t('daily.claimed')}</div>
+                          ) : qp.done ? (
+                            <button
+                              className="neon-btn px-3 py-1 text-[10px]"
+                              onClick={() => {
+                                const tok = getToken?.();
+                                const online = !!tok && !(tok || '').startsWith('offline-');
+                                if (online) {
+                                  setDailyMsg(null);
+                                  axios.post(`${API}/daily/claim`, { quest_id: q.id }, { headers: authHeaders() })
+                                    .then((r) => {
+                                      const data = r.data || {};
+                                      if (data.player) onPlayerUpdate?.(data.player);
+                                      if (data.daily) setDailyOnlineState((prev) => ({ ...(prev || {}), ...(data.daily || {}) }));
+                                      const awarded = data.coins_awarded || 0;
+                                      setDailyMsg({ ok: true, text: `${t('daily.claimed')} +${awarded} ${t('daily.coinsShort')}` });
+                                    })
+                                    .catch((e) => {
+                                      const detail = e?.response?.data?.detail || t('profile.failed');
+                                      setDailyMsg({ ok: false, text: detail });
+                                    });
+                                  return;
+                                }
+
+                                const res = claimDailyQuest(q.id);
+                                setDailyState(res?.state || getDailyState());
+                                setDailyCoins(getDailyCoins());
+                                if (res?.ok) {
+                                  const awarded = res.coinsAwarded || 0;
+                                  setDailyMsg({ ok: true, text: `${t('daily.claimed')} +${awarded} ${t('daily.coinsShort')}` });
+                                  try { onPlayerUpdate?.({ coins: (player?.coins || 0) + awarded }); } catch {}
+                                }
+                              }}
+                              data-testid={`daily-claim-${q.id}`}
+                            >
+                              {t('daily.claim')}
+                            </button>
+                          ) : (
+                            <div className="text-[11px] font-mono text-slate-500">{t('daily.inProgress')}</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </>
             )}
           </div>
