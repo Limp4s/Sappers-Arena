@@ -172,7 +172,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
       />
       <AchievementsModal open={showAchievements} onClose={() => setShowAchievements(false)} />
       <div className="flex items-start gap-5">
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0">
           <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// identity</div>
           <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3 flex-wrap">
             <User size={26} /> {player?.nick}
