@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2 } from 'lucide-react';
-import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminDeletePlayer, getToken, authHeaders } from '../../lib/player';
+import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2, Award } from 'lucide-react';
+import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminDeletePlayer, getToken, authHeaders, fetchAchievementDefs, fetchMyAchievements } from '../../lib/player';
 import { promoteToAdmin } from '../../lib/lobby';
 import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
 import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
@@ -32,6 +32,14 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   const [dailyMsg, setDailyMsg] = useState(null);
   const [dailyOnline, setDailyOnline] = useState(false);
   const [dailyOnlineState, setDailyOnlineState] = useState(null);
+  const [achDefs, setAchDefs] = useState(null);
+  const [achMine, setAchMine] = useState(null);
+
+  const achUnlocked = useMemo(() => (achMine?.unlocked && typeof achMine.unlocked === 'object') ? achMine.unlocked : {}, [achMine?.unlocked]);
+  const achList = useMemo(() => {
+    const list = achDefs?.achievements;
+    return Array.isArray(list) ? list : [];
+  }, [achDefs?.achievements]);
 
   useEffect(() => {
     if (!player?.nick) return;
@@ -46,6 +54,31 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
     setDailyCoins(getDailyCoins());
     setDailyMsg(null);
   }, [tab]);
+
+  useEffect(() => {
+    if (tab !== 'achievements') return;
+    const tok = getToken?.();
+    const online = !!tok && !(tok || '').startsWith('offline-');
+    if (!online) {
+      setAchDefs({ achievements: [] });
+      setAchMine({ offline: true, nickname: player?.nick, unlocked: {}, unlocked_count: 0 });
+      return;
+    }
+    setAchDefs(null);
+    setAchMine(null);
+    Promise.all([
+      fetchAchievementDefs(),
+      fetchMyAchievements(),
+    ])
+      .then(([defs, mine]) => {
+        setAchDefs(defs || { achievements: [] });
+        setAchMine(mine || { unlocked: {}, unlocked_count: 0 });
+      })
+      .catch(() => {
+        setAchDefs({ achievements: [] });
+        setAchMine({ offline: true, nickname: player?.nick, unlocked: {}, unlocked_count: 0 });
+      });
+  }, [tab, player?.nick]);
 
   useEffect(() => {
     if (tab !== 'daily') return;
@@ -301,6 +334,18 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               >
                 {t('daily.title')}
               </button>
+              <button
+                onClick={() => setTab('achievements')}
+                className={`shrink-0 w-10 h-10 rounded-lg border transition-all flex items-center justify-center ${
+                  tab === 'achievements'
+                    ? 'border-[#00E5FF] bg-[rgba(0,229,255,0.10)] shadow-[0_0_12px_rgba(0,229,255,0.25)]'
+                    : 'border-white/10 bg-black/20 hover:border-white/20'
+                }`}
+                title="Achievements"
+                data-testid="profile-tab-achievements"
+              >
+                <Award size={16} className={tab === 'achievements' ? 'neon-cyan' : 'text-slate-400'} />
+              </button>
             </div>
 
             {tab === 'account' ? (
@@ -389,6 +434,44 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                 <button onClick={() => setShowChangePw(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-change-password-btn">
                   <KeyRound size={14} /> {t('profile.changePassword')}
                 </button>
+              </>
+            ) : tab === 'achievements' ? (
+              <>
+                <div className="glass-panel-light rounded-xl p-4" data-testid="achievements-panel">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Trophy size={14} className="neon-gold" />
+                    <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('achievements.title')}</h3>
+                    <div className="ml-auto text-[11px] font-mono text-slate-400">
+                      {(achMine?.unlocked_count ?? Object.keys(achUnlocked || {}).length) || 0}/{achList.length || 0}
+                    </div>
+                  </div>
+
+                  {!achDefs || !achMine ? (
+                    <div className="text-slate-500 text-xs text-center py-6">{t('profile.loading')}</div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {achList.map((a) => {
+                        const id = a?.id;
+                        const unlockedAt = id ? achUnlocked?.[id] : null;
+                        const isUnlocked = !!unlockedAt;
+                        return (
+                          <div key={id} className={`glass-panel rounded-lg p-3 flex gap-3 items-start ${isUnlocked ? '' : 'opacity-60'}`}>
+                            <div className={`w-10 h-10 rounded-lg border flex items-center justify-center ${isUnlocked ? 'border-[#FFD700]/50 bg-[#FFD700]/10' : 'border-white/10 bg-black/20'}`}>
+                              <Trophy size={16} className={isUnlocked ? 'neon-gold' : 'text-slate-500'} />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-[11px] font-display tracking-[0.2em] uppercase text-slate-200 truncate">{a?.title || id}</div>
+                              <div className="text-[11px] font-mono text-slate-400 leading-snug mt-1">{a?.desc || ''}</div>
+                              {isUnlocked && (
+                                <div className="text-[10px] font-mono text-slate-500 mt-2">{t('achievements.unlocked')}</div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>

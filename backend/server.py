@@ -319,6 +319,179 @@ DAILY_QUESTS = [
 ]
 
 
+ACHIEVEMENTS = [
+    {"id": "games_1", "title": "First Steps", "desc": "Первый шаг сделан. Дальше — больше."},
+    {"id": "games_10", "title": "Getting Warm", "desc": "Разогрелся. Теперь можно и на серьёзных."},
+    {"id": "games_50", "title": "Regular", "desc": "Это уже привычка, да?"},
+    {"id": "games_200", "title": "Veteran", "desc": "Видел всё. И мины, и боль."},
+    {"id": "games_1000", "title": "Marathon", "desc": "Ты здесь живёшь?"},
+    {"id": "wins_1", "title": "First Win", "desc": "Первая победа — самая сладкая."},
+    {"id": "streak_3", "title": "Win Streak 3", "desc": "Пошла серия. Не останавливайся!"},
+    {"id": "streak_5", "title": "Win Streak 5", "desc": "Уверенно. Очень уверенно."},
+    {"id": "streak_10", "title": "Win Streak 10", "desc": "Ты их вообще видишь насквозь?"},
+    {"id": "streak_100", "title": "Win Streak 100", "desc": "Стоп. Ты точно не бот?"},
+    {"id": "flawless_win", "title": "Flawless", "desc": "Чистая работа. Без царапин."},
+
+    {"id": "speed_win_60", "title": "Quick Mind", "desc": "Думал быстро — нажимал ещё быстрее."},
+    {"id": "speed_win_30", "title": "Speedrunner", "desc": "Где ты вообще нашёл время моргнуть?"},
+    {"id": "speed_win_20", "title": "Lightning", "desc": "Молния. Поле даже не поняло, что произошло."},
+    {"id": "speed_win_10", "title": "Speedster", "desc": "Легенда гласит: ты уже закончил до старта."},
+
+    {"id": "flags_1", "title": "First Flag", "desc": "Первый флажок. Начинается паранойя."},
+    {"id": "flags_100", "title": "Flag Master", "desc": "Ты ставишь метки как профессионал."},
+    {"id": "flags_1000", "title": "Flag Legend", "desc": "Флагов больше, чем сомнений. Почти."},
+    {"id": "precise_all_mines", "title": "Precise", "desc": "Идеально по учебнику. Минёрам бы понравилось."},
+    {"id": "no_flags_win", "title": "No Flags", "desc": "На чистой интуиции. Или на безумии."},
+
+    {"id": "campaign_1", "title": "Campaign Start", "desc": "Глава 1: 'А что тут сложного?'"},
+    {"id": "campaign_10", "title": "Campaign 10", "desc": "Уже втянулся. Отступать поздно."},
+    {"id": "campaign_half", "title": "Campaign Halfway", "desc": "Экватор пройден. Теперь будет жарче."},
+    {"id": "campaign_complete", "title": "Campaign Complete", "desc": "Финал. И ты выжил. Как?"},
+    {"id": "hard_lesson", "title": "Hard Lesson", "desc": "Одна ошибка и ты ошибса а ой взорвалса!"},
+
+    {"id": "duels_1", "title": "First Duel", "desc": "Добро пожаловать в настоящую мясорубку."},
+    {"id": "duel_wins_1", "title": "Duel Winner", "desc": "Первый раз всегда приятно)"},
+    {"id": "ranked_10", "title": "Ranked Ready", "desc": "Рейтинг — это боль, но ты привык."},
+    {"id": "duel_wins_10", "title": "Rival", "desc": "Тебя уже запомнили. И боятся."},
+    {"id": "duel_wins_50", "title": "Nemesis", "desc": "Если ты в лобби — кто-то уже нервничает."},
+    {"id": "comeback_1hp", "title": "Comeback", "desc": "На волоске. Но всё равно победа."},
+    {"id": "duel_streak_5", "title": "Unstoppable", "desc": "Остановить тебя некому. Пока что."},
+
+    {"id": "rating_600", "title": "Rising", "desc": "Пошёл рост. Дальше — выше."},
+    {"id": "rating_1000", "title": "Skilled", "desc": "Уже не новичок. Совсем."},
+    {"id": "rating_5000", "title": "Pro", "desc": "Профи. Без вопросов."},
+    {"id": "rating_10000", "title": "Elite", "desc": "Элита. Туда просто так не попадают."},
+    {"id": "rating_15000", "title": "Legend", "desc": "Легенда. Живая. Опасная."},
+
+    {"id": "coins_balance_10000", "title": "Last Money", "desc": "Ты долго копил? Или просто не тратил?"},
+    {"id": "coins_earned_total_10000", "title": "Rich", "desc": "Неплохо поднялся."},
+
+    {"id": "daily_claim_1", "title": "Daily Claimer", "desc": "Забрать награду — святое."},
+    {"id": "daily_streak_5", "title": "Daily Streak", "desc": "Дисциплина. Железная. Почти."},
+]
+
+
+def _ach_blank_stats() -> dict:
+    return {
+        "games_played": 0,
+        "games_won": 0,
+        "win_streak": 0,
+        "flags_total": 0,
+        "duels_played": 0,
+        "duels_won": 0,
+        "ranked_played": 0,
+        "campaign_wins": 0,
+        "coins_earned_total": 0,
+        "daily_claims": 0,
+        "daily_claim_streak": 0,
+        "daily_claim_last_window": None,
+    }
+
+
+def _ach_get(player: dict) -> tuple[dict, dict]:
+    unlocked = player.get("achievements_unlocked")
+    if not isinstance(unlocked, dict):
+        unlocked = {}
+    stats = player.get("achievements_stats")
+    if not isinstance(stats, dict):
+        stats = _ach_blank_stats()
+    else:
+        base = _ach_blank_stats()
+        base.update(stats)
+        stats = base
+    return unlocked, stats
+
+
+def _ach_should_unlock(player_after: dict, payload: Optional[Any] = None, coins_balance_after: Optional[int] = None) -> list[str]:
+    unlocked, st = _ach_get(player_after)
+    ids: list[str] = []
+
+    def add(i: str):
+        if i and not unlocked.get(i):
+            ids.append(i)
+
+    gp = int(st.get("games_played") or 0)
+    gw = int(st.get("games_won") or 0)
+    ws = int(st.get("win_streak") or 0)
+    ft = int(st.get("flags_total") or 0)
+    dw = int(st.get("duels_won") or 0)
+    dp = int(st.get("duels_played") or 0)
+    rp = int(st.get("ranked_played") or 0)
+    cw = int(st.get("campaign_wins") or 0)
+    ce = int(st.get("coins_earned_total") or 0)
+    rating = int((player_after or {}).get("rating", 500) or 500)
+    if coins_balance_after is None:
+        coins_balance_after = int((player_after or {}).get("coins", 0) or 0)
+
+    if gp >= 1: add("games_1")
+    if gp >= 10: add("games_10")
+    if gp >= 50: add("games_50")
+    if gp >= 200: add("games_200")
+    if gp >= 1000: add("games_1000")
+    if gw >= 1: add("wins_1")
+
+    if ws >= 3: add("streak_3")
+    if ws >= 5: add("streak_5")
+    if ws >= 10: add("streak_10")
+    if ws >= 100: add("streak_100")
+
+    if ft >= 1: add("flags_1")
+    if ft >= 100: add("flags_100")
+    if ft >= 1000: add("flags_1000")
+
+    if dp >= 1: add("duels_1")
+    if dw >= 1: add("duel_wins_1")
+    if dw >= 10: add("duel_wins_10")
+    if dw >= 50: add("duel_wins_50")
+    if rp >= 10: add("ranked_10")
+
+    if cw >= 1: add("campaign_1")
+    if cw >= 10: add("campaign_10")
+    if cw >= 30: add("campaign_half")
+    if cw >= 60: add("campaign_complete")
+
+    if rating >= 600: add("rating_600")
+    if rating >= 1000: add("rating_1000")
+    if rating >= 5000: add("rating_5000")
+    if rating >= 10000: add("rating_10000")
+    if rating >= 15000: add("rating_15000")
+
+    if ce >= 10000: add("coins_earned_total_10000")
+    if int(coins_balance_after or 0) >= 10000: add("coins_balance_10000")
+
+    dc = int(st.get("daily_claims") or 0)
+    dcs = int(st.get("daily_claim_streak") or 0)
+    if dc >= 1: add("daily_claim_1")
+    if dcs >= 5: add("daily_streak_5")
+
+    if payload is not None:
+        try:
+            won = bool(payload.won)
+            if won:
+                ts = int(payload.time_seconds or 0)
+                if ts > 0 and ts < 60: add("speed_win_60")
+                if ts > 0 and ts < 30: add("speed_win_30")
+                if ts > 0 and ts < 20: add("speed_win_20")
+                if ts > 0 and ts < 10: add("speed_win_10")
+
+                lr = int(payload.lives_remaining or 0)
+                lt = int(payload.lives_total or 1)
+                if lt > 0 and lr >= lt:
+                    add("flawless_win")
+
+                if int(payload.flags or 0) <= 0:
+                    add("no_flags_win")
+
+                if payload.mode == "campaign":
+                    lvl = payload.level_id
+                    if lvl is not None and int(lvl) >= 150 and lr == 1:
+                        add("hard_lesson")
+        except Exception:
+            pass
+
+    return list(dict.fromkeys(ids))
+
+
 def _daily_now_local() -> datetime:
     return datetime.now(timezone.utc) + timedelta(hours=DAILY_TZ_OFFSET_HOURS)
 
@@ -350,6 +523,29 @@ def _daily_blank_state(window_key: str) -> dict:
         },
         "daily_claimed": {},
     }
+
+
+def _daily_prev_window_key(window_key: str) -> Optional[str]:
+    try:
+        parts = str(window_key).split("-")
+    except Exception:
+        parts = None
+    if not parts or len(parts) != 4:
+        return None
+    try:
+        y = int(parts[0])
+        m = int(parts[1])
+        d = int(parts[2])
+        w = int(parts[3])
+    except Exception:
+        return None
+    try:
+        if w == 1:
+            return f"{y:04d}-{m:02d}-{d:02d}-0"
+        dt = datetime(y, m, d, 0, 0, 0, tzinfo=timezone.utc) - timedelta(days=1)
+        return f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}-1"
+    except Exception:
+        return None
 
 
 async def _ensure_daily_window(player: dict) -> dict:
@@ -677,6 +873,37 @@ async def get_player_by_num(player_num: int = FPath(..., ge=0, le=2000000)):
     return _sanitize_player(doc)
 
 
+@api_router.get("/achievements/defs")
+async def get_achievement_defs():
+    return {"achievements": ACHIEVEMENTS}
+
+
+@api_router.get("/achievements/me")
+async def get_my_achievements(nick: str = Depends(require_session)):
+    player = await _get_player(nick)
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found.")
+    unlocked, _st = _ach_get(player)
+    return {
+        "nickname": player.get("nickname") or nick,
+        "unlocked": unlocked,
+        "unlocked_count": len(list(unlocked.keys())),
+    }
+
+
+@api_router.get("/achievements/{nickname}")
+async def get_player_achievements_public(nickname: str):
+    player = await _get_player(nickname)
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found.")
+    unlocked, _st = _ach_get(player)
+    return {
+        "nickname": player.get("nickname") or nickname,
+        "unlocked": unlocked,
+        "unlocked_count": len(list(unlocked.keys())),
+    }
+
+
 # --- Shop ---
 
 @api_router.get("/shop/items")
@@ -779,6 +1006,46 @@ async def submit_score(payload: ScoreCreate, nick: str = Depends(require_session
         )
     except Exception:
         pass
+
+    # Update achievements (server-authoritative)
+    try:
+        unlocked, st = _ach_get(player)
+        won = bool(payload.won)
+
+        mode = str(payload.mode or "")
+        is_duel = mode in ("battle_simple", "battle_ranked", "lobby")
+
+        next_st = dict(st)
+        next_st["games_played"] = int(next_st.get("games_played") or 0) + 1
+        next_st["games_won"] = int(next_st.get("games_won") or 0) + (1 if won else 0)
+        next_st["win_streak"] = (int(next_st.get("win_streak") or 0) + 1) if won else 0
+        next_st["flags_total"] = int(next_st.get("flags_total") or 0) + int(payload.flags or 0)
+        if is_duel:
+            next_st["duels_played"] = int(next_st.get("duels_played") or 0) + 1
+            next_st["duels_won"] = int(next_st.get("duels_won") or 0) + (1 if won else 0)
+        if mode == "battle_ranked":
+            next_st["ranked_played"] = int(next_st.get("ranked_played") or 0) + 1
+        if mode == "campaign" and won:
+            next_st["campaign_wins"] = int(next_st.get("campaign_wins") or 0) + 1
+        next_st["coins_earned_total"] = int(next_st.get("coins_earned_total") or 0) + max(0, int(entry.coins_awarded or 0))
+
+        rating_after = max(0, int((player.get("rating") or 500)) + int(rating_delta or 0))
+        coins_after = int((player.get("coins") or 0)) + int(entry.coins_awarded or 0)
+        player_after = {**player, "rating": rating_after, "coins": coins_after, "achievements_unlocked": unlocked, "achievements_stats": next_st}
+        to_unlock = _ach_should_unlock(player_after, payload=payload, coins_balance_after=coins_after)
+
+        set_doc: Dict[str, Any] = {"achievements_stats": next_st}
+        if to_unlock:
+            ts = int(datetime.now(timezone.utc).timestamp() * 1000)
+            for aid in to_unlock:
+                set_doc[f"achievements_unlocked.{aid}"] = ts
+
+        await db.players.update_one(
+            {"nickname_lower": player["nickname_lower"]},
+            {"$set": set_doc},
+        )
+    except Exception:
+        pass
     if entry.coins_awarded or rating_delta:
         await db.players.update_one(
             {"nickname_lower": player["nickname_lower"]},
@@ -861,6 +1128,39 @@ async def claim_daily(req: DailyClaimRequest, nick: str = Depends(require_sessio
     if coins:
         update_doc["$inc"] = {"coins": coins}
     await db.players.update_one({"nickname_lower": player["nickname_lower"]}, update_doc)
+
+    # Achievements from daily claim
+    try:
+        updated0 = await _get_player(nick)
+        updated0 = await _ensure_daily_window(updated0)
+        unlocked, st = _ach_get(updated0)
+        wk = updated0.get("daily_window")
+        last_wk = st.get("daily_claim_last_window")
+        next_st = dict(st)
+        if wk and wk != last_wk:
+            next_st["daily_claims"] = int(next_st.get("daily_claims") or 0) + 1
+            prev = _daily_prev_window_key(str(wk))
+            if last_wk and prev and str(last_wk) == str(prev):
+                next_st["daily_claim_streak"] = int(next_st.get("daily_claim_streak") or 0) + 1
+            else:
+                next_st["daily_claim_streak"] = 1
+            next_st["daily_claim_last_window"] = wk
+        next_st["coins_earned_total"] = int(next_st.get("coins_earned_total") or 0) + max(0, int(coins or 0))
+
+        coins_after = int((updated0.get("coins") or 0))
+        player_after = {**updated0, "achievements_unlocked": unlocked, "achievements_stats": next_st}
+        to_unlock = _ach_should_unlock(player_after, payload=None, coins_balance_after=coins_after)
+        set_doc: Dict[str, Any] = {"achievements_stats": next_st}
+        if to_unlock:
+            ts = int(datetime.now(timezone.utc).timestamp() * 1000)
+            for aid in to_unlock:
+                set_doc[f"achievements_unlocked.{aid}"] = ts
+        await db.players.update_one(
+            {"nickname_lower": updated0["nickname_lower"]},
+            {"$set": set_doc},
+        )
+    except Exception:
+        pass
     updated = await _get_player(nick)
     updated = await _ensure_daily_window(updated)
     now_local = _daily_now_local()

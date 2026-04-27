@@ -10,6 +10,8 @@ const API = `${BACKEND_URL}/api`;
 export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
   const [player, setPlayer] = useState(null);
   const [stats, setStats] = useState(null);
+  const [achDefs, setAchDefs] = useState(null);
+  const [ach, setAch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
   useLang();
@@ -48,6 +50,8 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
       setErr(null);
       setPlayer(null);
       setStats(null);
+      setAchDefs(null);
+      setAch(null);
       try {
         let p;
         if (playerNum != null && playerNum !== '' && !Number.isNaN(Number(playerNum))) {
@@ -69,6 +73,23 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
           if (!alive) return;
           setStats(null);
         }
+
+        try {
+          const nm = String(p?.nickname || nickname || '').trim();
+          if (nm) {
+            const [defsRes, achRes] = await Promise.all([
+              axios.get(`${API}/achievements/defs`),
+              axios.get(`${API}/achievements/${encodeURIComponent(nm)}`),
+            ]);
+            if (!alive) return;
+            setAchDefs(defsRes?.data || { achievements: [] });
+            setAch(achRes?.data || { unlocked: {}, unlocked_count: 0 });
+          }
+        } catch {
+          if (!alive) return;
+          setAchDefs({ achievements: [] });
+          setAch({ unlocked: {}, unlocked_count: 0, offline: true });
+        }
       } catch (e2) {
         if (!alive) return;
         setErr(e2?.response?.data?.detail || 'Failed');
@@ -83,6 +104,8 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
 
   const ratingText = String(player?.rating ?? '—');
   const leagueText = String(player?.league || '').toUpperCase();
+  const achUnlocked = (ach?.unlocked && typeof ach.unlocked === 'object') ? ach.unlocked : {};
+  const achList = Array.isArray(achDefs?.achievements) ? achDefs.achievements : [];
 
   return (
     <div className="modal-backdrop" data-testid="player-profile-modal">
@@ -147,6 +170,38 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
                 <div className="text-slate-500 text-xs text-center py-6">
                   <Clock size={16} className="mx-auto mb-2 opacity-60" />
                   {t('leaderboard.noRecords')}
+                </div>
+              )}
+            </div>
+
+            <div className="glass-panel-light rounded-xl p-4 mt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Trophy size={14} className="neon-gold" />
+                <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('achievements.title')}</h3>
+                <div className="ml-auto text-[11px] font-mono text-slate-400">
+                  {(ach?.unlocked_count ?? Object.keys(achUnlocked || {}).length) || 0}/{achList.length || 0}
+                </div>
+              </div>
+
+              {!achDefs || !ach ? (
+                <div className="text-slate-500 text-xs text-center py-6">{t('profile.loading')}</div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {achList.map((a) => {
+                    const id = a?.id;
+                    const isUnlocked = !!(id && achUnlocked?.[id]);
+                    return (
+                      <div key={id} className={`glass-panel rounded-lg p-3 flex gap-2 items-start ${isUnlocked ? '' : 'opacity-60'}`}>
+                        <div className={`w-9 h-9 rounded-lg border flex items-center justify-center ${isUnlocked ? 'border-[#FFD700]/50 bg-[#FFD700]/10' : 'border-white/10 bg-black/20'}`}>
+                          <Trophy size={14} className={isUnlocked ? 'neon-gold' : 'text-slate-500'} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[10px] font-display tracking-[0.2em] uppercase text-slate-200 truncate">{a?.title || id}</div>
+                          <div className="text-[10px] font-mono text-slate-400 leading-snug mt-1 line-clamp-2">{a?.desc || ''}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

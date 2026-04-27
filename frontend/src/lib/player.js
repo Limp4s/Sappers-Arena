@@ -455,6 +455,34 @@ export const fetchPlayer = async (nick) => {
   }
 };
 
+export const fetchAchievementDefs = async () => {
+  try {
+    return (await axios.get(`${API}/achievements/defs`)).data;
+  } catch {
+    return { achievements: [] };
+  }
+};
+
+export const fetchMyAchievements = async () => {
+  try {
+    if (!isOnlineToken(getToken())) throw new Error('Not logged in.');
+    return (await axios.get(`${API}/achievements/me`, { headers: authHeaders() })).data;
+  } catch {
+    const nick = getStoredNickname();
+    return { nickname: nick, unlocked: {}, unlocked_count: 0, offline: true };
+  }
+};
+
+export const fetchPlayerAchievements = async (nick) => {
+  try {
+    return (await axios.get(`${API}/achievements/${encodeURIComponent(String(nick || '').trim())}`)).data;
+  } catch (e) {
+    const err = new Error('Player not found.');
+    err.response = e?.response || { data: { detail: 'Player not found.' } };
+    throw err;
+  }
+};
+
 export const purchaseItem = async (itemId) => {
   try {
     return (await axios.post(`${API}/shop/purchase`, { item_id: itemId }, { headers: authHeaders() })).data;

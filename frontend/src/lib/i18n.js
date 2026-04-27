@@ -51,6 +51,10 @@ const DICTS = {
         safe_50: 'Reveal 50 safe cells',
       },
     },
+    achievements: {
+      title: 'ACHIEVEMENTS',
+      unlocked: 'UNLOCKED',
+    },
     auth: {
       identifyTitle: 'IDENTIFY',
       accessTitle: 'ACCESS',
@@ -283,6 +287,25 @@ const DICTS = {
       flagsBody: 'Ставьте флаги, чтобы отмечать мины. Правильные флаги помогают играть быстрее и безопаснее.',
       duelsTitle: 'ДУЭЛИ',
       duelsBody: 'В битвах цель — пройти больше и сохранить больше жизней, чем соперник. Скорость важна.',
+    },
+    daily: {
+      title: 'ДЕЙЛИКИ',
+      subtitle: 'ЕЖЕДНЕВНЫЕ ЗАДАНИЯ',
+      coins: 'МОНЕТЫ',
+      coinsShort: 'м',
+      resetIn: 'СБРОС ЧЕРЕЗ',
+      claimed: 'ЗАБРАНО',
+      claim: 'ЗАБРАТЬ',
+      quests: {
+        play_1: 'Сыграть 1 игру',
+        win_1: 'Победи 1 раз',
+        flags_10: 'Поставь 10 флагов',
+        safe_50: 'Открой 50 безопасных',
+      },
+    },
+    achievements: {
+      title: 'ОЧИВКИ',
+      unlocked: 'ОТКРЫТО',
     },
     auth: {
       identifyTitle: 'ИДЕНТИФИКАЦИЯ',
@@ -533,11 +556,30 @@ const DICTS = {
       duelsTitle: 'ДУЕЛІ',
       duelsBody: 'У битвах мета — завершити з більшим прогресом (і життями), ніж суперник. Швидкість важлива.',
     },
+    daily: {
+      title: 'ДЕЙЛІКИ',
+      subtitle: 'ЩОДЕННІ ЗАВДАННЯ',
+      coins: 'МОНЕТИ',
+      coinsShort: 'м',
+      resetIn: 'СКИДАННЯ ЧЕРЕЗ',
+      claimed: 'ЗАБРАНО',
+      claim: 'ЗАБРАТИ',
+      quests: {
+        play_1: 'Зіграти 1 гру',
+        win_1: 'Виграти 1 гру',
+        flags_10: 'Поставте 10 прапорців',
+        safe_50: 'Відкрийте 50 безпечних',
+      },
+    },
+    achievements: {
+      title: 'ДОСЯГНЕННЯ',
+      unlocked: 'ВІДКРИТО',
+    },
     auth: {
       identifyTitle: 'ІДЕНТИФІКАЦІЯ',
       accessTitle: 'ДОСТУП',
       identifyHint: 'Створи свій позивний.',
-      accessHint: 'Увійди з існуючим позивним.',
+      accessHint: 'Вийди з існуючим позивним.',
       callsignLabel: 'Позивний · 3–20 символів',
       callsignPlaceholder: 'YOUR_NAME',
       passwordLabel: 'Пароль · мінімум 4 символи',
@@ -773,6 +815,25 @@ const DICTS = {
       duelsTitle: 'SOUBOJE',
       duelsBody: 'V bitvách je cíl dokončit s větším postupem (a více životy) než soupeř. Rychlost rozhoduje.',
     },
+    daily: {
+      title: 'DENNÍ',
+      subtitle: 'DENNÍ ÚKOLY',
+      coins: 'MINCE',
+      coinsShort: 'm',
+      resetIn: 'RESET ZA',
+      claimed: 'VYZVEDNUTO',
+      claim: 'VYZVEDNOUT',
+      quests: {
+        play_1: 'Zahraj 1 hru',
+        win_1: 'Vyhraj 1 hru',
+        flags_10: 'Dej 10 vlajek',
+        safe_50: 'Odkryj 50 bezpečných',
+      },
+    },
+    achievements: {
+      title: 'ÚSPĚCHY',
+      unlocked: 'ODEMČENO',
+    },
     auth: {
       identifyTitle: 'IDENTIFIKACE',
       accessTitle: 'PŘÍSTUP',
@@ -985,7 +1046,7 @@ const DICTS = {
       inProgress: 'PROBÍHÁ',
       quests: {
         play_1: 'Zahrát 1 hru',
-        win_1: 'Vyhrát 1 hru',
+        win_1: 'Vyhraj 1 hru',
         flags_10: 'Položit 10 vlajek',
         safe_50: 'Odkrýt 50 bezpečných políček',
       },
@@ -1039,8 +1100,12 @@ const DICTS = {
         play_1: 'Jugar 1 partida',
         win_1: 'Ganar 1 partida',
         flags_10: 'Poner 10 banderas',
-        safe_50: 'Revelar 50 casillas seguras',
+        safe_50: 'Revelar 50 seguras',
       },
+    },
+    achievements: {
+      title: 'LOGROS',
+      unlocked: 'DESBLOQUEADO',
     },
     auth: {
       identifyTitle: 'IDENTIFICAR',
