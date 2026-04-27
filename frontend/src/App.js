@@ -11,6 +11,7 @@ import LeaderboardView from './components/views/LeaderboardView';
 import ProfileView from './components/views/ProfileView';
 import MinesweeperGame from './components/game/Minesweeper';
 import OnlineDuelGame from './components/game/OnlineDuelGame';
+import AchievementBanner from './components/ui/AchievementBanner';
 import AuthGate from './components/auth/NicknameGate';
 import { getStoredNickname, isAuthed, isAdmin as getIsAdmin, isAdminNick, fetchMe } from "@/lib/player";
 import { t } from '@/lib/i18n';
@@ -79,6 +80,7 @@ function Home() {
   const [tab, setTab] = useState('campaign');
   const [gameConfig, setGameConfig] = useState(null);
   const [infiniteLives, setInfiniteLives] = useState(false);
+  const [newUnlocked, setNewUnlocked] = useState([]);
   const [player, setPlayer] = useState(() => {
     if (isAuthed()) {
       const nick = getStoredNickname();
@@ -96,6 +98,16 @@ function Home() {
   }, [player?.nick]);
 
   useEffect(() => { refreshPlayer(); }, [refreshPlayer]);
+
+  useEffect(() => {
+    const onUnlocked = (e) => {
+      const ids = Array.isArray(e?.detail) ? e.detail.map(String).filter(Boolean) : [];
+      if (!ids.length) return;
+      setNewUnlocked(ids);
+    };
+    try { window.addEventListener('mg:new_unlocked', onUnlocked); } catch {}
+    return () => { try { window.removeEventListener('mg:new_unlocked', onUnlocked); } catch {} };
+  }, []);
 
   const handlePlayerUpdate = useCallback((updated) => {
     setPlayer((p) => ({
@@ -183,6 +195,11 @@ function Home() {
 
   return (
     <div className="min-h-screen w-full">
+      <AchievementBanner
+        items={newUnlocked}
+        onDone={() => setNewUnlocked([])}
+        textForId={(id) => t(`achievements.items.${id}.title`)}
+      />
       <div
         style={{ height: 25, WebkitAppRegion: 'drag', position: 'sticky', top: 0, zIndex: 50 }}
       />

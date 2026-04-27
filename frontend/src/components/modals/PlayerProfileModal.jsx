@@ -109,7 +109,7 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
 
   return (
     <div className="modal-backdrop" data-testid="player-profile-modal">
-      <div className="glass-panel slide-up rounded-2xl p-6 max-w-2xl w-[94%] max-h-[85vh] flex flex-col">
+      <div className="glass-panel slide-up rounded-2xl p-6 max-w-4xl w-[96%] max-h-[85vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display text-xl font-black neon-cyan flex items-center gap-2">
             <User size={18} /> {titleNick}
@@ -117,12 +117,13 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
           <button onClick={onClose} className="text-slate-400 hover:text-white" data-testid="close-player-profile-btn"><X size={18} /></button>
         </div>
 
-        {loading ? (
-          <div className="text-slate-500 text-xs text-center py-10">{t('profile.loading')}</div>
-        ) : err ? (
-          <div className="text-slate-500 text-xs text-center py-10">{err}</div>
-        ) : (
-          <>
+        <div className="flex-1 overflow-auto pr-1">
+          {loading ? (
+            <div className="text-slate-500 text-xs text-center py-10">{t('profile.loading')}</div>
+          ) : err ? (
+            <div className="text-slate-500 text-xs text-center py-10">{err}</div>
+          ) : (
+            <>
             <div className="glass-panel-light rounded-xl p-4 mb-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -174,7 +175,7 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
               )}
             </div>
 
-            <div className="glass-panel-light rounded-xl p-4 mt-4">
+            <div className="glass-panel-light rounded-xl p-5 mt-4">
               <div className="flex items-center gap-2 mb-3">
                 <Trophy size={14} className="neon-gold" />
                 <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('achievements.title')}</h3>
@@ -206,8 +207,9 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
                 </div>
               )}
             </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

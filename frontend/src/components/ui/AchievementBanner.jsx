@@ -47,7 +47,7 @@ export default function AchievementBanner({ items, onDone, textForId }) {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[80] px-3 pt-3" data-testid="achievement-banner">
+    <div className="fixed top-14 left-0 right-0 z-[200] px-3 pt-2" data-testid="achievement-banner">
       <div className="glass-panel rounded-xl px-4 py-2 border border-[#FFD700]/30 bg-[rgba(255,215,0,0.06)] shadow-[0_0_18px_rgba(255,215,0,0.15)]">
         <div className="flex items-center gap-2">
           <Trophy size={14} className="neon-gold" />

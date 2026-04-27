@@ -181,6 +181,14 @@ export const authHeaders = () => {
   return isOnlineToken(t) ? { 'X-Session-Token': t } : {};
 };
 
+export const emitNewUnlocked = (ids) => {
+  try {
+    const list = Array.isArray(ids) ? ids.map(String).filter(Boolean) : [];
+    if (!list.length) return;
+    window.dispatchEvent(new CustomEvent('mg:new_unlocked', { detail: list }));
+  } catch {}
+};
+
 export const ensureOnlineSession = async () => {
   const existing = getToken();
   if (isOnlineToken(existing) && getStoredNickname()) return { nickname: getStoredNickname(), token: existing };

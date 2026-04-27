@@ -141,13 +141,20 @@ export const recordLevelResult = (levelId, { stars, score, time, won }) => {
 
       const axios = (await import('axios')).default;
       const entry = progress[levelId];
-      await axios.post(`${API}/campaign/level_result`, {
+      const res = await axios.post(`${API}/campaign/level_result`, {
         level_id: Number(levelId),
         stars: entry?.stars || 0,
         bestScore: entry?.bestScore || 0,
         bestTime: entry?.bestTime == null ? null : entry.bestTime,
         completed: !!entry?.completed,
       }, { headers: sessionHeaders() });
+      const nu = Array.isArray(res?.data?.new_unlocked) ? res.data.new_unlocked : [];
+      if (nu.length) {
+        try {
+          const { emitNewUnlocked } = await import('./player');
+          emitNewUnlocked(nu);
+        } catch {}
+      }
     })();
   } catch {}
 

@@ -793,7 +793,25 @@ async def submit_campaign_level_result(payload: CampaignLevelResultRequest, nick
         {"nickname_lower": (nick or "").lower()},
         {"$set": {"campaign_progress": progress}},
     )
-    return {"ok": True, "progress": progress}
+
+    # Achievements may depend on campaign progress / wins; re-check unlocks.
+    updated0 = await _get_player(nick)
+    if not updated0:
+        return {"ok": True, "progress": progress, "new_unlocked": []}
+    unlocked, st = _ach_get(updated0)
+    player_after = {**updated0, "achievements_unlocked": unlocked, "achievements_stats": st}
+    to_unlock = _ach_should_unlock(player_after, payload=None, coins_balance_after=int(updated0.get("coins") or 0))
+    new_unlocked = list(to_unlock or [])
+    if new_unlocked:
+        ts = int(datetime.now(timezone.utc).timestamp() * 1000)
+        set_doc: Dict[str, Any] = {}
+        for aid in new_unlocked:
+            set_doc[f"achievements_unlocked.{aid}"] = ts
+        await db.players.update_one(
+            {"nickname_lower": (nick or "").lower()},
+            {"$set": set_doc},
+        )
+    return {"ok": True, "progress": progress, "new_unlocked": new_unlocked}
 
 
 # --- Auth / Players ---
