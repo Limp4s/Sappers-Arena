@@ -2,6 +2,28 @@
 
 let audioCtx = null;
 
+const KEY_SFX_VOLUME = 'mg_sfx_volume';
+
+export const getSfxVolume = () => {
+  try {
+    const raw = localStorage.getItem(KEY_SFX_VOLUME);
+    const v = raw == null ? 1 : Number(raw);
+    if (!Number.isFinite(v)) return 1;
+    return Math.max(0, Math.min(1, v));
+  } catch {
+    return 1;
+  }
+};
+
+export const setSfxVolume = (v) => {
+  const n = Number(v);
+  const clamped = Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 1;
+  try {
+    localStorage.setItem(KEY_SFX_VOLUME, String(clamped));
+  } catch {}
+  return clamped;
+};
+
 const getCtx = () => {
   if (!audioCtx) {
     try {
@@ -17,12 +39,14 @@ const getCtx = () => {
 const playTone = (freq, duration, type = 'sine', volume = 0.12, attack = 0.005, release = 0.08) => {
   const ctx = getCtx();
   if (!ctx) return;
+  const master = getSfxVolume();
+  if (master <= 0) return;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
   osc.frequency.value = freq;
   gain.gain.setValueAtTime(0, ctx.currentTime);
-  gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + attack);
+  gain.gain.linearRampToValueAtTime(volume * master, ctx.currentTime + attack);
   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration + release);
   osc.connect(gain);
   gain.connect(ctx.destination);
@@ -33,6 +57,8 @@ const playTone = (freq, duration, type = 'sine', volume = 0.12, attack = 0.005, 
 const playNoise = (duration = 0.6, volume = 0.25) => {
   const ctx = getCtx();
   if (!ctx) return;
+  const master = getSfxVolume();
+  if (master <= 0) return;
   const bufferSize = ctx.sampleRate * duration;
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
   const data = buffer.getChannelData(0);
@@ -42,7 +68,7 @@ const playNoise = (duration = 0.6, volume = 0.25) => {
   const noise = ctx.createBufferSource();
   noise.buffer = buffer;
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(volume, ctx.currentTime);
+  gain.gain.setValueAtTime(volume * master, ctx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
   const filter = ctx.createBiquadFilter();
   filter.type = 'lowpass';

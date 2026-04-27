@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus } from 'lucide-react';
+import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2 } from 'lucide-react';
 import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminDeletePlayer, getToken } from '../../lib/player';
 import { promoteToAdmin } from '../../lib/lobby';
+import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
 import InventoryModal from '../modals/InventoryModal';
 import PlayerProfileModal from '../modals/PlayerProfileModal';
 import { LANGUAGES, setLang, t, useLang } from '../../lib/i18n';
@@ -15,6 +16,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   const [showInventory, setShowInventory] = useState(false);
   const [showChangePw, setShowChangePw] = useState(false);
   const [showPromote, setShowPromote] = useState(false);
+  const [sfxVolume, setSfxVolumeState] = useState(() => getSfxVolume());
   const [viewQuery, setViewQuery] = useState('');
   const [viewNick, setViewNick] = useState(null);
   const [viewNum, setViewNum] = useState(null);
@@ -329,6 +331,29 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div className="glass-panel-light rounded-xl p-4" data-testid="settings-sfx-volume">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Volume2 size={14} className="neon-gold" />
+                    <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">SOUND</div>
+                    <div className="ml-auto text-[10px] font-mono text-slate-400">{Math.round((sfxVolume || 0) * 100)}%</div>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={sfxVolume}
+                    onChange={(e) => {
+                      const v = setSfxVolume(e.target.value);
+                      setSfxVolumeState(v);
+                    }}
+                    onMouseUp={() => { try { sfx.click(); } catch {} }}
+                    onTouchEnd={() => { try { sfx.click(); } catch {} }}
+                    className="w-full"
+                    data-testid="sfx-volume-slider"
+                  />
                 </div>
                 <button onClick={() => setShowChangePw(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-change-password-btn">
                   <KeyRound size={14} /> {t('profile.changePassword')}

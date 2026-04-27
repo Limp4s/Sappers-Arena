@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import "@/App.css";
 import { HashRouter, Routes, Route } from "react-router-dom";
+import { Heart, Flag, Swords, Sparkles } from 'lucide-react';
 import TabsNav from "@/components/layout/TabsNav";
 import CampaignView from "@/components/views/CampaignView";
 import BattlesView from './components/views/BattlesView';
@@ -15,6 +16,7 @@ import { getStoredNickname, isAuthed, isAdmin as getIsAdmin, isAdminNick, fetchM
 
 const TERMS_KEY = 'mg_terms_accepted_v1';
 const PRIVACY_KEY = 'mg_privacy_accepted_v1';
+const ONBOARDING_KEY = 'mg_onboarding_done_v1';
 const TERMS_TEXT = `The game is in early testing.
 By continuing, you agree to the Terms:
 - The game is provided "as is."
@@ -25,7 +27,6 @@ By continuing, you agree to the Terms:
 - If your name is Ivan, you will be an unpaid beta tester.`;
 
 const PRIVACY_TEXT = `Privacy Policy
-
 Last updated: ${new Date().toISOString().slice(0, 10)}
 
 This Privacy Policy explains how Sappers Arena ("we", "our", "the game") collects and uses information when you use the game.
@@ -70,6 +71,10 @@ Support: limp976@gmail.com`;
 function Home() {
   const [privacyAccepted, setPrivacyAccepted] = useState(() => localStorage.getItem(PRIVACY_KEY) === '1');
   const [termsAccepted, setTermsAccepted] = useState(() => localStorage.getItem(TERMS_KEY) === '1');
+  const [onboardingDone, setOnboardingDone] = useState(() => {
+    try { return localStorage.getItem(ONBOARDING_KEY) === '1'; } catch { return false; }
+  });
+  const [onboardingStep, setOnboardingStep] = useState(0);
   const [tab, setTab] = useState('campaign');
   const [gameConfig, setGameConfig] = useState(null);
   const [infiniteLives, setInfiniteLives] = useState(false);
@@ -120,6 +125,13 @@ function Home() {
   const handleLogout = useCallback(() => {
     setPlayer(null);
     setTab('campaign');
+  }, []);
+
+  const showOnboarding = !!player && !gameConfig && !onboardingDone;
+  const finishOnboarding = useCallback(() => {
+    try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch {}
+    setOnboardingDone(true);
+    setOnboardingStep(0);
   }, []);
 
   if (!privacyAccepted) {
@@ -174,6 +186,15 @@ function Home() {
         style={{ height: 25, WebkitAppRegion: 'drag', position: 'sticky', top: 0, zIndex: 50 }}
       />
       <TabsNav current={tab} onChange={setTab} player={player} />
+      {showOnboarding && (
+        <OnboardingModal
+          step={onboardingStep}
+          onBack={() => setOnboardingStep((s) => Math.max(0, s - 1))}
+          onNext={() => setOnboardingStep((s) => Math.min(3, s + 1))}
+          onSkip={finishOnboarding}
+          onDone={finishOnboarding}
+        />
+      )}
       {tab === 'campaign' && (
         <CampaignView onStartLevel={startCampaignLevel} isAdmin={player.isAdmin}
           infiniteLives={infiniteLives} onToggleInfiniteLives={() => setInfiniteLives((v) => !v)} />
@@ -189,6 +210,78 @@ function Home() {
       {tab === 'shop' && <ShopView player={player} onPlayerUpdate={handlePlayerUpdate} />}
       {tab === 'leaderboard' && <LeaderboardView isAdmin={player.isAdmin} />}
       {tab === 'profile' && <ProfileView player={player} onPlayerUpdate={handlePlayerUpdate} onLogout={handleLogout} />}
+    </div>
+  );
+}
+
+function OnboardingModal({ step, onBack, onNext, onSkip, onDone }) {
+  const STEPS = [
+    {
+      key: 'welcome',
+      title: 'WELCOME TO SAPPERS ARENA',
+      icon: <Sparkles size={18} className="neon-cyan" />,
+      body: 'A quick 30-second walkthrough. You can skip it and open the game immediately.',
+    },
+    {
+      key: 'lives',
+      title: 'LIVES',
+      icon: <Heart size={18} className="neon-coral" fill="currentColor" />,
+      body: 'You start with several lives. Hitting a mine costs 1 life. The game ends when lives reach 0.',
+    },
+    {
+      key: 'flags',
+      title: 'FLAGS',
+      icon: <Flag size={18} className="neon-gold" />,
+      body: 'Use flags to mark mines. Correct flags help you play faster and safer.',
+    },
+    {
+      key: 'duels',
+      title: 'DUELS',
+      icon: <Swords size={18} className="neon-lime" />,
+      body: 'In battles, your goal is to finish with more progress (and lives) than your opponent. Speed matters.',
+    },
+  ];
+
+  const idx = Math.max(0, Math.min(STEPS.length - 1, Number(step) || 0));
+  const s = STEPS[idx];
+  const isLast = idx === STEPS.length - 1;
+
+  return (
+    <div className="modal-backdrop" data-testid="onboarding-modal">
+      <div className="glass-panel slide-up rounded-2xl p-7 max-w-md w-[92%] relative overflow-hidden">
+        <div className="scanline" />
+        <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// onboarding</div>
+        <h2 className="font-display text-xl md:text-2xl font-black tracking-tight neon-cyan mb-3 flex items-center gap-2">
+          {s.icon} {s.title}
+        </h2>
+        <div className="text-xs text-slate-300 font-mono leading-relaxed bg-black/20 border border-white/10 rounded-lg p-4" data-testid={`onboarding-step-${s.key}`}>
+          {s.body}
+        </div>
+
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-[10px] text-slate-500 font-display tracking-[0.2em] uppercase" data-testid="onboarding-progress">
+            STEP {String(idx + 1).padStart(2, '0')} / 04
+          </div>
+          <button className="pill" onClick={onSkip} data-testid="onboarding-skip">SKIP</button>
+        </div>
+
+        <div className="flex gap-2 mt-4">
+          <button
+            type="button"
+            className="neon-btn neon-btn-coral flex-1"
+            onClick={onBack}
+            disabled={idx <= 0}
+            data-testid="onboarding-back"
+          >
+            BACK
+          </button>
+          {!isLast ? (
+            <button type="button" className="neon-btn flex-1" onClick={onNext} data-testid="onboarding-next">NEXT</button>
+          ) : (
+            <button type="button" className="neon-btn flex-1" onClick={onDone} data-testid="onboarding-done">DONE</button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
