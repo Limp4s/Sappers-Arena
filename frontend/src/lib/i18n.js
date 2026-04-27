@@ -1600,6 +1600,898 @@ const DICTS = {
   },
 };
 
+const _deepClone = (obj) => {
+  try {
+    return JSON.parse(JSON.stringify(obj));
+  } catch {
+    return obj;
+  }
+};
+
+const _setPath = (obj, path, value) => {
+  const parts = String(path || '').split('.').filter(Boolean);
+  if (!parts.length) return;
+  let node = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const k = parts[i];
+    if (!node[k] || typeof node[k] !== 'object') node[k] = {};
+    node = node[k];
+  }
+  node[parts[parts.length - 1]] = value;
+};
+
+const _setAchievementItems = (dict, items) => {
+  try {
+    Object.entries(items || {}).forEach(([id, v]) => {
+      if (!id || !v) return;
+      if (v.title) _setPath(dict, `achievements.items.${id}.title`, v.title);
+      if (v.cond) _setPath(dict, `achievements.items.${id}.cond`, v.cond);
+      if (v.desc) _setPath(dict, `achievements.items.${id}.desc`, v.desc);
+    });
+  } catch {}
+};
+
+// Add extra languages by cloning EN to guarantee full key coverage
+DICTS.fr = _deepClone(DICTS.en);
+DICTS.de = _deepClone(DICTS.en);
+DICTS.zh = _deepClone(DICTS.en);
+
+// French
+_setPath(DICTS.fr, 'tagline', '// démineur neural');
+_setPath(DICTS.fr, 'tabs.campaign', 'CAMPAGNE');
+_setPath(DICTS.fr, 'tabs.battles', 'DUELS');
+_setPath(DICTS.fr, 'tabs.custom', 'PERSO');
+_setPath(DICTS.fr, 'tabs.shop', 'BOUTIQUE');
+_setPath(DICTS.fr, 'tabs.leaderboard', 'CLASSEMENT');
+_setPath(DICTS.fr, 'tabs.profile', 'PROFIL');
+_setPath(DICTS.fr, 'tabs.friends', 'AMIS');
+_setPath(DICTS.fr, 'common.login', 'ACCÉDER');
+_setPath(DICTS.fr, 'common.register', 'ENREGISTRER');
+_setPath(DICTS.fr, 'common.logout', 'DÉCONNEXION · CHANGER DE COMPTE');
+_setPath(DICTS.fr, 'common.coins', 'PIÈCES');
+_setPath(DICTS.fr, 'common.rating', 'ELO');
+_setPath(DICTS.fr, 'common.play', 'JOUER');
+_setPath(DICTS.fr, 'common.cancel', 'ANNULER');
+_setPath(DICTS.fr, 'common.close', 'FERMER');
+_setPath(DICTS.fr, 'common.remaining', 'VIES RESTANTES');
+_setPath(DICTS.fr, 'common.findOpponent', 'TROUVER UN ADVERSAIRE');
+_setPath(DICTS.fr, 'common.createLobby', 'CRÉER UN SALON');
+_setPath(DICTS.fr, 'common.joinLobby', 'REJOINDRE');
+_setPath(DICTS.fr, 'common.friends', 'AMIS');
+_setPath(DICTS.fr, 'common.search', 'RECHERCHER');
+_setPath(DICTS.fr, 'common.settings', 'PARAMÈTRES');
+_setPath(DICTS.fr, 'common.language', 'LANGUE');
+_setPath(DICTS.fr, 'common.exit', 'QUITTER');
+_setPath(DICTS.fr, 'common.continue', 'CONTINUER');
+_setPath(DICTS.fr, 'common.back', 'RETOUR');
+_setPath(DICTS.fr, 'common.copy', 'COPIER');
+_setPath(DICTS.fr, 'common.or', 'OU');
+_setPath(DICTS.fr, 'common.vs', 'VS');
+_setPath(DICTS.fr, 'settings.sound', 'SON');
+_setPath(DICTS.fr, 'onboarding.skip', 'PASSER');
+_setPath(DICTS.fr, 'onboarding.next', 'SUIVANT');
+_setPath(DICTS.fr, 'onboarding.done', 'TERMINÉ');
+_setPath(DICTS.fr, 'daily.title', 'QUOTIDIEN');
+_setPath(DICTS.fr, 'daily.subtitle', 'QUÊTES QUOTIDIENNES');
+_setPath(DICTS.fr, 'daily.coins', 'PIÈCES');
+_setPath(DICTS.fr, 'daily.coinsShort', 'p');
+_setPath(DICTS.fr, 'daily.resetIn', 'RÉINITIALISATION DANS');
+_setPath(DICTS.fr, 'daily.claimed', 'RÉCLAMÉ');
+_setPath(DICTS.fr, 'daily.claim', 'RÉCLAMER');
+_setPath(DICTS.fr, 'daily.quests.play_1', 'Jouer 1 partie');
+_setPath(DICTS.fr, 'daily.quests.play_3', 'Jouer 3 parties');
+_setPath(DICTS.fr, 'daily.quests.win_1', 'Gagner 1 partie');
+_setPath(DICTS.fr, 'daily.quests.win_3', 'Gagner 3 parties');
+_setPath(DICTS.fr, 'daily.quests.lose_1', 'Perdre 1 partie');
+_setPath(DICTS.fr, 'daily.quests.lose_3', 'Perdre 3 parties');
+_setPath(DICTS.fr, 'daily.quests.flags_5', 'Placer 5 drapeaux');
+_setPath(DICTS.fr, 'daily.quests.flags_20', 'Placer 20 drapeaux');
+_setPath(DICTS.fr, 'daily.quests.flags_50', 'Placer 50 drapeaux');
+_setPath(DICTS.fr, 'daily.quests.safe_100', 'Révéler 100 cases sûres');
+_setPath(DICTS.fr, 'daily.quests.safe_250', 'Révéler 250 cases sûres');
+_setPath(DICTS.fr, 'daily.quests.time_300', 'Jouer 5 min (300 s)');
+_setPath(DICTS.fr, 'daily.quests.time_900', 'Jouer 15 min (900 s)');
+_setPath(DICTS.fr, 'daily.quests.fast_60', 'Gagner en moins de 60 s');
+_setPath(DICTS.fr, 'daily.quests.fast_30', 'Gagner en moins de 30 s');
+_setPath(DICTS.fr, 'daily.quests.no_flags', 'Gagner sans drapeaux');
+_setPath(DICTS.fr, 'daily.quests.flawless', 'Gagner sans perdre de vies');
+_setPath(DICTS.fr, 'daily.quests.one_life', 'Gagner avec 1 vie');
+_setPath(DICTS.fr, 'daily.quests.campaign_1', 'Gagner 1 niveau de campagne');
+_setPath(DICTS.fr, 'daily.quests.campaign_3', 'Gagner 3 niveaux de campagne');
+_setPath(DICTS.fr, 'achievements.title', 'SUCCÈS');
+_setPath(DICTS.fr, 'achievements.unlocked', 'DÉBLOQUÉ');
+_setPath(DICTS.fr, 'achievements.toast', 'SUCCÈS DÉBLOQUÉ');
+_setPath(DICTS.fr, 'achievements.more', 'DE PLUS');
+
+_setAchievementItems(DICTS.fr, {
+  games_1: { title: 'PREMIERS PAS', cond: 'Jouer 1 partie', desc: 'Premier pas. La suite arrive.' },
+  games_10: { title: 'ÉCHAUFFEMENT', cond: 'Jouer 10 parties', desc: 'Tu es chaud. Maintenant, c’est sérieux.' },
+  games_50: { title: 'HABITUÉ', cond: 'Jouer 50 parties', desc: 'C’est une habitude, non ?' },
+  games_200: { title: 'VÉTÉRAN', cond: 'Jouer 200 parties', desc: 'Tu as tout vu. Même la douleur.' },
+  games_1000: { title: 'MARATHON', cond: 'Jouer 1000 parties', desc: 'Tu vis ici ?' },
+  wins_1: { title: 'PREMIÈRE VICTOIRE', cond: 'Gagner 1 partie', desc: 'La première victoire est la meilleure.' },
+  streak_3: { title: 'SÉRIE 3', cond: 'Gagner 3 fois d’affilée', desc: 'La série commence. Continue.' },
+  streak_5: { title: 'SÉRIE 5', cond: 'Gagner 5 fois d’affilée', desc: 'Confiant. Très confiant.' },
+  streak_10: { title: 'SÉRIE 10', cond: 'Gagner 10 fois d’affilée', desc: 'Tu lis la grille comme un livre.' },
+  streak_100: { title: 'SÉRIE 100', cond: 'Gagner 100 fois d’affilée', desc: 'Attends… tu es un bot ?' },
+  flawless_win: { title: 'SANS FAILLE', cond: 'Gagner sans perdre de vies', desc: 'Travail propre. Pas de rayures.' },
+  speed_win_60: { title: 'ESPRIT VIF', cond: 'Gagner en moins de 60 s', desc: 'Réflexes rapides.' },
+  speed_win_30: { title: 'SPEEDRUNNER', cond: 'Gagner en moins de 30 s', desc: 'Tu as cligné des yeux ?' },
+  speed_win_20: { title: 'ÉCLAIR', cond: 'Gagner en moins de 20 s', desc: 'Un éclair. Et c’est fini.' },
+  speed_win_10: { title: 'FUSÉE', cond: 'Gagner en moins de 10 s', desc: 'Terminé avant de commencer.' },
+  flags_1: { title: 'PREMIER DRAPEAU', cond: 'Placer 1 drapeau', desc: 'Premier drapeau. La parano démarre.' },
+  flags_100: { title: 'MAÎTRE DES DRAPEAUX', cond: 'Placer 100 drapeaux', desc: 'Marquage de pro.' },
+  flags_1000: { title: 'LÉGENDE DES DRAPEAUX', cond: 'Placer 1000 drapeaux', desc: 'Des drapeaux partout. Presque.' },
+  precise_all_mines: { title: 'PRÉCIS', cond: 'Gagner avec des drapeaux sur toutes les mines', desc: 'Parfait, comme dans le manuel.' },
+  no_flags_win: { title: 'SANS DRAPEAUX', cond: 'Gagner sans placer de drapeaux', desc: 'Pure intuition. Ou folie.' },
+  campaign_1: { title: 'DÉBUT CAMPAGNE', cond: 'Gagner 1 niveau de campagne', desc: 'Chapitre 1 : « Facile… non ? »' },
+  campaign_10: { title: 'CAMPAGNE 10', cond: 'Gagner 10 niveaux de campagne', desc: 'Tu es dedans. Pas de retour.' },
+  campaign_half: { title: 'MI-CAMPAGNE', cond: 'Atteindre la moitié de la campagne', desc: 'À mi-chemin. Ça chauffe.' },
+  campaign_complete: { title: 'CAMPAGNE TERMINÉE', cond: 'Terminer la campagne', desc: 'La fin. Et tu as survécu. Comment ?' },
+  hard_lesson: { title: 'DURE LEÇON', cond: 'Gagner le niveau campagne 150+ avec 1 vie', desc: 'Une erreur et… boum !' },
+  duels_1: { title: 'PREMIER DUEL', cond: 'Jouer 1 duel', desc: 'Bienvenue au vrai combat.' },
+  duel_wins_1: { title: 'VAINQUEUR DE DUEL', cond: 'Gagner 1 duel', desc: 'La première fois, c’est toujours bien)' },
+  ranked_10: { title: 'PRÊT POUR LE CLASSEMENT', cond: 'Jouer 10 duels classés', desc: 'Le rating, ça fait mal.' },
+  duel_wins_10: { title: 'RIVAL', cond: 'Gagner 10 duels', desc: 'Ils se souviennent de toi. Et ils ont peur.' },
+  duel_wins_50: { title: 'NÉMÉSIS', cond: 'Gagner 50 duels', desc: 'Si tu es là, quelqu’un panique.' },
+  comeback_1hp: { title: 'RETOUR', cond: 'Gagner avec 1 vie', desc: 'Au bord du gouffre. Victoire quand même.' },
+  duel_streak_5: { title: 'INARRÊTABLE', cond: 'Gagner 5 duels d’affilée', desc: 'Personne ne peut t’arrêter. Pas encore.' },
+  rating_600: { title: 'EN HAUSSE', cond: 'Atteindre 600 ELO', desc: 'Ça monte.' },
+  rating_1000: { title: 'CONFIRMÉ', cond: 'Atteindre 1000 ELO', desc: 'Plus un débutant.' },
+  rating_5000: { title: 'PRO', cond: 'Atteindre 5000 ELO', desc: 'Pro. Sans discussion.' },
+  rating_10000: { title: 'ÉLITE', cond: 'Atteindre 10000 ELO', desc: 'Réservé à l’élite.' },
+  rating_15000: { title: 'LÉGENDE', cond: 'Atteindre 15000 ELO', desc: 'Une vraie légende.' },
+  coins_balance_10000: { title: 'DERNIERS SOUS', cond: 'Avoir 10000 pièces en solde', desc: 'Tu économises ou tu ne dépenses jamais ?' },
+  coins_earned_total_10000: { title: 'RICHE', cond: 'Gagner 10000 pièces au total', desc: 'Pas mal.' },
+  daily_claim_1: { title: 'RÉCLAMEUR QUOTIDIEN', cond: 'Réclamer 1 quête quotidienne', desc: 'Réclamer, c’est sacré.' },
+  daily_streak_5: { title: 'SÉRIE QUOTIDIENNE', cond: 'Réclamer sur 5 fenêtres d’affilée', desc: 'Discipline. Acier.' },
+});
+
+_setPath(DICTS.fr, 'auth.identifyTitle', 'IDENTIFIER');
+_setPath(DICTS.fr, 'auth.accessTitle', 'ACCÈS');
+_setPath(DICTS.fr, 'auth.identifyHint', 'Crée ton identité sur la grille.');
+_setPath(DICTS.fr, 'auth.accessHint', 'Connecte-toi avec un indicatif existant.');
+_setPath(DICTS.fr, 'auth.callsignLabel', 'Indicatif · 3–20 caractères');
+_setPath(DICTS.fr, 'auth.callsignPlaceholder', 'TON_NOM');
+_setPath(DICTS.fr, 'auth.passwordLabel', 'Mot de passe · min 4');
+_setPath(DICTS.fr, 'auth.passwordPlaceholder', '••••••');
+_setPath(DICTS.fr, 'auth.login', 'SE CONNECTER');
+_setPath(DICTS.fr, 'auth.register', 'S’INSCRIRE');
+_setPath(DICTS.fr, 'auth.connecting', 'CONNEXION...');
+_setPath(DICTS.fr, 'auth.passwordRequiredHint', 'Mot de passe requis. Modifiable ensuite dans le profil.');
+_setPath(DICTS.fr, 'auth.forgotPasswordHint', 'Mot de passe oublié ? Demande à l’admin.');
+_setPath(DICTS.fr, 'auth.failedTryAgain', 'Échec. Réessaie.');
+
+_setPath(DICTS.fr, 'lobbyFriend.title', 'JOUER AVEC UN AMI');
+_setPath(DICTS.fr, 'lobbyFriend.hint', 'Crée un salon privé et partage le code, ou rejoins un salon existant.');
+_setPath(DICTS.fr, 'lobbyFriend.codeLabel', 'Code du salon · 6 caractères');
+_setPath(DICTS.fr, 'lobbyFriend.codePlaceholder', 'XXXXXX');
+_setPath(DICTS.fr, 'lobbyFriend.shareCode', 'PARTAGER LE CODE');
+_setPath(DICTS.fr, 'lobbyFriend.host', 'HÔTE');
+_setPath(DICTS.fr, 'lobbyFriend.guest', 'INVITÉ');
+_setPath(DICTS.fr, 'lobbyFriend.waiting', 'attente');
+_setPath(DICTS.fr, 'lobbyFriend.startNow', 'DÉMARRER');
+_setPath(DICTS.fr, 'lobbyFriend.waitingForHost', 'En attente que l’hôte démarre...');
+_setPath(DICTS.fr, 'lobbyFriend.createFailed', 'Création échouée.');
+_setPath(DICTS.fr, 'lobbyFriend.joinFailed', 'Connexion échouée.');
+_setPath(DICTS.fr, 'lobbyFriend.startFailed', 'Démarrage échoué.');
+
+_setPath(DICTS.fr, 'game.minesLower', 'mines');
+_setPath(DICTS.fr, 'game.livesLower', 'vies');
+_setPath(DICTS.fr, 'game.controlsHint', '// CLIC GAUCHE révéler · CLIC DROIT drapeau · le 1er clic est sûr');
+_setPath(DICTS.fr, 'game.time', 'TEMPS');
+_setPath(DICTS.fr, 'game.mines', 'MINES');
+_setPath(DICTS.fr, 'game.score', 'SCORE');
+_setPath(DICTS.fr, 'game.lives', 'VIES');
+_setPath(DICTS.fr, 'game.flag', 'DRAPEAU');
+_setPath(DICTS.fr, 'game.reset', 'RESTART');
+_setPath(DICTS.fr, 'game.victory', 'VICTOIRE');
+_setPath(DICTS.fr, 'game.systemBreach', 'INTRUSION SYSTÈME');
+_setPath(DICTS.fr, 'game.cleared', 'nettoyé');
+_setPath(DICTS.fr, 'game.terminated', 'terminé');
+_setPath(DICTS.fr, 'game.bounty', 'Prime');
+_setPath(DICTS.fr, 'game.adminNoSubmit', '∞ mode admin — score non envoyé');
+_setPath(DICTS.fr, 'game.uploading', 'envoi...');
+_setPath(DICTS.fr, 'game.queued', 'en file...');
+_setPath(DICTS.fr, 'game.scoreUploaded', '✓ score envoyé');
+_setPath(DICTS.fr, 'game.win', 'victoire');
+_setPath(DICTS.fr, 'game.loss', 'défaite');
+_setPath(DICTS.fr, 'game.duelResult', 'RÉSULTAT DU DUEL');
+_setPath(DICTS.fr, 'game.you', 'TOI');
+_setPath(DICTS.fr, 'game.rival', 'RIVAL');
+_setPath(DICTS.fr, 'game.youWinDuel', '🏆 TU GAGNES LE DUEL');
+_setPath(DICTS.fr, 'game.defeated', 'BATTU');
+_setPath(DICTS.fr, 'game.tie', 'ÉGALITÉ');
+_setPath(DICTS.fr, 'game.replay', 'REJOUER');
+_setPath(DICTS.fr, 'game.playAgain', 'REJOUER');
+_setPath(DICTS.fr, 'game.youWon', 'TU AS GAGNÉ');
+_setPath(DICTS.fr, 'game.youLost', 'TU AS PERDU');
+
+_setPath(DICTS.fr, 'profile.inventory', 'INVENTAIRE');
+_setPath(DICTS.fr, 'profile.changePassword', 'CHANGER LE MOT DE PASSE');
+_setPath(DICTS.fr, 'profile.account', 'COMPTE');
+_setPath(DICTS.fr, 'profile.lifetimeStats', 'STATS');
+_setPath(DICTS.fr, 'profile.offline', 'hors ligne');
+_setPath(DICTS.fr, 'profile.loading', 'chargement...');
+_setPath(DICTS.fr, 'profile.playerId', 'ID');
+_setPath(DICTS.fr, 'profile.oldPassword', 'Ancien mot de passe');
+_setPath(DICTS.fr, 'profile.newPassword', 'Nouveau mot de passe · min 4');
+_setPath(DICTS.fr, 'profile.repeatNewPassword', 'Répéter le mot de passe');
+_setPath(DICTS.fr, 'profile.passwordsDoNotMatch', 'Les mots de passe ne correspondent pas.');
+_setPath(DICTS.fr, 'profile.passwordUpdated', 'Mot de passe mis à jour.');
+_setPath(DICTS.fr, 'profile.updating', 'MISE À JOUR...');
+_setPath(DICTS.fr, 'profile.update', 'METTRE À JOUR');
+_setPath(DICTS.fr, 'profile.failed', 'Échec.');
+
+_setPath(DICTS.fr, 'friends.title', 'AMIS');
+_setPath(DICTS.fr, 'friends.searchPlaceholder', 'Rechercher un indicatif...');
+_setPath(DICTS.fr, 'friends.noResult', 'Joueur introuvable.');
+_setPath(DICTS.fr, 'friends.blurb', 'Cherche d’autres joueurs et consulte leurs stats.');
+
+_setPath(DICTS.fr, 'pause.title', 'PAUSE');
+_setPath(DICTS.fr, 'pause.exitGame', 'QUITTER');
+
+_setPath(DICTS.fr, 'shop.title', 'BOUTIQUE');
+_setPath(DICTS.fr, 'shop.blurb', 'Gagne des pièces en campagne. Dépense-les pour des icônes, thèmes et effets.');
+_setPath(DICTS.fr, 'shop.coins', 'PIÈCES');
+_setPath(DICTS.fr, 'shop.loading', 'chargement...');
+_setPath(DICTS.fr, 'shop.groups.mine', 'ICÔNES MINES');
+_setPath(DICTS.fr, 'shop.groups.cell', 'THÈMES');
+_setPath(DICTS.fr, 'shop.groups.explosion', 'EFFETS');
+_setPath(DICTS.fr, 'shop.groups.cursor', 'CURSEURS');
+_setPath(DICTS.fr, 'shop.notEnoughCoins', 'Pas assez de pièces.');
+_setPath(DICTS.fr, 'shop.acquired', 'Obtenu · {id}');
+_setPath(DICTS.fr, 'shop.equippedMsg', 'Équipé · {id}');
+_setPath(DICTS.fr, 'shop.purchaseFailed', 'Achat échoué.');
+_setPath(DICTS.fr, 'shop.defaultBomb', 'Bombe par défaut');
+_setPath(DICTS.fr, 'shop.defaultCell', 'Grille cyan (défaut)');
+_setPath(DICTS.fr, 'shop.defaultFx', 'Flash rouge (défaut)');
+_setPath(DICTS.fr, 'shop.defaultCursor', 'Curseur par défaut');
+_setPath(DICTS.fr, 'shop.free', 'GRATUIT');
+_setPath(DICTS.fr, 'shop.equip', 'ÉQUIPER');
+_setPath(DICTS.fr, 'shop.equipped', 'ÉQUIPÉ');
+_setPath(DICTS.fr, 'shop.buy', 'ACHETER');
+_setPath(DICTS.fr, 'shop.buying', 'ACHAT...');
+
+_setPath(DICTS.fr, 'inventory.title', 'INVENTAIRE');
+_setPath(DICTS.fr, 'inventory.buyInShop', 'ACHETER DANS LA BOUTIQUE');
+_setPath(DICTS.fr, 'inventory.tabs.bombs', 'BOMBES');
+_setPath(DICTS.fr, 'inventory.tabs.explosions', 'EXPLOSIONS');
+_setPath(DICTS.fr, 'inventory.tabs.cursors', 'CURSEURS');
+_setPath(DICTS.fr, 'inventory.tabs.themes', 'THÈMES');
+
+_setPath(DICTS.fr, 'battles.title', 'DUELS');
+_setPath(DICTS.fr, 'battles.blurb', 'Trouve des adversaires en temps réel. Même graine, même terrain — le plus rapide gagne.');
+_setPath(DICTS.fr, 'battles.simpleTitle', 'DUEL SIMPLE');
+_setPath(DICTS.fr, 'battles.simpleSubtitle', 'Casual · Sans rating');
+_setPath(DICTS.fr, 'battles.rankedTitle', 'DUEL CLASSÉ');
+_setPath(DICTS.fr, 'battles.rankedSubtitle', 'Compétitif · ELO');
+_setPath(DICTS.fr, 'battles.searching', 'RECHERCHE...');
+_setPath(DICTS.fr, 'battles.found', 'ADVERSAIRE TROUVÉ');
+_setPath(DICTS.fr, 'battles.code', 'CODE');
+_setPath(DICTS.fr, 'battles.host', 'HÔTE');
+_setPath(DICTS.fr, 'battles.opponent', 'ADVERSAIRE');
+_setPath(DICTS.fr, 'battles.waiting', 'attente...');
+_setPath(DICTS.fr, 'battles.startNow', 'DÉMARRER');
+_setPath(DICTS.fr, 'battles.cancel', 'ANNULER');
+_setPath(DICTS.fr, 'battles.findOpponent', 'TROUVER');
+_setPath(DICTS.fr, 'battles.yourRating', 'TON ELO');
+_setPath(DICTS.fr, 'battles.field', 'TERRAIN');
+_setPath(DICTS.fr, 'battles.mines', 'MINES');
+_setPath(DICTS.fr, 'battles.lives', 'VIES');
+
+_setPath(DICTS.fr, 'campaign.title', 'LE CHEMIN');
+_setPath(DICTS.fr, 'campaign.blurb', '{n} nœuds sur un chemin sinueux. Fais défiler ou glisse.');
+_setPath(DICTS.fr, 'campaign.infinityOn', 'INFINI ON');
+_setPath(DICTS.fr, 'campaign.infinityOff', 'INFINI OFF');
+_setPath(DICTS.fr, 'campaign.cleared', 'TERMINÉ');
+_setPath(DICTS.fr, 'campaign.stars', 'ÉTOILES');
+_setPath(DICTS.fr, 'campaign.start', 'DÉMARRER');
+
+_setPath(DICTS.fr, 'leaderboard.title', 'CLASSEMENT');
+_setPath(DICTS.fr, 'leaderboard.top', 'Top 20');
+_setPath(DICTS.fr, 'leaderboard.name', 'NOM');
+_setPath(DICTS.fr, 'leaderboard.lvl', 'NIV');
+_setPath(DICTS.fr, 'leaderboard.score', 'SCORE');
+_setPath(DICTS.fr, 'leaderboard.time', 'TEMPS');
+_setPath(DICTS.fr, 'leaderboard.loading', 'chargement...');
+_setPath(DICTS.fr, 'leaderboard.noRecords', 'Aucun record.');
+_setPath(DICTS.fr, 'leaderboard.deleteConfirm', 'Supprimer cette entrée ?');
+_setPath(DICTS.fr, 'leaderboard.topRanked', 'Top classé');
+_setPath(DICTS.fr, 'leaderboard.noRankedRunsYet', 'aucune partie classée.');
+_setPath(DICTS.fr, 'leaderboard.agentStats', 'Stats Agent');
+_setPath(DICTS.fr, 'leaderboard.callsignPlaceholder', 'indicatif...');
+_setPath(DICTS.fr, 'leaderboard.scan', 'SCANNER');
+_setPath(DICTS.fr, 'leaderboard.scanning', 'scan...');
+_setPath(DICTS.fr, 'leaderboard.enterCallsignHint', 'Entre un indicatif pour voir les stats.');
+_setPath(DICTS.fr, 'leaderboard.recentActivity', 'Activité récente');
+_setPath(DICTS.fr, 'leaderboard.noRunsYet', 'aucune partie.');
+
+_setPath(DICTS.fr, 'custom.title', 'PARTIE PERSONNALISÉE');
+_setPath(DICTS.fr, 'custom.blurb', 'Configure ta grille et tes skins. Solo ou avec un ami via code.');
+_setPath(DICTS.fr, 'custom.rows', 'LIGNES');
+_setPath(DICTS.fr, 'custom.cols', 'COLONNES');
+_setPath(DICTS.fr, 'custom.mines', 'MINES');
+_setPath(DICTS.fr, 'custom.lives', 'VIES');
+_setPath(DICTS.fr, 'custom.presets', 'préréglages');
+_setPath(DICTS.fr, 'custom.mineCapTitle', 'LIMITE DE MINES APPLIQUÉE.');
+_setPath(DICTS.fr, 'custom.mineCapBody', 'Densité bloquée à ~60%.');
+_setPath(DICTS.fr, 'custom.solo', 'SOLO');
+_setPath(DICTS.fr, 'custom.withFriend', 'AVEC UN AMI');
+_setPath(DICTS.fr, 'custom.configPreview', 'aperçu');
+_setPath(DICTS.fr, 'custom.estChallenge', 'difficulté');
+_setPath(DICTS.fr, 'custom.cells', 'CASES');
+_setPath(DICTS.fr, 'custom.safe', 'SÛR');
+_setPath(DICTS.fr, 'custom.density', 'DENSITÉ');
+_setPath(DICTS.fr, 'custom.fxSkins', 'FX & skins');
+_setPath(DICTS.fr, 'custom.diff.easy', 'FACILE');
+_setPath(DICTS.fr, 'custom.diff.normal', 'NORMAL');
+_setPath(DICTS.fr, 'custom.diff.hard', 'DIFFICILE');
+_setPath(DICTS.fr, 'custom.diff.insane', 'INSANE');
+_setPath(DICTS.fr, 'custom.skin.mine', 'MINE');
+_setPath(DICTS.fr, 'custom.skin.cell', 'CASE');
+_setPath(DICTS.fr, 'custom.skin.fx', 'FX');
+_setPath(DICTS.fr, 'custom.skin.cursor', 'CURSEUR');
+_setPath(DICTS.fr, 'custom.lockedTooltip', 'Verrouillé — acheter en boutique');
+
+// German
+_setPath(DICTS.de, 'tagline', '// neuronales minesweeper');
+_setPath(DICTS.de, 'tabs.campaign', 'KAMPAGNE');
+_setPath(DICTS.de, 'tabs.battles', 'DUELLE');
+_setPath(DICTS.de, 'tabs.custom', 'CUSTOM');
+_setPath(DICTS.de, 'tabs.shop', 'SHOP');
+_setPath(DICTS.de, 'tabs.leaderboard', 'RANGLISTE');
+_setPath(DICTS.de, 'tabs.profile', 'PROFIL');
+_setPath(DICTS.de, 'tabs.friends', 'FREUNDE');
+_setPath(DICTS.de, 'common.login', 'ANMELDEN');
+_setPath(DICTS.de, 'common.register', 'REGISTRIEREN');
+_setPath(DICTS.de, 'common.logout', 'ABMELDEN · KONTO WECHSELN');
+_setPath(DICTS.de, 'common.coins', 'MÜNZEN');
+_setPath(DICTS.de, 'common.play', 'SPIELEN');
+_setPath(DICTS.de, 'common.cancel', 'ABBRECHEN');
+_setPath(DICTS.de, 'common.close', 'SCHLIESSEN');
+_setPath(DICTS.de, 'common.remaining', 'LEBEN ÜBRIG');
+_setPath(DICTS.de, 'common.findOpponent', 'GEGNER FINDEN');
+_setPath(DICTS.de, 'common.createLobby', 'LOBBY ERSTELLEN');
+_setPath(DICTS.de, 'common.joinLobby', 'LOBBY BEITRETEN');
+_setPath(DICTS.de, 'common.search', 'SUCHEN');
+_setPath(DICTS.de, 'common.settings', 'EINSTELLUNGEN');
+_setPath(DICTS.de, 'common.language', 'SPRACHE');
+_setPath(DICTS.de, 'common.exit', 'BEENDEN');
+_setPath(DICTS.de, 'common.continue', 'WEITER');
+_setPath(DICTS.de, 'common.back', 'ZURÜCK');
+_setPath(DICTS.de, 'common.copy', 'KOPIEREN');
+_setPath(DICTS.de, 'common.or', 'ODER');
+_setPath(DICTS.de, 'settings.sound', 'SOUND');
+_setPath(DICTS.de, 'daily.title', 'TÄGLICH');
+_setPath(DICTS.de, 'daily.subtitle', 'TÄGLICHE AUFGABEN');
+_setPath(DICTS.de, 'daily.coins', 'MÜNZEN');
+_setPath(DICTS.de, 'daily.coinsShort', 'm');
+_setPath(DICTS.de, 'daily.resetIn', 'RESET IN');
+_setPath(DICTS.de, 'daily.claimed', 'ABGEHOLT');
+_setPath(DICTS.de, 'daily.claim', 'ABHOLEN');
+_setPath(DICTS.de, 'daily.quests.play_1', '1 Spiel spielen');
+_setPath(DICTS.de, 'daily.quests.play_3', '3 Spiele spielen');
+_setPath(DICTS.de, 'daily.quests.win_1', '1 Spiel gewinnen');
+_setPath(DICTS.de, 'daily.quests.win_3', '3 Spiele gewinnen');
+_setPath(DICTS.de, 'daily.quests.lose_1', '1 Spiel verlieren');
+_setPath(DICTS.de, 'daily.quests.lose_3', '3 Spiele verlieren');
+_setPath(DICTS.de, 'daily.quests.flags_5', '5 Flaggen setzen');
+_setPath(DICTS.de, 'daily.quests.flags_20', '20 Flaggen setzen');
+_setPath(DICTS.de, 'daily.quests.flags_50', '50 Flaggen setzen');
+_setPath(DICTS.de, 'daily.quests.safe_100', '100 sichere Felder aufdecken');
+_setPath(DICTS.de, 'daily.quests.safe_250', '250 sichere Felder aufdecken');
+_setPath(DICTS.de, 'daily.quests.time_300', '5 Min spielen (300 s)');
+_setPath(DICTS.de, 'daily.quests.time_900', '15 Min spielen (900 s)');
+_setPath(DICTS.de, 'daily.quests.fast_60', 'Unter 60 s gewinnen');
+_setPath(DICTS.de, 'daily.quests.fast_30', 'Unter 30 s gewinnen');
+_setPath(DICTS.de, 'daily.quests.no_flags', 'Ohne Flaggen gewinnen');
+_setPath(DICTS.de, 'daily.quests.flawless', 'Gewinnen ohne Leben zu verlieren');
+_setPath(DICTS.de, 'daily.quests.one_life', 'Mit 1 Leben gewinnen');
+_setPath(DICTS.de, 'daily.quests.campaign_1', '1 Kampagnenlevel gewinnen');
+_setPath(DICTS.de, 'daily.quests.campaign_3', '3 Kampagnenlevel gewinnen');
+_setPath(DICTS.de, 'achievements.title', 'ERFOLGE');
+_setPath(DICTS.de, 'achievements.unlocked', 'FREIGESCHALTET');
+_setPath(DICTS.de, 'achievements.toast', 'ERFOLG FREIGESCHALTET');
+_setPath(DICTS.de, 'achievements.more', 'MEHR');
+
+_setAchievementItems(DICTS.de, {
+  games_1: { title: 'ERSTE SCHRITTE', cond: '1 Spiel spielen', desc: 'Erster Schritt. Mehr kommt.' },
+  games_10: { title: 'AUFWÄRMEN', cond: '10 Spiele spielen', desc: 'Aufgewärmt. Jetzt wird’s ernst.' },
+  games_50: { title: 'STAMMSPIELER', cond: '50 Spiele spielen', desc: 'Schon zur Gewohnheit geworden, oder?' },
+  games_200: { title: 'VETERAN', cond: '200 Spiele spielen', desc: 'Du hast alles gesehen. Sogar Schmerz.' },
+  games_1000: { title: 'MARATHON', cond: '1000 Spiele spielen', desc: 'Wohnst du hier?' },
+  wins_1: { title: 'ERSTER SIEG', cond: '1 Spiel gewinnen', desc: 'Der erste Sieg ist der schönste.' },
+  streak_3: { title: 'SIEGESSERIE 3', cond: '3 Siege in Folge', desc: 'Die Serie beginnt. Weiter so.' },
+  streak_5: { title: 'SIEGESSERIE 5', cond: '5 Siege in Folge', desc: 'Selbstbewusst. Sehr.' },
+  streak_10: { title: 'SIEGESSERIE 10', cond: '10 Siege in Folge', desc: 'Du liest das Feld wie ein Buch.' },
+  streak_100: { title: 'SIEGESSERIE 100', cond: '100 Siege in Folge', desc: 'Moment… bist du ein Bot?' },
+  flawless_win: { title: 'FEHLERLOS', cond: 'Gewinnen ohne Leben zu verlieren', desc: 'Saubere Arbeit. Keine Kratzer.' },
+  speed_win_60: { title: 'SCHNELLER KOPF', cond: 'Unter 60 Sekunden gewinnen', desc: 'Schnell gedacht, schnell geklickt.' },
+  speed_win_30: { title: 'SPEEDRUNNER', cond: 'Unter 30 Sekunden gewinnen', desc: 'Hast du überhaupt geblinzelt?' },
+  speed_win_20: { title: 'BLITZ', cond: 'Unter 20 Sekunden gewinnen', desc: 'Ein Wimpernschlag.' },
+  speed_win_10: { title: 'RAKETE', cond: 'Unter 10 Sekunden gewinnen', desc: 'Fertig, bevor es begann.' },
+  flags_1: { title: 'ERSTE FLAGGE', cond: '1 Flagge setzen', desc: 'Erste Flagge. Paranoia startet.' },
+  flags_100: { title: 'FLAGGENMEISTER', cond: '100 Flaggen setzen', desc: 'Markieren wie ein Profi.' },
+  flags_1000: { title: 'FLAGGENLEGENDE', cond: '1000 Flaggen setzen', desc: 'Mehr Flaggen als Zweifel. Fast.' },
+  precise_all_mines: { title: 'PRÄZISE', cond: 'Gewinnen mit Flaggen auf allen Minen', desc: 'Lehrbuch-perfekt.' },
+  no_flags_win: { title: 'OHNE FLAGGEN', cond: 'Gewinnen ohne Flaggen', desc: 'Pure Intuition. Oder Wahnsinn.' },
+  campaign_1: { title: 'KAMPAGNENSTART', cond: '1 Kampagnenlevel gewinnen', desc: 'Kapitel 1: „Wie schwer kann’s sein?“' },
+  campaign_10: { title: 'KAMPAGNE 10', cond: '10 Kampagnenlevel gewinnen', desc: 'Du bist drin. Kein Zurück.' },
+  campaign_half: { title: 'HALBZEIT', cond: 'Die Hälfte der Kampagne erreichen', desc: 'Halbzeit. Jetzt wird’s spicy.' },
+  campaign_complete: { title: 'KAMPAGNE GESCHAFFT', cond: 'Kampagne abschließen', desc: 'Das Ende. Und du hast überlebt. Wie?' },
+  hard_lesson: { title: 'HARTE LEKTION', cond: 'Kampagne 150+ mit 1 Leben gewinnen', desc: 'Ein Fehler und… boom!' },
+  duels_1: { title: 'ERSTES DUELL', cond: '1 Duell spielen', desc: 'Willkommen im echten Kampf.' },
+  duel_wins_1: { title: 'DUELL-SIEGER', cond: '1 Duell gewinnen', desc: 'Das erste Mal ist immer schön)' },
+  ranked_10: { title: 'RANKED BEREIT', cond: '10 Ranked-Duelle spielen', desc: 'Rating ist Schmerz. Du gewöhnst dich.' },
+  duel_wins_10: { title: 'RIVALE', cond: '10 Duelle gewinnen', desc: 'Sie erinnern sich. Und sie fürchten dich.' },
+  duel_wins_50: { title: 'NEMESIS', cond: '50 Duelle gewinnen', desc: 'Wenn du da bist, bekommt jemand Panik.' },
+  comeback_1hp: { title: 'COMEBACK', cond: 'Mit 1 Leben gewinnen', desc: 'Am Abgrund. Trotzdem Sieg.' },
+  duel_streak_5: { title: 'UNAUFHALTSAM', cond: '5 Duelle in Folge gewinnen', desc: 'Niemand stoppt dich. Noch nicht.' },
+  rating_600: { title: 'AUFSTEIGER', cond: 'Rating 600 erreichen', desc: 'Es geht hoch.' },
+  rating_1000: { title: 'SKILLED', cond: 'Rating 1000 erreichen', desc: 'Kein Anfänger mehr.' },
+  rating_5000: { title: 'PRO', cond: 'Rating 5000 erreichen', desc: 'Pro. Keine Fragen.' },
+  rating_10000: { title: 'ELITE', cond: 'Rating 10000 erreichen', desc: 'Nur Elite.' },
+  rating_15000: { title: 'LEGENDE', cond: 'Rating 15000 erreichen', desc: 'Eine echte Legende.' },
+  coins_balance_10000: { title: 'LETZTES GELD', cond: '10000 Münzen Kontostand haben', desc: 'Gespart oder nie ausgegeben?' },
+  coins_earned_total_10000: { title: 'REICH', cond: 'Insgesamt 10000 Münzen verdienen', desc: 'Nicht schlecht.' },
+  daily_claim_1: { title: 'DAILY-CLAIMER', cond: '1 Daily-Quest abholen', desc: 'Belohnungen sind heilig.' },
+  daily_streak_5: { title: 'DAILY-SERIE', cond: '5 Fenster in Folge abholen', desc: 'Disziplin. Stahl.' },
+});
+
+_setPath(DICTS.de, 'auth.identifyTitle', 'IDENTIFIZIEREN');
+_setPath(DICTS.de, 'auth.accessTitle', 'ZUGANG');
+_setPath(DICTS.de, 'auth.identifyHint', 'Erstelle deine Identität im Grid.');
+_setPath(DICTS.de, 'auth.accessHint', 'Melde dich mit einem vorhandenen Rufzeichen an.');
+_setPath(DICTS.de, 'auth.callsignLabel', 'Rufzeichen · 3–20 Zeichen');
+_setPath(DICTS.de, 'auth.callsignPlaceholder', 'DEIN_NAME');
+_setPath(DICTS.de, 'auth.passwordLabel', 'Passwort · min 4');
+_setPath(DICTS.de, 'auth.passwordPlaceholder', '••••••');
+_setPath(DICTS.de, 'auth.login', 'ANMELDEN');
+_setPath(DICTS.de, 'auth.register', 'REGISTRIEREN');
+_setPath(DICTS.de, 'auth.connecting', 'VERBINDUNG...');
+_setPath(DICTS.de, 'auth.passwordRequiredHint', 'Passwort erforderlich. Später im Profil ändern.');
+_setPath(DICTS.de, 'auth.forgotPasswordHint', 'Passwort vergessen? Frag den Admin.');
+_setPath(DICTS.de, 'auth.failedTryAgain', 'Fehlgeschlagen. Versuch es erneut.');
+
+_setPath(DICTS.de, 'lobbyFriend.title', 'MIT FREUND SPIELEN');
+_setPath(DICTS.de, 'lobbyFriend.hint', 'Erstelle eine private Lobby und teile den Code oder tritt einer bestehenden bei.');
+_setPath(DICTS.de, 'lobbyFriend.codeLabel', 'Lobby-Code · 6 Zeichen');
+_setPath(DICTS.de, 'lobbyFriend.shareCode', 'CODE TEILEN');
+_setPath(DICTS.de, 'lobbyFriend.host', 'HOST');
+_setPath(DICTS.de, 'lobbyFriend.guest', 'GAST');
+_setPath(DICTS.de, 'lobbyFriend.waiting', 'warte');
+_setPath(DICTS.de, 'lobbyFriend.startNow', 'JETZT STARTEN');
+_setPath(DICTS.de, 'lobbyFriend.waitingForHost', 'Warte, bis der Host startet...');
+_setPath(DICTS.de, 'lobbyFriend.createFailed', 'Erstellen fehlgeschlagen.');
+_setPath(DICTS.de, 'lobbyFriend.joinFailed', 'Beitritt fehlgeschlagen.');
+_setPath(DICTS.de, 'lobbyFriend.startFailed', 'Start fehlgeschlagen.');
+
+_setPath(DICTS.de, 'game.controlsHint', '// LINKSKLICK aufdecken · RECHTSKLICK Flagge · 1. Klick ist sicher');
+_setPath(DICTS.de, 'game.time', 'ZEIT');
+_setPath(DICTS.de, 'game.score', 'PUNKTE');
+_setPath(DICTS.de, 'game.lives', 'LEBEN');
+_setPath(DICTS.de, 'game.flag', 'FLAGGE');
+_setPath(DICTS.de, 'game.reset', 'RESET');
+_setPath(DICTS.de, 'game.victory', 'SIEG');
+_setPath(DICTS.de, 'game.systemBreach', 'SYSTEMVERLETZUNG');
+_setPath(DICTS.de, 'game.cleared', 'geräumt');
+_setPath(DICTS.de, 'game.terminated', 'beendet');
+_setPath(DICTS.de, 'game.bounty', 'Belohnung');
+_setPath(DICTS.de, 'game.adminNoSubmit', '∞ Admin-Modus — Score wird nicht gesendet');
+_setPath(DICTS.de, 'game.uploading', 'sende...');
+_setPath(DICTS.de, 'game.queued', 'warteschlange...');
+_setPath(DICTS.de, 'game.scoreUploaded', '✓ Score gesendet');
+_setPath(DICTS.de, 'game.win', 'sieg');
+_setPath(DICTS.de, 'game.loss', 'niederlage');
+_setPath(DICTS.de, 'game.duelResult', 'DUELLERGEBNIS');
+_setPath(DICTS.de, 'game.you', 'DU');
+_setPath(DICTS.de, 'game.rival', 'GEGNER');
+_setPath(DICTS.de, 'game.youWinDuel', '🏆 DU GEWINNST DAS DUELL');
+_setPath(DICTS.de, 'game.defeated', 'BESIEGT');
+_setPath(DICTS.de, 'game.tie', 'UNENTSCHIEDEN');
+_setPath(DICTS.de, 'game.replay', 'NOCHMAL');
+_setPath(DICTS.de, 'game.playAgain', 'NOCHMAL SPIELEN');
+_setPath(DICTS.de, 'game.youWon', 'DU HAST GEWONNEN');
+_setPath(DICTS.de, 'game.youLost', 'DU HAST VERLOREN');
+
+_setPath(DICTS.de, 'profile.inventory', 'INVENTAR');
+_setPath(DICTS.de, 'profile.changePassword', 'PASSWORT ÄNDERN');
+_setPath(DICTS.de, 'profile.account', 'KONTO');
+_setPath(DICTS.de, 'profile.lifetimeStats', 'STATISTIK');
+_setPath(DICTS.de, 'profile.offline', 'offline');
+_setPath(DICTS.de, 'profile.loading', 'lädt...');
+_setPath(DICTS.de, 'profile.oldPassword', 'Altes Passwort');
+_setPath(DICTS.de, 'profile.newPassword', 'Neues Passwort · min 4');
+_setPath(DICTS.de, 'profile.repeatNewPassword', 'Passwort wiederholen');
+_setPath(DICTS.de, 'profile.passwordsDoNotMatch', 'Passwörter stimmen nicht überein.');
+_setPath(DICTS.de, 'profile.passwordUpdated', 'Passwort aktualisiert.');
+_setPath(DICTS.de, 'profile.updating', 'AKTUALISIERUNG...');
+_setPath(DICTS.de, 'profile.update', 'AKTUALISIEREN');
+_setPath(DICTS.de, 'profile.failed', 'Fehlgeschlagen.');
+
+_setPath(DICTS.de, 'friends.title', 'FREUNDE');
+_setPath(DICTS.de, 'friends.searchPlaceholder', 'Rufzeichen suchen...');
+_setPath(DICTS.de, 'friends.noResult', 'Spieler nicht gefunden.');
+_setPath(DICTS.de, 'friends.blurb', 'Suche andere Spieler und sieh dir ihre Stats an.');
+
+_setPath(DICTS.de, 'pause.title', 'PAUSE');
+_setPath(DICTS.de, 'pause.exitGame', 'SPIEL BEENDEN');
+
+_setPath(DICTS.de, 'shop.title', 'SHOP');
+_setPath(DICTS.de, 'shop.blurb', 'Verdiene Münzen in der Kampagne. Gib sie für Icons, Themes und Effekte aus.');
+_setPath(DICTS.de, 'shop.loading', 'katalog lädt...');
+_setPath(DICTS.de, 'shop.groups.mine', 'MINEN-ICONS');
+_setPath(DICTS.de, 'shop.groups.cell', 'ZELL-THEMES');
+_setPath(DICTS.de, 'shop.groups.explosion', 'EXPLOSION-EFFEKTE');
+_setPath(DICTS.de, 'shop.groups.cursor', 'CURSORS');
+_setPath(DICTS.de, 'shop.notEnoughCoins', 'Nicht genug Münzen.');
+_setPath(DICTS.de, 'shop.purchaseFailed', 'Kauf fehlgeschlagen.');
+_setPath(DICTS.de, 'shop.defaultBomb', 'Standardbombe');
+_setPath(DICTS.de, 'shop.defaultCell', 'Cyan Grid (Standard)');
+_setPath(DICTS.de, 'shop.defaultFx', 'Roter Blitz (Standard)');
+_setPath(DICTS.de, 'shop.defaultCursor', 'Standardcursor');
+_setPath(DICTS.de, 'shop.free', 'KOSTENLOS');
+_setPath(DICTS.de, 'shop.equip', 'AUSRÜSTEN');
+_setPath(DICTS.de, 'shop.equipped', 'AUSGERÜSTET');
+_setPath(DICTS.de, 'shop.buy', 'KAUFEN');
+_setPath(DICTS.de, 'shop.buying', 'KAUF...');
+
+_setPath(DICTS.de, 'inventory.title', 'INVENTAR');
+_setPath(DICTS.de, 'inventory.buyInShop', 'IM SHOP KAUFEN');
+_setPath(DICTS.de, 'inventory.tabs.bombs', 'BOMBEN');
+_setPath(DICTS.de, 'inventory.tabs.explosions', 'EXPLOSIONEN');
+_setPath(DICTS.de, 'inventory.tabs.cursors', 'CURSORS');
+_setPath(DICTS.de, 'inventory.tabs.themes', 'THEMES');
+
+_setPath(DICTS.de, 'battles.title', 'DUELLE');
+_setPath(DICTS.de, 'battles.blurb', 'Finde Gegner in Echtzeit. Gleiches Feld — wer schneller räumt, gewinnt.');
+_setPath(DICTS.de, 'battles.simpleTitle', 'EINFACH');
+_setPath(DICTS.de, 'battles.simpleSubtitle', 'Casual · Kein Rating');
+_setPath(DICTS.de, 'battles.rankedTitle', 'RANKED');
+_setPath(DICTS.de, 'battles.rankedSubtitle', 'Kompetitiv · ELO');
+_setPath(DICTS.de, 'battles.searching', 'SUCHE...');
+_setPath(DICTS.de, 'battles.found', 'GEGNER GEFUNDEN');
+_setPath(DICTS.de, 'battles.opponent', 'GEGNER');
+_setPath(DICTS.de, 'battles.waiting', 'warte...');
+_setPath(DICTS.de, 'battles.startNow', 'START');
+_setPath(DICTS.de, 'battles.cancel', 'ABBRECHEN');
+_setPath(DICTS.de, 'battles.findOpponent', 'FINDEN');
+_setPath(DICTS.de, 'battles.yourRating', 'DEIN ELO');
+_setPath(DICTS.de, 'battles.field', 'FELD');
+
+_setPath(DICTS.de, 'campaign.title', 'DER PFAD');
+_setPath(DICTS.de, 'campaign.blurb', '{n} Knoten auf einem Pfad. Scrollen oder ziehen.');
+_setPath(DICTS.de, 'campaign.infinityOn', 'INFINITY AN');
+_setPath(DICTS.de, 'campaign.infinityOff', 'INFINITY AUS');
+_setPath(DICTS.de, 'campaign.cleared', 'GESCHAFFT');
+_setPath(DICTS.de, 'campaign.stars', 'STERNE');
+_setPath(DICTS.de, 'campaign.start', 'START');
+
+_setPath(DICTS.de, 'leaderboard.title', 'RANGLISTE');
+_setPath(DICTS.de, 'leaderboard.name', 'NAME');
+_setPath(DICTS.de, 'leaderboard.lvl', 'LVL');
+_setPath(DICTS.de, 'leaderboard.score', 'SCORE');
+_setPath(DICTS.de, 'leaderboard.time', 'ZEIT');
+_setPath(DICTS.de, 'leaderboard.loading', 'lädt...');
+_setPath(DICTS.de, 'leaderboard.noRecords', 'Noch keine Einträge.');
+_setPath(DICTS.de, 'leaderboard.deleteConfirm', 'Eintrag löschen?');
+_setPath(DICTS.de, 'leaderboard.topRanked', 'Top Ranked');
+_setPath(DICTS.de, 'leaderboard.noRankedRunsYet', 'noch keine ranked runs.');
+_setPath(DICTS.de, 'leaderboard.agentStats', 'Agent Stats');
+_setPath(DICTS.de, 'leaderboard.callsignPlaceholder', 'rufzeichen...');
+_setPath(DICTS.de, 'leaderboard.scan', 'SCAN');
+_setPath(DICTS.de, 'leaderboard.scanning', 'scan...');
+_setPath(DICTS.de, 'leaderboard.enterCallsignHint', 'Rufzeichen eingeben für Stats.');
+_setPath(DICTS.de, 'leaderboard.recentActivity', 'Letzte Aktivität');
+_setPath(DICTS.de, 'leaderboard.noRunsYet', 'noch keine runs.');
+
+_setPath(DICTS.de, 'custom.title', 'CUSTOM');
+_setPath(DICTS.de, 'custom.blurb', 'Konfiguriere dein Grid und Skins. Solo oder mit Freund per Code.');
+_setPath(DICTS.de, 'custom.rows', 'ZEILEN');
+_setPath(DICTS.de, 'custom.cols', 'SPALTEN');
+_setPath(DICTS.de, 'custom.presets', 'presets');
+_setPath(DICTS.de, 'custom.mineCapTitle', 'MINENLIMIT AKTIV.');
+_setPath(DICTS.de, 'custom.mineCapBody', 'Dichte auf ~60% begrenzt.');
+_setPath(DICTS.de, 'custom.solo', 'SOLO');
+_setPath(DICTS.de, 'custom.withFriend', 'MIT FREUND');
+_setPath(DICTS.de, 'custom.configPreview', 'vorschau');
+_setPath(DICTS.de, 'custom.estChallenge', 'schwierigkeit');
+_setPath(DICTS.de, 'custom.cells', 'ZELLEN');
+_setPath(DICTS.de, 'custom.safe', 'SICHER');
+_setPath(DICTS.de, 'custom.density', 'DICHTE');
+_setPath(DICTS.de, 'custom.lockedTooltip', 'Gesperrt — im Shop kaufen');
+
+// Chinese (Simplified)
+_setPath(DICTS.zh, 'tagline', '// 神经扫雷');
+_setPath(DICTS.zh, 'tabs.campaign', '战役');
+_setPath(DICTS.zh, 'tabs.battles', '对战');
+_setPath(DICTS.zh, 'tabs.custom', '自定义');
+_setPath(DICTS.zh, 'tabs.shop', '商店');
+_setPath(DICTS.zh, 'tabs.leaderboard', '排行榜');
+_setPath(DICTS.zh, 'tabs.profile', '个人');
+_setPath(DICTS.zh, 'tabs.friends', '好友');
+_setPath(DICTS.zh, 'common.login', '进入');
+_setPath(DICTS.zh, 'common.register', '注册');
+_setPath(DICTS.zh, 'common.logout', '退出登录 · 切换账号');
+_setPath(DICTS.zh, 'common.coins', '金币');
+_setPath(DICTS.zh, 'common.rating', 'ELO');
+_setPath(DICTS.zh, 'common.play', '开始');
+_setPath(DICTS.zh, 'common.cancel', '取消');
+_setPath(DICTS.zh, 'common.close', '关闭');
+_setPath(DICTS.zh, 'common.remaining', '剩余生命');
+_setPath(DICTS.zh, 'common.findOpponent', '匹配对手');
+_setPath(DICTS.zh, 'common.createLobby', '创建房间');
+_setPath(DICTS.zh, 'common.joinLobby', '加入房间');
+_setPath(DICTS.zh, 'common.search', '搜索');
+_setPath(DICTS.zh, 'common.settings', '设置');
+_setPath(DICTS.zh, 'common.language', '语言');
+_setPath(DICTS.zh, 'common.exit', '退出');
+_setPath(DICTS.zh, 'common.continue', '继续');
+_setPath(DICTS.zh, 'common.back', '返回');
+_setPath(DICTS.zh, 'common.copy', '复制');
+_setPath(DICTS.zh, 'common.or', '或');
+_setPath(DICTS.zh, 'common.vs', '对');
+_setPath(DICTS.zh, 'settings.sound', '声音');
+_setPath(DICTS.zh, 'daily.title', '每日');
+_setPath(DICTS.zh, 'daily.subtitle', '每日任务');
+_setPath(DICTS.zh, 'daily.coins', '金币');
+_setPath(DICTS.zh, 'daily.coinsShort', '币');
+_setPath(DICTS.zh, 'daily.resetIn', '重置倒计时');
+_setPath(DICTS.zh, 'daily.claimed', '已领取');
+_setPath(DICTS.zh, 'daily.claim', '领取');
+_setPath(DICTS.zh, 'daily.quests.play_1', '进行 1 局游戏');
+_setPath(DICTS.zh, 'daily.quests.play_3', '进行 3 局游戏');
+_setPath(DICTS.zh, 'daily.quests.win_1', '赢 1 局');
+_setPath(DICTS.zh, 'daily.quests.win_3', '赢 3 局');
+_setPath(DICTS.zh, 'daily.quests.lose_1', '输 1 局');
+_setPath(DICTS.zh, 'daily.quests.lose_3', '输 3 局');
+_setPath(DICTS.zh, 'daily.quests.flags_5', '放置 5 个旗子');
+_setPath(DICTS.zh, 'daily.quests.flags_20', '放置 20 个旗子');
+_setPath(DICTS.zh, 'daily.quests.flags_50', '放置 50 个旗子');
+_setPath(DICTS.zh, 'daily.quests.safe_100', '揭开 100 个安全格');
+_setPath(DICTS.zh, 'daily.quests.safe_250', '揭开 250 个安全格');
+_setPath(DICTS.zh, 'daily.quests.time_300', '游玩 5 分钟 (300 秒)');
+_setPath(DICTS.zh, 'daily.quests.time_900', '游玩 15 分钟 (900 秒)');
+_setPath(DICTS.zh, 'daily.quests.fast_60', '60 秒内获胜');
+_setPath(DICTS.zh, 'daily.quests.fast_30', '30 秒内获胜');
+_setPath(DICTS.zh, 'daily.quests.no_flags', '不放旗子获胜');
+_setPath(DICTS.zh, 'daily.quests.flawless', '不失去生命获胜');
+_setPath(DICTS.zh, 'daily.quests.one_life', '剩 1 条命获胜');
+_setPath(DICTS.zh, 'daily.quests.campaign_1', '通关 1 个战役关卡');
+_setPath(DICTS.zh, 'daily.quests.campaign_3', '通关 3 个战役关卡');
+_setPath(DICTS.zh, 'achievements.title', '成就');
+_setPath(DICTS.zh, 'achievements.unlocked', '已解锁');
+_setPath(DICTS.zh, 'achievements.toast', '成就已解锁');
+_setPath(DICTS.zh, 'achievements.more', '更多');
+
+_setAchievementItems(DICTS.zh, {
+  games_1: { title: '第一步', cond: '进行 1 局游戏', desc: '迈出第一步，更多即将到来。' },
+  games_10: { title: '热身', cond: '进行 10 局游戏', desc: '热起来了，接下来更认真。' },
+  games_50: { title: '常客', cond: '进行 50 局游戏', desc: '这已经成习惯了吧？' },
+  games_200: { title: '老兵', cond: '进行 200 局游戏', desc: '你见识过一切，甚至痛苦。' },
+  games_1000: { title: '马拉松', cond: '进行 1000 局游戏', desc: '你住在这里吗？' },
+  wins_1: { title: '首次胜利', cond: '赢 1 局', desc: '第一次胜利最甜。' },
+  streak_3: { title: '三连胜', cond: '连续赢 3 局', desc: '连胜开始了，继续。' },
+  streak_5: { title: '五连胜', cond: '连续赢 5 局', desc: '自信，非常自信。' },
+  streak_10: { title: '十连胜', cond: '连续赢 10 局', desc: '你像读书一样读懂棋盘。' },
+  streak_100: { title: '百连胜', cond: '连续赢 100 局', desc: '等等…你是机器人吗？' },
+  flawless_win: { title: '无伤', cond: '不失去生命获胜', desc: '干净利落，毫发无损。' },
+  speed_win_60: { title: '快思维', cond: '60 秒内获胜', desc: '思考快，点击更快。' },
+  speed_win_30: { title: '速通玩家', cond: '30 秒内获胜', desc: '你有眨眼吗？' },
+  speed_win_20: { title: '闪电', cond: '20 秒内获胜', desc: '眨眼就结束。' },
+  speed_win_10: { title: '极速', cond: '10 秒内获胜', desc: '开始前就结束了。' },
+  flags_1: { title: '第一面旗', cond: '放置 1 个旗子', desc: '第一面旗， paranoia 开始。' },
+  flags_100: { title: '插旗大师', cond: '累计放置 100 个旗子', desc: '标记如同专业选手。' },
+  flags_1000: { title: '插旗传奇', cond: '累计放置 1000 个旗子', desc: '旗子比怀疑更多（差不多）。' },
+  precise_all_mines: { title: '精准', cond: '所有地雷都插旗并获胜', desc: '教科书般完美。' },
+  no_flags_win: { title: '不插旗', cond: '不放旗子获胜', desc: '纯直觉，或纯疯狂。' },
+  campaign_1: { title: '战役开局', cond: '通关 1 个战役关卡', desc: '第一章：这有多难？' },
+  campaign_10: { title: '战役 10', cond: '通关 10 个战役关卡', desc: '你已经上头，无法回头。' },
+  campaign_half: { title: '战役过半', cond: '到达战役一半', desc: '过半了，接下来更刺激。' },
+  campaign_complete: { title: '战役通关', cond: '完成战役', desc: '结局。你居然活下来了。' },
+  hard_lesson: { title: '惨痛教训', cond: '战役 150+ 且剩 1 条命获胜', desc: '一步错，直接爆。' },
+  duels_1: { title: '首次对战', cond: '进行 1 场对战', desc: '欢迎来到真正的战斗。' },
+  duel_wins_1: { title: '对战胜者', cond: '赢 1 场对战', desc: '第一次总是很爽)' },
+  ranked_10: { title: '排位准备', cond: '进行 10 场排位对战', desc: '分数很痛，但你会习惯。' },
+  duel_wins_10: { title: '劲敌', cond: '赢 10 场对战', desc: '他们记得你，并且害怕你。' },
+  duel_wins_50: { title: '梦魇', cond: '赢 50 场对战', desc: '你一进房间，就有人紧张。' },
+  comeback_1hp: { title: '翻盘', cond: '剩 1 条命获胜', desc: '悬崖边上也能赢。' },
+  duel_streak_5: { title: '势不可挡', cond: '对战五连胜', desc: '没人能阻止你。暂时。' },
+  rating_600: { title: '上升', cond: '达到 600 ELO', desc: '继续往上。' },
+  rating_1000: { title: '熟练', cond: '达到 1000 ELO', desc: '不再是新手。' },
+  rating_5000: { title: '职业', cond: '达到 5000 ELO', desc: '职业玩家，毋庸置疑。' },
+  rating_10000: { title: '精英', cond: '达到 10000 ELO', desc: '只有精英。' },
+  rating_15000: { title: '传奇', cond: '达到 15000 ELO', desc: '真正的传奇。' },
+  coins_balance_10000: { title: '最后的钱', cond: '余额达到 10000 金币', desc: '你是攒了很久，还是从不花？' },
+  coins_earned_total_10000: { title: '有钱人', cond: '累计获得 10000 金币', desc: '不错。' },
+  daily_claim_1: { title: '每日领取', cond: '领取 1 个每日任务', desc: '领奖是神圣的。' },
+  daily_streak_5: { title: '每日连签', cond: '连续 5 个窗口领取', desc: '纪律如铁。' },
+});
+
+_setPath(DICTS.zh, 'auth.identifyTitle', '身份');
+_setPath(DICTS.zh, 'auth.accessTitle', '访问');
+_setPath(DICTS.zh, 'auth.identifyHint', '创建你的网格身份。');
+_setPath(DICTS.zh, 'auth.accessHint', '使用已有呼号登录。');
+_setPath(DICTS.zh, 'auth.callsignLabel', '呼号 · 3–20 字符');
+_setPath(DICTS.zh, 'auth.callsignPlaceholder', '你的名字');
+_setPath(DICTS.zh, 'auth.passwordLabel', '密码 · 至少 4 位');
+_setPath(DICTS.zh, 'auth.passwordPlaceholder', '••••••');
+_setPath(DICTS.zh, 'auth.login', '登录');
+_setPath(DICTS.zh, 'auth.register', '注册');
+_setPath(DICTS.zh, 'auth.connecting', '连接中...');
+_setPath(DICTS.zh, 'auth.passwordRequiredHint', '需要密码。可在个人页面修改。');
+_setPath(DICTS.zh, 'auth.forgotPasswordHint', '忘记密码？联系管理员。');
+_setPath(DICTS.zh, 'auth.failedTryAgain', '失败，请重试。');
+
+_setPath(DICTS.zh, 'lobbyFriend.title', '与好友游戏');
+_setPath(DICTS.zh, 'lobbyFriend.hint', '创建私人房间并分享代码，或加入已有房间。');
+_setPath(DICTS.zh, 'lobbyFriend.codeLabel', '房间代码 · 6 位');
+_setPath(DICTS.zh, 'lobbyFriend.shareCode', '分享代码');
+_setPath(DICTS.zh, 'lobbyFriend.host', '房主');
+_setPath(DICTS.zh, 'lobbyFriend.guest', '访客');
+_setPath(DICTS.zh, 'lobbyFriend.waiting', '等待');
+_setPath(DICTS.zh, 'lobbyFriend.startNow', '立即开始');
+_setPath(DICTS.zh, 'lobbyFriend.waitingForHost', '等待房主开始...');
+_setPath(DICTS.zh, 'lobbyFriend.createFailed', '创建失败。');
+_setPath(DICTS.zh, 'lobbyFriend.joinFailed', '加入失败。');
+_setPath(DICTS.zh, 'lobbyFriend.startFailed', '开始失败。');
+
+_setPath(DICTS.zh, 'game.controlsHint', '// 左键揭开 · 右键插旗 · 第一次点击安全');
+_setPath(DICTS.zh, 'game.time', '时间');
+_setPath(DICTS.zh, 'game.mines', '地雷');
+_setPath(DICTS.zh, 'game.score', '分数');
+_setPath(DICTS.zh, 'game.lives', '生命');
+_setPath(DICTS.zh, 'game.flag', '旗子');
+_setPath(DICTS.zh, 'game.reset', '重置');
+_setPath(DICTS.zh, 'game.victory', '胜利');
+_setPath(DICTS.zh, 'game.systemBreach', '系统入侵');
+_setPath(DICTS.zh, 'game.cleared', '已清除');
+_setPath(DICTS.zh, 'game.terminated', '已终止');
+_setPath(DICTS.zh, 'game.bounty', '奖励');
+_setPath(DICTS.zh, 'game.adminNoSubmit', '∞ 管理员模式 — 不提交成绩');
+_setPath(DICTS.zh, 'game.uploading', '上传中...');
+_setPath(DICTS.zh, 'game.queued', '排队中...');
+_setPath(DICTS.zh, 'game.scoreUploaded', '✓ 成绩已上传');
+_setPath(DICTS.zh, 'game.win', '胜');
+_setPath(DICTS.zh, 'game.loss', '负');
+_setPath(DICTS.zh, 'game.duelResult', '对战结果');
+_setPath(DICTS.zh, 'game.you', '你');
+_setPath(DICTS.zh, 'game.rival', '对手');
+_setPath(DICTS.zh, 'game.youWinDuel', '🏆 你赢了对战');
+_setPath(DICTS.zh, 'game.defeated', '失败');
+_setPath(DICTS.zh, 'game.tie', '平局');
+_setPath(DICTS.zh, 'game.replay', '重放');
+_setPath(DICTS.zh, 'game.playAgain', '再来一局');
+_setPath(DICTS.zh, 'game.youWon', '你赢了');
+_setPath(DICTS.zh, 'game.youLost', '你输了');
+
+_setPath(DICTS.zh, 'profile.inventory', '背包');
+_setPath(DICTS.zh, 'profile.changePassword', '修改密码');
+_setPath(DICTS.zh, 'profile.account', '账号');
+_setPath(DICTS.zh, 'profile.lifetimeStats', '生涯数据');
+_setPath(DICTS.zh, 'profile.offline', '离线');
+_setPath(DICTS.zh, 'profile.loading', '加载中...');
+_setPath(DICTS.zh, 'profile.playerId', 'ID');
+_setPath(DICTS.zh, 'profile.oldPassword', '旧密码');
+_setPath(DICTS.zh, 'profile.newPassword', '新密码 · 至少 4 位');
+_setPath(DICTS.zh, 'profile.repeatNewPassword', '重复新密码');
+_setPath(DICTS.zh, 'profile.passwordsDoNotMatch', '两次密码不一致。');
+_setPath(DICTS.zh, 'profile.passwordUpdated', '密码已更新。');
+_setPath(DICTS.zh, 'profile.updating', '更新中...');
+_setPath(DICTS.zh, 'profile.update', '更新');
+_setPath(DICTS.zh, 'profile.failed', '失败。');
+
+_setPath(DICTS.zh, 'friends.title', '好友');
+_setPath(DICTS.zh, 'friends.searchPlaceholder', '搜索呼号...');
+_setPath(DICTS.zh, 'friends.noResult', '未找到玩家。');
+_setPath(DICTS.zh, 'friends.blurb', '搜索其他玩家并查看他们的生涯数据。');
+
+_setPath(DICTS.zh, 'pause.title', '暂停');
+_setPath(DICTS.zh, 'pause.exitGame', '退出游戏');
+
+_setPath(DICTS.zh, 'shop.title', '商店');
+_setPath(DICTS.zh, 'shop.blurb', '通过通关战役获得金币，用于购买图标、主题和特效。');
+_setPath(DICTS.zh, 'shop.loading', '加载中...');
+_setPath(DICTS.zh, 'shop.groups.mine', '地雷图标');
+_setPath(DICTS.zh, 'shop.groups.cell', '格子主题');
+_setPath(DICTS.zh, 'shop.groups.explosion', '爆炸特效');
+_setPath(DICTS.zh, 'shop.groups.cursor', '光标');
+_setPath(DICTS.zh, 'shop.notEnoughCoins', '金币不足。');
+_setPath(DICTS.zh, 'shop.acquired', '已获得 · {id}');
+_setPath(DICTS.zh, 'shop.equippedMsg', '已装备 · {id}');
+_setPath(DICTS.zh, 'shop.purchaseFailed', '购买失败。');
+_setPath(DICTS.zh, 'shop.defaultBomb', '默认炸弹');
+_setPath(DICTS.zh, 'shop.defaultCell', '青色网格（默认）');
+_setPath(DICTS.zh, 'shop.defaultFx', '红色闪光（默认）');
+_setPath(DICTS.zh, 'shop.defaultCursor', '默认光标');
+_setPath(DICTS.zh, 'shop.free', '免费');
+_setPath(DICTS.zh, 'shop.equip', '装备');
+_setPath(DICTS.zh, 'shop.equipped', '已装备');
+_setPath(DICTS.zh, 'shop.buy', '购买');
+_setPath(DICTS.zh, 'shop.buying', '购买中...');
+
+_setPath(DICTS.zh, 'inventory.title', '背包');
+_setPath(DICTS.zh, 'inventory.buyInShop', '去商店购买');
+_setPath(DICTS.zh, 'inventory.tabs.bombs', '炸弹');
+_setPath(DICTS.zh, 'inventory.tabs.explosions', '爆炸');
+_setPath(DICTS.zh, 'inventory.tabs.cursors', '光标');
+_setPath(DICTS.zh, 'inventory.tabs.themes', '主题');
+
+_setPath(DICTS.zh, 'battles.title', '对战');
+_setPath(DICTS.zh, 'battles.blurb', '实时匹配对手。同一地图种子 — 谁先清完谁赢。');
+_setPath(DICTS.zh, 'battles.simpleTitle', '普通对战');
+_setPath(DICTS.zh, 'battles.simpleSubtitle', '休闲 · 无排名');
+_setPath(DICTS.zh, 'battles.rankedTitle', '排位对战');
+_setPath(DICTS.zh, 'battles.rankedSubtitle', '竞技 · ELO');
+_setPath(DICTS.zh, 'battles.searching', '匹配中...');
+_setPath(DICTS.zh, 'battles.found', '已找到对手');
+_setPath(DICTS.zh, 'battles.code', '代码');
+_setPath(DICTS.zh, 'battles.host', '房主');
+_setPath(DICTS.zh, 'battles.opponent', '对手');
+_setPath(DICTS.zh, 'battles.waiting', '等待中...');
+_setPath(DICTS.zh, 'battles.startNow', '开始');
+_setPath(DICTS.zh, 'battles.cancel', '取消');
+_setPath(DICTS.zh, 'battles.findOpponent', '匹配');
+_setPath(DICTS.zh, 'battles.yourRating', '你的 ELO');
+_setPath(DICTS.zh, 'battles.field', '地图');
+_setPath(DICTS.zh, 'battles.mines', '地雷');
+_setPath(DICTS.zh, 'battles.lives', '生命');
+
+_setPath(DICTS.zh, 'campaign.title', '道路');
+_setPath(DICTS.zh, 'campaign.blurb', '{n} 个节点的蜿蜒之路。滚轮或拖动。');
+_setPath(DICTS.zh, 'campaign.infinityOn', '无限：开');
+_setPath(DICTS.zh, 'campaign.infinityOff', '无限：关');
+_setPath(DICTS.zh, 'campaign.cleared', '已通关');
+_setPath(DICTS.zh, 'campaign.stars', '星');
+_setPath(DICTS.zh, 'campaign.start', '开始');
+
+_setPath(DICTS.zh, 'leaderboard.title', '排行榜');
+_setPath(DICTS.zh, 'leaderboard.top', '前 20');
+_setPath(DICTS.zh, 'leaderboard.name', '名字');
+_setPath(DICTS.zh, 'leaderboard.lvl', '等级');
+_setPath(DICTS.zh, 'leaderboard.score', '分数');
+_setPath(DICTS.zh, 'leaderboard.time', '时间');
+_setPath(DICTS.zh, 'leaderboard.loading', '加载中...');
+_setPath(DICTS.zh, 'leaderboard.noRecords', '暂无记录。');
+_setPath(DICTS.zh, 'leaderboard.deleteConfirm', '删除该记录？');
+_setPath(DICTS.zh, 'leaderboard.topRanked', '排位 Top');
+_setPath(DICTS.zh, 'leaderboard.noRankedRunsYet', '暂无排位记录。');
+_setPath(DICTS.zh, 'leaderboard.agentStats', '玩家数据');
+_setPath(DICTS.zh, 'leaderboard.callsignPlaceholder', '呼号...');
+_setPath(DICTS.zh, 'leaderboard.scan', '扫描');
+_setPath(DICTS.zh, 'leaderboard.scanning', '扫描中...');
+_setPath(DICTS.zh, 'leaderboard.enterCallsignHint', '输入呼号查看生涯数据。');
+_setPath(DICTS.zh, 'leaderboard.recentActivity', '最近记录');
+_setPath(DICTS.zh, 'leaderboard.noRunsYet', '暂无记录。');
+
+_setPath(DICTS.zh, 'custom.title', '自定义扫雷');
+_setPath(DICTS.zh, 'custom.blurb', '自定义网格和皮肤。单人或与好友通过代码一起玩。');
+_setPath(DICTS.zh, 'custom.rows', '行');
+_setPath(DICTS.zh, 'custom.cols', '列');
+_setPath(DICTS.zh, 'custom.mines', '地雷');
+_setPath(DICTS.zh, 'custom.lives', '生命');
+_setPath(DICTS.zh, 'custom.presets', '预设');
+_setPath(DICTS.zh, 'custom.mineCapTitle', '已应用地雷上限。');
+_setPath(DICTS.zh, 'custom.mineCapBody', '密度锁定在 ~60%。');
+_setPath(DICTS.zh, 'custom.solo', '单人');
+_setPath(DICTS.zh, 'custom.withFriend', '与好友');
+_setPath(DICTS.zh, 'custom.configPreview', '配置预览');
+_setPath(DICTS.zh, 'custom.estChallenge', '难度');
+_setPath(DICTS.zh, 'custom.cells', '格子');
+_setPath(DICTS.zh, 'custom.safe', '安全');
+_setPath(DICTS.zh, 'custom.density', '密度');
+_setPath(DICTS.zh, 'custom.fxSkins', '特效与皮肤');
+_setPath(DICTS.zh, 'custom.diff.easy', '简单');
+_setPath(DICTS.zh, 'custom.diff.normal', '普通');
+_setPath(DICTS.zh, 'custom.diff.hard', '困难');
+_setPath(DICTS.zh, 'custom.diff.insane', '地狱');
+_setPath(DICTS.zh, 'custom.skin.mine', '地雷');
+_setPath(DICTS.zh, 'custom.skin.cell', '格子');
+_setPath(DICTS.zh, 'custom.skin.fx', '特效');
+_setPath(DICTS.zh, 'custom.skin.cursor', '光标');
+_setPath(DICTS.zh, 'custom.lockedTooltip', '已锁定 — 去商店购买');
+
 const KEY = 'mg_lang';
 
 const _detectSystemLang = () => {
@@ -1641,6 +2533,9 @@ export const LANGUAGES = [
   { code: 'uk', name: 'Українська' },
   { code: 'cs', name: 'Čeština' },
   { code: 'es', name: 'Español' },
+  { code: 'fr', name: 'Français' },
+  { code: 'de', name: 'Deutsch' },
+  { code: 'zh', name: '简体中文' },
 ];
 
 export const getLang = () => CURRENT;
