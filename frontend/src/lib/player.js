@@ -181,10 +181,6 @@ export const authHeaders = () => {
   return isOnlineToken(t) ? { 'X-Session-Token': t } : {};
 };
 
-export const rewardWatchAd = async () => {
-  return (await axios.post(`${API}/rewards/watch-ad`, {}, { headers: authHeaders() })).data;
-};
-
 export const ensureOnlineSession = async () => {
   const existing = getToken();
   if (isOnlineToken(existing) && getStoredNickname()) return { nickname: getStoredNickname(), token: existing };

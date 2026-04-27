@@ -624,63 +624,6 @@ async def purchase_item(payload: PurchaseRequest, nick: str = Depends(require_se
     return {"ok": True, "item_id": payload.item_id, "player": _sanitize_player(updated)}
 
 
-@api_router.post("/rewards/watch-ad")
-async def reward_watch_ad(nick: str = Depends(require_session)):
-    now = datetime.now(timezone.utc)
-    day_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
-
-    # NOTE: Browser-only deployments usually cannot do secure server-side verification
-    # for rewarded ads. This endpoint adds guardrails (cooldown + daily cap) but is
-    # still vulnerable to abuse if exposed to malicious clients.
-    reward_coins = 50
-    daily_limit = 10
-    cooldown_seconds = 60
-
-    player = await _get_player(nick)
-    nickname_lower = player.get("nickname_lower")
-    if not nickname_lower:
-        nickname_lower = (nick or "").lower()
-        await db.players.update_one(
-            {"_id": player["_id"]},
-            {"$set": {"nickname_lower": nickname_lower}},
-        )
-
-    recent = await db.ad_rewards.find_one(
-        {"nickname_lower": nickname_lower},
-        sort=[("created_at", -1)],
-        projection={"_id": 0, "created_at": 1},
-    )
-    if recent and isinstance(recent.get("created_at"), datetime):
-        dt = now - recent["created_at"]
-        if dt.total_seconds() < cooldown_seconds:
-            raise HTTPException(status_code=429, detail="Cooldown. Try again soon.")
-
-    claimed_today = await db.ad_rewards.count_documents(
-        {"nickname_lower": nickname_lower, "created_at": {"$gte": day_start}}
-    )
-    if claimed_today >= daily_limit:
-        raise HTTPException(status_code=429, detail="Daily limit reached.")
-
-    await db.ad_rewards.insert_one({
-        "nickname_lower": nickname_lower,
-        "created_at": now,
-        "coins": reward_coins,
-        "type": "watch_ad",
-    })
-
-    await db.players.update_one(
-        {"nickname_lower": nickname_lower},
-        {"$inc": {"coins": reward_coins}},
-    )
-    updated = await _get_player(nick)
-    return {
-        "ok": True,
-        "coins_awarded": reward_coins,
-        "remaining_today": max(0, daily_limit - (claimed_today + 1)),
-        "player": _sanitize_player(updated),
-    }
-
-
 # --- Leaderboard ---
 
 @api_router.post("/leaderboard")
