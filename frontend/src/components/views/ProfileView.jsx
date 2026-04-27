@@ -171,10 +171,10 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
         textForId={(id) => t(`achievements.items.${id}.title`)}
       />
       <AchievementsModal open={showAchievements} onClose={() => setShowAchievements(false)} />
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// identity</div>
-        <div className="flex items-center gap-3">
-          <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3">
+      <div className="flex items-start gap-5">
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// identity</div>
+          <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3 flex-wrap">
             <User size={26} /> {player?.nick}
             {(player?.league || player?.ranked_place) && (
               <span className="flex items-center gap-1 text-[11px] font-display tracking-[0.25em] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-200">
@@ -192,9 +192,18 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               </span>
             )}
           </h2>
+          <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display mt-2">
+            {t('profile.playerId')}
+            <span className="ml-2 font-mono text-[14px] font-black text-white tracking-[0.12em] no-text-shadow">
+              {prettyPlayerId}
+            </span>
+          </div>
+        </div>
+
+        <div className="pt-6">
           <button
             onClick={() => setShowAchievements(true)}
-            className={`ml-auto w-12 h-12 rounded-xl border transition-all flex items-center justify-center ${
+            className={`w-12 h-12 rounded-xl border transition-all flex items-center justify-center ${
               showAchievements
                 ? 'border-[#FFD700]/60 bg-[rgba(255,215,0,0.10)] shadow-[0_0_18px_rgba(255,215,0,0.25)]'
                 : 'border-[#FFD700]/30 bg-[rgba(255,215,0,0.05)] hover:border-[#FFD700]/60 hover:bg-[rgba(255,215,0,0.08)] hover:shadow-[0_0_14px_rgba(255,215,0,0.18)]'
@@ -204,12 +213,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
           >
             <Award size={18} className="neon-gold" />
           </button>
-        </div>
-        <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display mt-2">
-          {t('profile.playerId')}
-          <span className="ml-2 font-mono text-[14px] font-black text-white tracking-[0.12em] no-text-shadow">
-            {prettyPlayerId}
-          </span>
         </div>
       </div>
 
