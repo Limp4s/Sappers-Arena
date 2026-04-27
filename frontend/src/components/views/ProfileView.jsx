@@ -191,6 +191,19 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                 <Shield size={11} /> {t('admin.title')}
               </span>
             )}
+
+            <button
+              onClick={() => setShowAchievements(true)}
+              className={`w-12 h-12 rounded-xl border transition-all flex items-center justify-center shrink-0 ${
+                showAchievements
+                  ? 'border-[#FFD700]/60 bg-[rgba(255,215,0,0.10)] shadow-[0_0_18px_rgba(255,215,0,0.25)]'
+                  : 'border-[#FFD700]/30 bg-[rgba(255,215,0,0.05)] hover:border-[#FFD700]/60 hover:bg-[rgba(255,215,0,0.08)] hover:shadow-[0_0_14px_rgba(255,215,0,0.18)]'
+              }`}
+              title={t('achievements.title')}
+              data-testid="profile-top-achievements"
+            >
+              <Award size={18} className="neon-gold" />
+            </button>
           </h2>
           <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display mt-2">
             {t('profile.playerId')}
@@ -198,21 +211,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               {prettyPlayerId}
             </span>
           </div>
-        </div>
-
-        <div className="pt-6">
-          <button
-            onClick={() => setShowAchievements(true)}
-            className={`w-12 h-12 rounded-xl border transition-all flex items-center justify-center ${
-              showAchievements
-                ? 'border-[#FFD700]/60 bg-[rgba(255,215,0,0.10)] shadow-[0_0_18px_rgba(255,215,0,0.25)]'
-                : 'border-[#FFD700]/30 bg-[rgba(255,215,0,0.05)] hover:border-[#FFD700]/60 hover:bg-[rgba(255,215,0,0.08)] hover:shadow-[0_0_14px_rgba(255,215,0,0.18)]'
-            }`}
-            title={t('achievements.title')}
-            data-testid="profile-top-achievements"
-          >
-            <Award size={18} className="neon-gold" />
-          </button>
         </div>
       </div>
 
