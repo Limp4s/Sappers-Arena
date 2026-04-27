@@ -577,9 +577,15 @@ export const adminListPlayers = async ({ limit = 200 } = {}) => {
   return (await axios.get(`${API}/admin/players`, { params: { limit }, headers: authHeaders() })).data;
 };
 
-export const adminFixNegativeRatings = async () => {
-  return (await axios.post(`${API}/admin/ratings/fix-negative`, {}, { headers: authHeaders() })).data;
-};
+export async function adminFixNegativeRatings() {
+  const res = await axios.post(`${API}/admin/ratings/fix-negative`, {}, { headers: authHeaders() });
+  return res?.data;
+}
+
+export async function adminGrantRatingWin() {
+  const res = await axios.post(`${API}/admin/rating/grant-win`, {}, { headers: authHeaders() });
+  return res?.data;
+}
 
 export const adminDeletePlayer = async (nickname) => {
   const nick = String(nickname || '').trim();

@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2, Award } from 'lucide-react';
-import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminDeletePlayer, getToken, authHeaders, fetchAchievementDefs, fetchMyAchievements } from '../../lib/player';
+import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminDeletePlayer, getToken, authHeaders } from '../../lib/player';
 import { promoteToAdmin } from '../../lib/lobby';
 import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
 import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
 import InventoryModal from '../modals/InventoryModal';
 import PlayerProfileModal from '../modals/PlayerProfileModal';
+import AchievementsModal from '../modals/AchievementsModal';
 import AchievementBanner from '../ui/AchievementBanner';
 import { LANGUAGES, setLang, t, useLang } from '../../lib/i18n';
 
@@ -18,6 +19,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   const [showInventory, setShowInventory] = useState(false);
   const [showChangePw, setShowChangePw] = useState(false);
   const [showPromote, setShowPromote] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const [sfxVolume, setSfxVolumeState] = useState(() => getSfxVolume());
   const [viewQuery, setViewQuery] = useState('');
   const [viewNick, setViewNick] = useState(null);
@@ -56,43 +58,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
     setDailyState(getDailyState());
     setDailyCoins(getDailyCoins());
     setDailyMsg(null);
-  }, [tab]);
-
-  useEffect(() => {
-    if (tab !== 'achievements') return;
-    const tok = getToken?.();
-    const online = !!tok && !(tok || '').startsWith('offline-');
-    if (!online) {
-      setAchDefs({ achievements: [] });
-      setAchMine({ offline: true, nickname: player?.nick, unlocked: {}, unlocked_count: 0 });
-      return;
-    }
-    setAchDefs(null);
-    setAchMine(null);
-    Promise.all([
-      fetchAchievementDefs(),
-      fetchMyAchievements(),
-    ])
-      .then(([defs, mine]) => {
-        setAchDefs(defs || { achievements: [] });
-        setAchMine(mine || { unlocked: {}, unlocked_count: 0 });
-      })
-      .catch(() => {
-        setAchDefs({ achievements: [] });
-        setAchMine({ offline: true, nickname: player?.nick, unlocked: {}, unlocked_count: 0 });
-      });
-  }, [tab, player?.nick]);
-
-  useEffect(() => {
-    if (tab !== 'daily') return;
-    const tok = getToken?.();
-    const online = !!tok && !(tok || '').startsWith('offline-');
-    setDailyOnline(online);
-    if (!online) { setDailyOnlineState(null); return; }
-    setDailyOnlineState(null);
-    axios.get(`${API}/daily/state`, { headers: authHeaders() })
-      .then((r) => setDailyOnlineState(r.data))
-      .catch(() => setDailyOnlineState({ offline: true }));
   }, [tab]);
 
   useEffect(() => {
@@ -205,31 +170,33 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
         onDone={() => setNewUnlocked([])}
         textForId={(id) => t(`achievements.items.${id}.title`)}
       />
+      <AchievementsModal open={showAchievements} onClose={() => setShowAchievements(false)} />
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5">
         <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// identity</div>
-        <div className="flex items-center gap-3">
-          <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3">
-            <User size={26} /> {player?.nick}
-          {(player?.league || player?.ranked_place) && (
-            <span className="flex items-center gap-1 text-[11px] font-display tracking-[0.25em] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-200">
-              {rankIconSrc(player?.league) ? (
-                <img src={rankIconSrc(player?.league)} alt="rank" className="w-10 h-10" />
-              ) : (
-                <Trophy size={11} className="neon-gold" />
-              )}
-              {player?.league === 'top500' && player?.ranked_place ? `TOP ${player.ranked_place}` : String(player?.league || '').toUpperCase()}
-            </span>
-          )}
-          {player?.isAdmin && (
-            <span className="flex items-center gap-1 text-[11px] neon-gold font-display tracking-[0.25em] bg-[#FFD700]/10 border border-[#FFD700]/50 px-2 py-0.5 rounded">
-              <Shield size={11} /> {t('admin.title')}
-            </span>
-          )}
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3 min-w-0">
+            <User size={26} />
+            <span className="truncate">{player?.nick}</span>
+            {(player?.league || player?.ranked_place) && (
+              <span className="flex items-center gap-1 text-[11px] font-display tracking-[0.25em] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-200 shrink-0">
+                {rankIconSrc(player?.league) ? (
+                  <img src={rankIconSrc(player?.league)} alt="rank" className="w-10 h-10" />
+                ) : (
+                  <Trophy size={11} className="neon-gold" />
+                )}
+                {player?.league === 'top500' && player?.ranked_place ? `TOP ${player.ranked_place}` : String(player?.league || '').toUpperCase()}
+              </span>
+            )}
+            {player?.isAdmin && (
+              <span className="flex items-center gap-1 text-[11px] neon-gold font-display tracking-[0.25em] bg-[#FFD700]/10 border border-[#FFD700]/50 px-2 py-0.5 rounded shrink-0">
+                <Shield size={11} /> {t('admin.title')}
+              </span>
+            )}
           </h2>
           <button
-            onClick={() => setTab('achievements')}
-            className={`ml-auto w-12 h-12 rounded-xl border transition-all flex items-center justify-center ${
-              tab === 'achievements'
+            onClick={() => setShowAchievements(true)}
+            className={`w-12 h-12 rounded-xl border transition-all flex items-center justify-center shrink-0 ${
+              showAchievements
                 ? 'border-[#FFD700]/60 bg-[rgba(255,215,0,0.10)] shadow-[0_0_18px_rgba(255,215,0,0.25)]'
                 : 'border-[#FFD700]/30 bg-[rgba(255,215,0,0.05)] hover:border-[#FFD700]/60 hover:bg-[rgba(255,215,0,0.08)] hover:shadow-[0_0_14px_rgba(255,215,0,0.18)]'
             }`}
@@ -286,6 +253,23 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                   style={{ borderColor: '#FFD700', color: '#FFD700' }}
                 >
                   FIX NEGATIVE RATINGS
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      setAdminMsg(null);
+                      const r = await adminGrantRatingWin();
+                      if (r?.player) onPlayerUpdate?.(r.player);
+                      setAdminMsg({ ok: true, text: `+${r?.rating_delta || 0} RATING` });
+                    } catch {
+                      setAdminMsg({ ok: false, text: 'Failed.' });
+                    }
+                  }}
+                  disabled={adminBusy}
+                  className="neon-btn flex-1 py-2"
+                  style={{ borderColor: '#00E5FF', color: '#00E5FF' }}
+                >
+                  +RATING (SELF)
                 </button>
               </div>
               {adminMsg && (
@@ -459,49 +443,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                   </>
                 )}
               </>
-            ) : tab === 'achievements' ? (
-              <>
-                <div className="glass-panel-light rounded-xl p-4" data-testid="achievements-panel">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Trophy size={14} className="neon-gold" />
-                    <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('achievements.title')}</h3>
-                    <div className="ml-auto text-[11px] font-mono text-slate-400">
-                      {(achMine?.unlocked_count ?? Object.keys(achUnlocked || {}).length) || 0}/{achList.length || 0}
-                    </div>
-                  </div>
-
-                  {!achDefs || !achMine ? (
-                    <div className="text-slate-500 text-xs text-center py-6">{t('profile.loading')}</div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {achList.map((a) => {
-                        const id = a?.id;
-                        const unlockedAt = id ? achUnlocked?.[id] : null;
-                        const isUnlocked = !!unlockedAt;
-                        return (
-                          <div
-                            key={id}
-                            className={`group glass-panel rounded-lg p-3 flex gap-3 items-start transition-transform duration-150 hover:scale-[1.03] ${isUnlocked ? '' : 'opacity-60'}`}
-                          >
-                            <div className={`w-10 h-10 rounded-lg border flex items-center justify-center ${isUnlocked ? 'border-[#FFD700]/50 bg-[#FFD700]/10' : 'border-white/10 bg-black/20'}`}>
-                              <Trophy size={16} className={isUnlocked ? 'neon-gold' : 'text-slate-500'} />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-[11px] font-display tracking-[0.2em] uppercase text-slate-200 truncate">{t(`achievements.items.${id}.title`)}</div>
-                              <div className="text-[11px] font-mono text-slate-300 leading-snug mt-1">{t(`achievements.items.${id}.cond`)}</div>
-                              <div className="text-[11px] font-mono text-slate-400 leading-snug mt-1 hidden group-hover:block">{t(`achievements.items.${id}.desc`)}</div>
-                              {isUnlocked && (
-                                <div className="text-[10px] font-mono text-slate-500 mt-2">{t('achievements.unlocked')}</div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
+            ) : tab === 'daily' ? (
               <>
                 <div className="glass-panel-light rounded-xl p-4" data-testid="daily-quests">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">
@@ -607,7 +549,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                   </div>
                 </div>
               </>
-            )}
+            ) : null}
           </div>
         </div>
 

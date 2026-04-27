@@ -1413,6 +1413,26 @@ async def admin_fix_negative_ratings(nick: str = Depends(require_session)):
     return {"ok": True, "fixed": int(res.modified_count or 0)}
 
 
+@api_router.post("/admin/rating/grant-win")
+async def admin_grant_rating_win(nick: str = Depends(require_session)):
+    await _require_admin(nick)
+    player = await _get_player(nick)
+    if not player:
+        raise HTTPException(status_code=403, detail="Player not registered.")
+
+    # Mimic a single ranked win (legacy delta).
+    delta = int(_compute_rating_delta("battle_ranked", True, 999, 1) or 0)
+    if delta == 0:
+        delta = 10
+
+    await db.players.update_one(
+        {"nickname_lower": player.get("nickname_lower")},
+        {"$inc": {"rating": delta}},
+    )
+    updated = await _get_player(nick)
+    return {"ok": True, "rating_delta": delta, "player": _sanitize_player(updated)}
+
+
 @api_router.delete("/admin/player/{nickname}")
 async def admin_delete_player(nickname: str, nick: str = Depends(require_session)):
     await _require_admin(nick)
