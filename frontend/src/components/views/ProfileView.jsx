@@ -228,15 +228,15 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
           </h2>
           <button
             onClick={() => setTab('achievements')}
-            className={`ml-auto w-10 h-10 rounded-lg border transition-all flex items-center justify-center ${
+            className={`ml-auto w-12 h-12 rounded-xl border transition-all flex items-center justify-center ${
               tab === 'achievements'
-                ? 'border-[#00E5FF] bg-[rgba(0,229,255,0.10)] shadow-[0_0_12px_rgba(0,229,255,0.25)]'
-                : 'border-white/10 bg-black/20 hover:border-white/20'
+                ? 'border-[#FFD700]/60 bg-[rgba(255,215,0,0.10)] shadow-[0_0_18px_rgba(255,215,0,0.25)]'
+                : 'border-[#FFD700]/30 bg-[rgba(255,215,0,0.05)] hover:border-[#FFD700]/60 hover:bg-[rgba(255,215,0,0.08)] hover:shadow-[0_0_14px_rgba(255,215,0,0.18)]'
             }`}
             title={t('achievements.title')}
             data-testid="profile-top-achievements"
           >
-            <Award size={16} className={tab === 'achievements' ? 'neon-cyan' : 'text-slate-400'} />
+            <Award size={18} className="neon-gold" />
           </button>
         </div>
         <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display mt-2">
