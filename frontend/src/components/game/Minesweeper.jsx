@@ -10,6 +10,7 @@ import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, loadEquipped } from '../../lib/sho
 import { submitLobbyResult, createSeededRandom, getLobby } from '../../lib/lobby';
 import { recordDailyProgress } from '../../lib/dailies';
 import { t, useLang } from '../../lib/i18n';
+import AchievementBanner from '../ui/AchievementBanner';
 
 export default function MinesweeperGame({ config, onCoinsEarned }) {
   const {
@@ -38,6 +39,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const [coinsAwarded, setCoinsAwarded] = useState(0);
   const [ratingDelta, setRatingDelta] = useState(0);
   const [lobbyResult, setLobbyResult] = useState(null);
+  const [newUnlocked, setNewUnlocked] = useState([]);
   const [flagMode, setFlagMode] = useState(false);
   useLang();
   const timerRef = useRef(null);
@@ -105,8 +107,13 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
       recordDailyProgress({
         played: 1,
         won: won ? 1 : 0,
+        lost: won ? 0 : 1,
         flags: flagsCount,
         safe: finalSafe,
+        timeSeconds: timer,
+        livesRemaining: finalLives,
+        livesTotal: livesTotal,
+        mode,
       });
     } catch {}
 
@@ -202,6 +209,9 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
       const awarded = res.coins_awarded ?? 0;
       setCoinsAwarded(awarded);
       setRatingDelta(res.rating_delta ?? 0);
+      if (Array.isArray(res?.new_unlocked) && res.new_unlocked.length > 0) {
+        setNewUnlocked(res.new_unlocked);
+      }
       if (onCoinsEarned) onCoinsEarned(awarded);
       if (lobbyCode) {
         try { await submitLobbyResult(lobbyCode, { score, time_seconds: timer, won: status === 'won', lives_remaining: lives }); } catch {}
@@ -220,6 +230,11 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
   return (
     <div className="min-h-screen w-full relative flex flex-col" data-testid="game-screen">
+      <AchievementBanner
+        items={newUnlocked}
+        onDone={() => setNewUnlocked([])}
+        textForId={(id) => t(`achievements.items.${id}.title`)}
+      />
       {explosionFx && (
         <>
           {(() => {

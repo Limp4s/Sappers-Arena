@@ -7,6 +7,7 @@ import { submitScore } from '../../lib/player';
 import { submitLobbyResult } from '../../lib/lobby';
 import { loadEquipped, MINE_ICONS, CELL_THEMES, FX_EFFECTS } from '../../lib/shop';
 import { recordDailyProgress } from '../../lib/dailies';
+import AchievementBanner from '../ui/AchievementBanner';
 
 const makeEmptyBoard = (rows, cols) => Array.from({ length: rows }, () => Array.from({ length: cols }, () => ({
   revealed: false,
@@ -71,6 +72,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   const [rematchVoted, setRematchVoted] = useState(false);
   const [oppRematchVoted, setOppRematchVoted] = useState(false);
   const [rematchSecondsLeft, setRematchSecondsLeft] = useState(0);
+  const [newUnlocked, setNewUnlocked] = useState([]);
 
   useLang();
   const timerRef = useRef(null);
@@ -262,7 +264,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
             if (msg.done && !finishedRef.current) {
               try {
                 const iWon = !!msg.won;
-                recordDailyProgress({ played: 1, won: iWon ? 1 : 0, flags: 0, safe: Number(msg.safe || 0) });
+                recordDailyProgress({ played: 1, won: iWon ? 1 : 0, lost: iWon ? 0 : 1, flags: 0, safe: Number(msg.safe || 0), timeSeconds: Number(msg.time_seconds || timer || 0), livesRemaining: lives, livesTotal: livesTotal, mode });
               } catch {}
               finishedRef.current = true;
               setStatus(msg.won ? 'won' : 'lost');
@@ -281,7 +283,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
           const iWon = msg.winner && msg.winner === playerName;
           if (!finishedRef.current) {
             try {
-              recordDailyProgress({ played: 1, won: iWon ? 1 : 0, flags: 0, safe: safe });
+              recordDailyProgress({ played: 1, won: iWon ? 1 : 0, lost: iWon ? 0 : 1, flags: 0, safe: safe, timeSeconds: timer, livesRemaining: lives, livesTotal: livesTotal, mode });
             } catch {}
             finishedRef.current = true;
           }
@@ -384,6 +386,9 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
       const awarded = res.coins_awarded ?? 0;
       setCoinsAwarded(awarded);
       setRatingDelta(res.rating_delta ?? 0);
+      if (Array.isArray(res?.new_unlocked) && res.new_unlocked.length > 0) {
+        setNewUnlocked(res.new_unlocked);
+      }
       onCoinsEarned?.(awarded);
       if (lobbyCode) {
         try { await submitLobbyResult(lobbyCode, { score, time_seconds: timer, won, lives_remaining: lives }); } catch {}
@@ -439,6 +444,11 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
 
   return (
     <div className="min-h-screen w-full relative flex flex-col" data-testid="online-duel-screen">
+      <AchievementBanner
+        items={newUnlocked}
+        onDone={() => setNewUnlocked([])}
+        textForId={(id) => t(`achievements.items.${id}.title`)}
+      />
       <header className="relative z-10 max-w-[1600px] mx-auto w-full px-4 md:px-6 pt-5 pb-3">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <button onClick={onExit} className="neon-btn flex items-center gap-2" data-testid="exit-online-btn">

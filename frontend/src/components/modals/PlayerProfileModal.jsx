@@ -191,13 +191,14 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
                     const id = a?.id;
                     const isUnlocked = !!(id && achUnlocked?.[id]);
                     return (
-                      <div key={id} className={`glass-panel rounded-lg p-3 flex gap-2 items-start ${isUnlocked ? '' : 'opacity-60'}`}>
+                      <div key={id} className={`group glass-panel rounded-lg p-3 flex gap-2 items-start transition-transform duration-150 hover:scale-[1.03] ${isUnlocked ? '' : 'opacity-60'}`}>
                         <div className={`w-9 h-9 rounded-lg border flex items-center justify-center ${isUnlocked ? 'border-[#FFD700]/50 bg-[#FFD700]/10' : 'border-white/10 bg-black/20'}`}>
                           <Trophy size={14} className={isUnlocked ? 'neon-gold' : 'text-slate-500'} />
                         </div>
                         <div className="min-w-0">
-                          <div className="text-[10px] font-display tracking-[0.2em] uppercase text-slate-200 truncate">{a?.title || id}</div>
-                          <div className="text-[10px] font-mono text-slate-400 leading-snug mt-1 line-clamp-2">{a?.desc || ''}</div>
+                          <div className="text-[10px] font-display tracking-[0.2em] uppercase text-slate-200 truncate">{t(`achievements.items.${id}.title`)}</div>
+                          <div className="text-[10px] font-mono text-slate-300 leading-snug mt-1 line-clamp-2">{t(`achievements.items.${id}.cond`)}</div>
+                          <div className="text-[10px] font-mono text-slate-400 leading-snug mt-1 hidden group-hover:block">{t(`achievements.items.${id}.desc`)}</div>
                         </div>
                       </div>
                     );

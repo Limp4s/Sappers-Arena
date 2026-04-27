@@ -7,6 +7,7 @@ import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
 import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
 import InventoryModal from '../modals/InventoryModal';
 import PlayerProfileModal from '../modals/PlayerProfileModal';
+import AchievementBanner from '../ui/AchievementBanner';
 import { LANGUAGES, setLang, t, useLang } from '../../lib/i18n';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
@@ -26,12 +27,14 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   const [adminBusy, setAdminBusy] = useState(false);
   const [adminMsg, setAdminMsg] = useState(null);
   const [lang] = useLang();
-  const [tab, setTab] = useState('account');
+  const [tab, setTab] = useState('daily');
+  const [settingsTab, setSettingsTab] = useState('account');
   const [dailyState, setDailyState] = useState(() => getDailyState());
   const [dailyCoins, setDailyCoins] = useState(() => getDailyCoins());
   const [dailyMsg, setDailyMsg] = useState(null);
   const [dailyOnline, setDailyOnline] = useState(false);
   const [dailyOnlineState, setDailyOnlineState] = useState(null);
+  const [newUnlocked, setNewUnlocked] = useState([]);
   const [achDefs, setAchDefs] = useState(null);
   const [achMine, setAchMine] = useState(null);
 
@@ -197,10 +200,16 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
 
   return (
     <div className="max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-10" data-testid="profile-view">
-      <div className="glass-panel rounded-xl p-6 mb-5">
+      <AchievementBanner
+        items={newUnlocked}
+        onDone={() => setNewUnlocked([])}
+        textForId={(id) => t(`achievements.items.${id}.title`)}
+      />
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5">
         <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// identity</div>
-        <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3">
-          <User size={26} /> {player?.nick}
+        <div className="flex items-center gap-3">
+          <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3">
+            <User size={26} /> {player?.nick}
           {(player?.league || player?.ranked_place) && (
             <span className="flex items-center gap-1 text-[11px] font-display tracking-[0.25em] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-200">
               {rankIconSrc(player?.league) ? (
@@ -216,7 +225,20 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               <Shield size={11} /> {t('admin.title')}
             </span>
           )}
-        </h2>
+          </h2>
+          <button
+            onClick={() => setTab('achievements')}
+            className={`ml-auto w-10 h-10 rounded-lg border transition-all flex items-center justify-center ${
+              tab === 'achievements'
+                ? 'border-[#00E5FF] bg-[rgba(0,229,255,0.10)] shadow-[0_0_12px_rgba(0,229,255,0.25)]'
+                : 'border-white/10 bg-black/20 hover:border-white/20'
+            }`}
+            title={t('achievements.title')}
+            data-testid="profile-top-achievements"
+          >
+            <Award size={16} className={tab === 'achievements' ? 'neon-cyan' : 'text-slate-400'} />
+          </button>
+        </div>
         <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display mt-2">
           {t('profile.playerId')}
           <span className="ml-2 font-mono text-[14px] font-black text-white tracking-[0.12em] no-text-shadow">
@@ -314,20 +336,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
 
             <div className="flex gap-2">
               <button
-                onClick={() => setTab('account')}
-                className={`pill ${tab === 'account' ? 'pill-active' : ''}`}
-                data-testid="profile-tab-account"
-              >
-                {t('profile.account')}
-              </button>
-              <button
-                onClick={() => setTab('settings')}
-                className={`pill ${tab === 'settings' ? 'pill-active' : ''}`}
-                data-testid="profile-tab-settings"
-              >
-                {t('common.settings')}
-              </button>
-              <button
                 onClick={() => setTab('daily')}
                 className={`pill ${tab === 'daily' ? 'pill-active' : ''}`}
                 data-testid="profile-tab-daily"
@@ -335,105 +343,121 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                 {t('daily.title')}
               </button>
               <button
-                onClick={() => setTab('achievements')}
-                className={`shrink-0 w-10 h-10 rounded-lg border transition-all flex items-center justify-center ${
-                  tab === 'achievements'
-                    ? 'border-[#00E5FF] bg-[rgba(0,229,255,0.10)] shadow-[0_0_12px_rgba(0,229,255,0.25)]'
-                    : 'border-white/10 bg-black/20 hover:border-white/20'
-                }`}
-                title="Achievements"
-                data-testid="profile-tab-achievements"
+                onClick={() => { setTab('settings'); setSettingsTab('settings'); }}
+                className={`pill ${tab === 'settings' ? 'pill-active' : ''}`}
+                data-testid="profile-tab-settings"
               >
-                <Award size={16} className={tab === 'achievements' ? 'neon-cyan' : 'text-slate-400'} />
+                {t('common.settings')}
               </button>
             </div>
 
-            {tab === 'account' ? (
+            {tab === 'settings' ? (
               <>
-                <button onClick={() => setShowInventory(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-inventory-btn">
-                  <Package size={14} /> {t('profile.inventory')}
-                </button>
-
-                <div className="glass-panel-light rounded-xl p-4">
-                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">VIEW PLAYER</div>
-                  <div className="flex gap-2">
-                    <input
-                      className="neon-input flex-1"
-                      placeholder="ID or nickname"
-                      value={viewQuery}
-                      onChange={(e) => setViewQuery(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') openOtherProfile(); }}
-                      maxLength={20}
-                      data-testid="view-player-input"
-                    />
-                    <button
-                      onClick={openOtherProfile}
-                      className="neon-btn px-4"
-                      data-testid="view-player-open-btn"
-                    >
-                      OPEN
-                    </button>
-                  </div>
-                </div>
-
-                {player?.isAdmin && (
-                  <button onClick={() => setShowPromote(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3"
-                    style={{ borderColor: '#FFD700', color: '#FFD700' }}
-                    data-testid="open-promote-btn">
-                    <UserPlus size={14} /> {t('admin.promote')}
+                <div className="flex gap-2 mb-2">
+                  <button
+                    onClick={() => setSettingsTab('settings')}
+                    className={`pill ${settingsTab === 'settings' ? 'pill-active' : ''}`}
+                    data-testid="profile-settings-tab-settings"
+                  >
+                    {t('common.settings')}
                   </button>
-                )}
-                <button onClick={handleLogout} className="neon-btn neon-btn-coral w-full flex items-center justify-center gap-2 py-3" data-testid="logout-btn">
-                  <LogOut size={14} /> {t('common.logout')}
-                </button>
+                  <button
+                    onClick={() => setSettingsTab('account')}
+                    className={`pill ${settingsTab === 'account' ? 'pill-active' : ''}`}
+                    data-testid="profile-settings-tab-account"
+                  >
+                    {t('profile.account')}
+                  </button>
+                </div>
 
-                <button onClick={handleExitGame} className="neon-btn neon-btn-coral w-full flex items-center justify-center gap-2 py-3" data-testid="exit-game-btn">
-                  <LogOut size={14} /> {t('common.exit')}
-                </button>
-              </>
-            ) : tab === 'settings' ? (
-              <>
-                <div className="glass-panel-light rounded-xl p-4">
-                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('common.language')}</div>
-                  <div className="flex gap-2 flex-wrap">
-                    {LANGUAGES.map((l) => (
-                      <button
-                        key={l.code}
-                        onClick={() => setLang(l.code)}
-                        className={`pill ${lang === l.code ? 'pill-active' : ''}`}
-                        data-testid={`profile-lang-${l.code}`}
-                      >
-                        {l.name}
+                {settingsTab === 'settings' ? (
+                  <>
+                    <div className="glass-panel-light rounded-xl p-4">
+                      <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('common.language')}</div>
+                      <div className="flex gap-2 flex-wrap">
+                        {LANGUAGES.map((l) => (
+                          <button
+                            key={l.code}
+                            onClick={() => setLang(l.code)}
+                            className={`pill ${lang === l.code ? 'pill-active' : ''}`}
+                            data-testid={`profile-lang-${l.code}`}
+                          >
+                            {l.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="glass-panel-light rounded-xl p-4" data-testid="settings-sfx-volume">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Volume2 size={14} className="neon-gold" />
+                        <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">{t('settings.sound')}</div>
+                        <div className="ml-auto text-[10px] font-mono text-slate-400">{Math.round((sfxVolume || 0) * 100)}%</div>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        value={sfxVolume}
+                        onChange={(e) => {
+                          const v = setSfxVolume(e.target.value);
+                          setSfxVolumeState(v);
+                        }}
+                        onMouseUp={() => { try { sfx.click(); } catch {} }}
+                        onTouchEnd={() => { try { sfx.click(); } catch {} }}
+                        className="w-full"
+                        data-testid="sfx-volume-slider"
+                      />
+                    </div>
+                    <button onClick={() => setShowChangePw(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-change-password-btn">
+                      <KeyRound size={14} /> {t('profile.changePassword')}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => setShowInventory(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-inventory-btn">
+                      <Package size={14} /> {t('profile.inventory')}
+                    </button>
+
+                    <div className="glass-panel-light rounded-xl p-4">
+                      <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">VIEW PLAYER</div>
+                      <div className="flex gap-2">
+                        <input
+                          className="neon-input flex-1"
+                          placeholder="ID or nickname"
+                          value={viewQuery}
+                          onChange={(e) => setViewQuery(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') openOtherProfile(); }}
+                          maxLength={20}
+                          data-testid="view-player-input"
+                        />
+                        <button
+                          onClick={openOtherProfile}
+                          className="neon-btn px-4"
+                          data-testid="view-player-open-btn"
+                        >
+                          OPEN
+                        </button>
+                      </div>
+                    </div>
+
+                    {player?.isAdmin && (
+                      <button onClick={() => setShowPromote(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3"
+                        style={{ borderColor: '#FFD700', color: '#FFD700' }}
+                        data-testid="open-promote-btn">
+                        <UserPlus size={14} /> {t('admin.promote')}
                       </button>
-                    ))}
-                  </div>
-                </div>
+                    )}
+                    <button onClick={handleLogout} className="neon-btn neon-btn-coral w-full flex items-center justify-center gap-2 py-3" data-testid="logout-btn">
+                      <LogOut size={14} /> {t('common.logout')}
+                    </button>
 
-                <div className="glass-panel-light rounded-xl p-4" data-testid="settings-sfx-volume">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Volume2 size={14} className="neon-gold" />
-                    <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">{t('settings.sound')}</div>
-                    <div className="ml-auto text-[10px] font-mono text-slate-400">{Math.round((sfxVolume || 0) * 100)}%</div>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={sfxVolume}
-                    onChange={(e) => {
-                      const v = setSfxVolume(e.target.value);
-                      setSfxVolumeState(v);
-                    }}
-                    onMouseUp={() => { try { sfx.click(); } catch {} }}
-                    onTouchEnd={() => { try { sfx.click(); } catch {} }}
-                    className="w-full"
-                    data-testid="sfx-volume-slider"
-                  />
-                </div>
-                <button onClick={() => setShowChangePw(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-change-password-btn">
-                  <KeyRound size={14} /> {t('profile.changePassword')}
-                </button>
+                    <button onClick={handleExitGame} className="neon-btn neon-btn-coral w-full flex items-center justify-center gap-2 py-3" data-testid="exit-game-btn">
+                      <LogOut size={14} /> {t('common.exit')}
+                    </button>
+                  </>
+                )}
               </>
             ) : tab === 'achievements' ? (
               <>
@@ -455,13 +479,17 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                         const unlockedAt = id ? achUnlocked?.[id] : null;
                         const isUnlocked = !!unlockedAt;
                         return (
-                          <div key={id} className={`glass-panel rounded-lg p-3 flex gap-3 items-start ${isUnlocked ? '' : 'opacity-60'}`}>
+                          <div
+                            key={id}
+                            className={`group glass-panel rounded-lg p-3 flex gap-3 items-start transition-transform duration-150 hover:scale-[1.03] ${isUnlocked ? '' : 'opacity-60'}`}
+                          >
                             <div className={`w-10 h-10 rounded-lg border flex items-center justify-center ${isUnlocked ? 'border-[#FFD700]/50 bg-[#FFD700]/10' : 'border-white/10 bg-black/20'}`}>
                               <Trophy size={16} className={isUnlocked ? 'neon-gold' : 'text-slate-500'} />
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[11px] font-display tracking-[0.2em] uppercase text-slate-200 truncate">{a?.title || id}</div>
-                              <div className="text-[11px] font-mono text-slate-400 leading-snug mt-1">{a?.desc || ''}</div>
+                              <div className="text-[11px] font-display tracking-[0.2em] uppercase text-slate-200 truncate">{t(`achievements.items.${id}.title`)}</div>
+                              <div className="text-[11px] font-mono text-slate-300 leading-snug mt-1">{t(`achievements.items.${id}.cond`)}</div>
+                              <div className="text-[11px] font-mono text-slate-400 leading-snug mt-1 hidden group-hover:block">{t(`achievements.items.${id}.desc`)}</div>
                               {isUnlocked && (
                                 <div className="text-[10px] font-mono text-slate-500 mt-2">{t('achievements.unlocked')}</div>
                               )}
@@ -507,7 +535,14 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                   )}
 
                   <div className="space-y-2">
-                    {DAILY_QUESTS.map((q) => {
+                    {(() => {
+                      const activeIds = dailyOnline && dailyOnlineState && !dailyOnlineState.offline
+                        ? (dailyOnlineState.active || [])
+                        : (dailyState?.active || []);
+                      const setIds = new Set((activeIds || []).map(String));
+                      const list = DAILY_QUESTS.filter((qq) => setIds.has(String(qq.id)));
+                      return list;
+                    })().map((q) => {
                       const baseState = dailyOnline && dailyOnlineState && !dailyOnlineState.offline
                         ? { progress: dailyOnlineState.progress || {}, claimed: dailyOnlineState.claimed || {} }
                         : dailyState;
@@ -538,7 +573,10 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                                       if (data.player) onPlayerUpdate?.(data.player);
                                       if (data.daily) setDailyOnlineState((prev) => ({ ...(prev || {}), ...(data.daily || {}) }));
                                       const awarded = data.coins_awarded || 0;
-                                      setDailyMsg({ ok: true, text: `${t('daily.claimed')} +${awarded} ${t('daily.coinsShort')}` });
+                                      const nu = Array.isArray(data?.new_unlocked) ? data.new_unlocked : [];
+                                      if (nu.length) setNewUnlocked(nu);
+                                      const extra = nu.length ? ` · +${nu.length} ${t('achievements.title')}` : '';
+                                      setDailyMsg({ ok: true, text: `${t('daily.claimed')} +${awarded} ${t('daily.coinsShort')}${extra}` });
                                     })
                                     .catch((e) => {
                                       const detail = e?.response?.data?.detail || t('profile.failed');
