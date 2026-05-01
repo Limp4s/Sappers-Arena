@@ -152,7 +152,10 @@ async def _next_player_num() -> int:
         except Exception:
             pass
         try:
-            last = await db.players.find({}, {"player_num": 1}).sort("player_num", -1).limit(1).to_list(length=1)
+            last = await db.players.find(
+                {"player_num": {"$type": "number", "$lt": 2000000}},
+                {"player_num": 1},
+            ).sort("player_num", -1).limit(1).to_list(length=1)
             cur = int((last[0] or {}).get("player_num") or 0) if last else 0
             return max(1, cur + 1)
         except Exception:
