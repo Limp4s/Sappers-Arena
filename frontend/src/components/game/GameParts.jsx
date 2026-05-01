@@ -62,9 +62,15 @@ export const Cell = React.memo(function Cell({
   const accent = cellTheme?.accent || '#00E5FF';
   const accentColor = accent === 'rainbow'
     ? '#00E5FF'
-    : (accent === 'gold_premium' ? '#D4AF37' : accent);
+    : (accent === 'gold_premium'
+      ? '#D4AF37'
+      : (accent === 'ice_premium'
+        ? '#67E8F9'
+        : (accent === 'fire_premium' ? '#FB923C' : accent)));
   if (accent === 'rainbow') className += ' cell-rainbow';
   if (accent === 'gold_premium') className += ' cell-gold-premium';
+  if (accent === 'ice_premium') className += ' cell-ice-premium';
+  if (accent === 'fire_premium') className += ' cell-fire-premium';
 
   if (cell.revealed) {
     if (cell.mine) {

@@ -151,8 +151,21 @@ body::after {
     100% { background-position: 100% 50%; }
 }
 
+@keyframes premiumFrostPulse {
+    0%, 100% { opacity: 0.85; filter: blur(0.2px) saturate(120%); }
+    50% { opacity: 1; filter: blur(0.8px) saturate(160%); }
+}
+
+@keyframes premiumFireFlicker {
+    0% { background-position: 0% 50%; filter: saturate(140%) brightness(1.0); }
+    50% { background-position: 100% 50%; filter: saturate(180%) brightness(1.08); }
+    100% { background-position: 0% 50%; filter: saturate(140%) brightness(1.0); }
+}
+
 .cell-rainbow::before,
-.cell-gold-premium::before {
+.cell-gold-premium::before,
+.cell-ice-premium::before,
+.cell-fire-premium::before {
     content: '';
     position: absolute;
     inset: -1px;
@@ -184,6 +197,18 @@ body::after {
     background: linear-gradient(90deg, #7a5b18, #d4af37, #ffec8b, #d4af37, #7a5b18);
     background-size: 220% 220%;
     animation: premiumGoldShimmer 2.4s ease-in-out infinite;
+}
+
+.cell-ice-premium::before {
+    background: linear-gradient(90deg, #0ea5e9, #67e8f9, #e0f2fe, #67e8f9, #0ea5e9);
+    background-size: 240% 240%;
+    animation: premiumFrostPulse 1.8s ease-in-out infinite;
+}
+
+.cell-fire-premium::before {
+    background: linear-gradient(90deg, #7c2d12, #fb923c, #fbbf24, #ef4444, #fb923c, #7c2d12);
+    background-size: 280% 280%;
+    animation: premiumFireFlicker 1.25s ease-in-out infinite;
 }
 
 .cell-hidden {
@@ -485,6 +510,16 @@ body::after {
 .fx-gold-premium {
     background-size: 260% 260% !important;
     animation: explosionFlash 460ms cubic-bezier(0.16, 1, 0.3, 1), premiumGoldShimmer 900ms ease-in-out infinite;
+}
+
+.fx-ice-premium {
+    background-size: 260% 260% !important;
+    animation: explosionFlash 460ms cubic-bezier(0.16, 1, 0.3, 1), premiumFrostPulse 1.4s ease-in-out infinite;
+}
+
+.fx-fire-premium {
+    background-size: 260% 260% !important;
+    animation: explosionFlash 460ms cubic-bezier(0.16, 1, 0.3, 1), premiumFireFlicker 900ms ease-in-out infinite;
 }
 
 /* Win sparkles container */
