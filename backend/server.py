@@ -1836,16 +1836,16 @@ async def _start_bot_if_needed(code: str):
                 # Ranked: smarter and adapts to player rating.
                 delay_min = 0.60 + (1.0 - skill) * 0.25
                 delay_max = 1.40 + (1.0 - skill) * 0.45
-                mistake_chance = 0.015 + (1.0 - skill) * 0.05
-                use_logic_chance = 0.75 + skill * 0.20
-                flag_chance = 0.35 + skill * 0.30
+                mistake_chance = 0.008 + (1.0 - skill) * 0.02
+                use_logic_chance = 0.92 + skill * 0.07
+                flag_chance = 0.55 + skill * 0.25
             else:
                 # Simple: slower (roughly 2x), not too strong, sometimes errors.
                 delay_min = 1.20
                 delay_max = 2.40
-                mistake_chance = 0.08
-                use_logic_chance = 0.75
-                flag_chance = 0.25
+                mistake_chance = 0.02
+                use_logic_chance = 0.90
+                flag_chance = 0.45
 
             r = _rng(int(game.seed) ^ 0xB07B07)
 
@@ -2016,11 +2016,14 @@ async def _start_bot_if_needed(code: str):
                 if r.random() < use_logic_chance:
                     move = _pick_logic_move(bp)
 
-                # Mistake: intentionally click a mine sometimes (keeps bot beatable)
+                # Mistake: pick a riskier cell sometimes (human-like misread)
                 if move is None and r.random() < mistake_chance:
-                    mines_left = [m for m in bp.mines if m not in bp.revealed and m not in bp.flags]
-                    if mines_left:
-                        rr, cc = mines_left[int(r.random() * len(mines_left))]
+                    frontier = _frontier_hidden(bp)
+                    pool = frontier
+                    if pool:
+                        pool.sort(key=lambda x: _risk_for_cell(bp, x), reverse=True)
+                        topk = max(1, min(4, len(pool)))
+                        rr, cc = pool[int(r.random() * topk)]
                         await _do_open(bot, rr, cc)
                         continue
 
