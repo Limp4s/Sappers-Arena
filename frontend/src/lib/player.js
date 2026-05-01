@@ -127,7 +127,7 @@ export const clearSession = () => {
   localStorage.removeItem(KEY_ADMIN);
 };
 
-const NICK_RE = /^[A-Za-z0-9_-]{3,20}$/;
+const NICK_RE = /^[\p{L}0-9_-]{3,20}$/u;
 export const validateNickFormat = (nick) => {
   if (!nick || nick.length < 3) return 'Minimum 3 characters.';
   if (nick.length > 20) return 'Maximum 20 characters.';

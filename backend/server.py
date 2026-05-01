@@ -71,7 +71,7 @@ def _serialize_cells(cells: set, mines: set, adj: List[List[int]], revealed: set
             pass
     return out
 
-NICK_PATTERN = re.compile(r"^[A-Za-z0-9_\-]{3,20}$")
+NICK_PATTERN = re.compile(r"^[\w\-]{3,20}$", re.UNICODE)
 STARTER_COINS = 100
 
 SHOP_CATALOG = {
@@ -122,7 +122,7 @@ def _verify_password(pw: str, stored: str) -> bool:
 
 def _validate_nick(nick: str) -> str:
     if not NICK_PATTERN.match(nick or ""):
-        raise HTTPException(status_code=422, detail="Nickname must be 3-20 characters (letters, digits, _, -).")
+        raise HTTPException(status_code=422, detail="Nickname must be 3-20 characters (letters from any alphabet, digits, _, -).")
     return nick
 
 
