@@ -92,7 +92,13 @@ export default function ShopView({ player, onPlayerUpdate }) {
     if (id.startsWith('cell_')) {
       const def = CELL_THEMES[id];
       if (!def) return null;
-      const accent = def.accent === 'rainbow' ? '#00E5FF' : (def.accent === 'gold_premium' ? '#D4AF37' : def.accent);
+      const accent = def.accent === 'rainbow'
+        ? '#00E5FF'
+        : (def.accent === 'gold_premium'
+          ? '#D4AF37'
+          : (def.accent === 'ice_premium'
+            ? '#67E8F9'
+            : (def.accent === 'fire_premium' ? '#FB923C' : def.accent)));
       return (
         <div className="flex items-center justify-center h-16">
           <div className="grid grid-cols-3 gap-1">
@@ -114,9 +120,13 @@ export default function ShopView({ player, onPlayerUpdate }) {
         ? 'linear-gradient(90deg, #00E5FF, #00FF9D, #FFD700, #FF2A6D, #A855F7, #00E5FF)'
         : (def.color === 'gold_premium'
           ? 'linear-gradient(90deg, #7a5b18, #d4af37, #ffec8b, #d4af37, #7a5b18)'
+          : (def.color === 'ice_premium'
+            ? 'linear-gradient(90deg, #0ea5e9, #67e8f9, #e0f2fe, #67e8f9, #0ea5e9)'
+            : (def.color === 'fire_premium'
+              ? 'linear-gradient(90deg, #7c2d12, #fb923c, #fbbf24, #ef4444, #fb923c, #7c2d12)'
           : (def.color === 'rainbow'
             ? 'radial-gradient(circle at center, rgba(255,215,0,0.45), rgba(0,229,255,0.35), rgba(255,42,109,0.35), transparent 70%)'
-            : def.color));
+            : def.color))));
       return <div className="h-16 rounded-lg" style={{ background: bg }} />;
     }
     return null;

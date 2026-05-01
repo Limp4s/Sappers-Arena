@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2, Award } from 'lucide-react';
-import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminResetAchievements, adminDeletePlayer, getToken, authHeaders } from '../../lib/player';
+import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminGrantCoins, adminResetAchievements, adminDeletePlayer, getToken, authHeaders } from '../../lib/player';
 import { promoteToAdmin } from '../../lib/lobby';
 import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
 import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
@@ -293,6 +293,23 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                   style={{ borderColor: '#FFD700', color: '#FFD700' }}
                 >
                   FIX NEGATIVE RATINGS
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      setAdminMsg(null);
+                      const r = await adminGrantCoins(100);
+                      if (r?.player) onPlayerUpdate?.(r.player);
+                      setAdminMsg({ ok: true, text: `+${r?.coins_delta || 0} COINS` });
+                    } catch {
+                      setAdminMsg({ ok: false, text: 'Failed.' });
+                    }
+                  }}
+                  disabled={adminBusy}
+                  className="neon-btn flex-1 py-2"
+                  style={{ borderColor: '#FFD700', color: '#FFD700' }}
+                >
+                  +COINS (SELF)
                 </button>
                 <button
                   onClick={async () => {

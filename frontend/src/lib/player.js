@@ -606,6 +606,11 @@ export async function adminGrantRatingWin() {
   return res?.data;
 }
 
+export async function adminGrantCoins(amount = 100) {
+  const res = await axios.post(`${API}/admin/coins/grant`, {}, { params: { amount }, headers: authHeaders() });
+  return res?.data;
+}
+
 export async function adminResetAchievements(nickname) {
   const nick = String(nickname || '').trim();
   if (!nick) throw new Error('Missing nickname');

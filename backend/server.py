@@ -1522,6 +1522,22 @@ async def admin_grant_rating_win(nick: str = Depends(require_session)):
     return {"ok": True, "rating_delta": delta, "player": _sanitize_player(updated)}
 
 
+@api_router.post("/admin/coins/grant")
+async def admin_grant_coins(amount: int = Query(default=100, ge=1, le=100000), nick: str = Depends(require_session)):
+    await _require_admin(nick)
+    player = await _get_player(nick)
+    if not player:
+        raise HTTPException(status_code=403, detail="Player not registered.")
+
+    inc = int(amount or 0)
+    await db.players.update_one(
+        {"nickname_lower": player.get("nickname_lower")},
+        {"$inc": {"coins": inc}},
+    )
+    updated = await _get_player(nick)
+    return {"ok": True, "coins_delta": inc, "player": _sanitize_player(updated)}
+
+
 @api_router.post("/admin/achievements/reset")
 async def admin_reset_achievements(payload: AdminResetAchievementsRequest, nick: str = Depends(require_session)):
     await _require_admin(nick)
