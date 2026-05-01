@@ -122,10 +122,17 @@ export default function ShopView({ player, onPlayerUpdate }) {
     return null;
   };
 
+  const sortByPrice = (a, b) => {
+    const ap = Number(a?.price ?? 0);
+    const bp = Number(b?.price ?? 0);
+    if (ap !== bp) return ap - bp;
+    return String(a?.id || '').localeCompare(String(b?.id || ''));
+  };
+
   const groupedItems = {
-    mine: items.filter(i => i.category === 'mine'),
-    cell: items.filter(i => i.category === 'cell'),
-    explosion: items.filter(i => i.category === 'explosion'),
+    mine: items.filter(i => i.category === 'mine').slice().sort(sortByPrice),
+    cell: items.filter(i => i.category === 'cell').slice().sort(sortByPrice),
+    explosion: items.filter(i => i.category === 'explosion').slice().sort(sortByPrice),
   };
 
   const GROUPS = [

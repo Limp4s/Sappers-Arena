@@ -104,7 +104,7 @@ SHOP_CATALOG = {
     "fx_gold_premium": {"price": 4500, "category": "explosion", "name": "Liquid Gold"},
     "fx_silver":       {"price": 2000, "category": "explosion", "name": "Silver Burst"},
     "fx_rainbow":      {"price": 1200, "category": "explosion", "name": "Rainbow"},
-    "fx_rainbow_premium": {"price": 5000, "category": "explosion", "name": "Prismatic Nova"},
+    "fx_rainbow_premium": {"price": 5000, "category": "explosion", "name": "Rainbow"},
     "fx_shockwave":    {"price": 1600, "category": "explosion", "name": "Shockwave"},
     "fx_void":         {"price": 1800, "category": "explosion", "name": "Void"},
     "fx_lime":         {"price": 1400, "category": "explosion", "name": "Lime Burst"},
