@@ -10,6 +10,7 @@ export const Cell = React.memo(function Cell({
   flagMode = false,
 }) {
   const touchRef = React.useRef({ timer: null, triggered: false, skipClick: false });
+  const svgUid = React.useId();
 
   const handleClick = (e) => {
     if (touchRef.current.skipClick) { touchRef.current.skipClick = false; return; }
@@ -92,10 +93,11 @@ export const Cell = React.memo(function Cell({
   } else if (cell.flagged) {
     className += ' cell-flag';
     if (flagColor === 'rainbow') {
+      const gid = `rf-${svgUid}`;
       content = (
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <defs>
-            <linearGradient id={`rf-${r}-${c}`} x1="0" y1="0" x2="24" y2="0">
+            <linearGradient id={gid} x1="0" y1="0" x2="24" y2="0">
               <stop offset="0%" stopColor="#00E5FF" />
               <stop offset="25%" stopColor="#00FF9D" />
               <stop offset="50%" stopColor="#FFD700" />
@@ -103,12 +105,12 @@ export const Cell = React.memo(function Cell({
               <stop offset="100%" stopColor="#A855F7" />
             </linearGradient>
           </defs>
-          <path d="M4 22V4" stroke={`url(#rf-${r}-${c})`} />
-          <path d="M4 4H14l-1.5 4L14 12H4" stroke={`url(#rf-${r}-${c})`} />
+          <path d="M4 22V4" stroke={`url(#${gid})`} />
+          <path d="M4 4H14l-1.5 4L14 12H4" stroke={`url(#${gid})`} />
         </svg>
       );
     } else {
-      content = <Flag size={12} strokeWidth={2.5} style={{ color: flagColor }} />;
+      content = <Flag size={14} strokeWidth={2.5} style={{ color: flagColor }} />;
     }
   } else {
     className += ' cell-hidden';
