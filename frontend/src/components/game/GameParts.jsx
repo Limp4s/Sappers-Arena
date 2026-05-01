@@ -91,7 +91,25 @@ export const Cell = React.memo(function Cell({
     }
   } else if (cell.flagged) {
     className += ' cell-flag';
-    content = <Flag size={12} strokeWidth={2.5} style={{ color: flagColor }} />;
+    if (flagColor === 'rainbow') {
+      content = (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <defs>
+            <linearGradient id={`rf-${r}-${c}`} x1="0" y1="0" x2="24" y2="0">
+              <stop offset="0%" stopColor="#00E5FF" />
+              <stop offset="25%" stopColor="#00FF9D" />
+              <stop offset="50%" stopColor="#FFD700" />
+              <stop offset="75%" stopColor="#FF2A6D" />
+              <stop offset="100%" stopColor="#A855F7" />
+            </linearGradient>
+          </defs>
+          <path d="M4 22V4" stroke={`url(#rf-${r}-${c})`} />
+          <path d="M4 4H14l-1.5 4L14 12H4" stroke={`url(#rf-${r}-${c})`} />
+        </svg>
+      );
+    } else {
+      content = <Flag size={12} strokeWidth={2.5} style={{ color: flagColor }} />;
+    }
   } else {
     className += ' cell-hidden';
   }

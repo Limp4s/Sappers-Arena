@@ -75,7 +75,7 @@ export const FLAG_SKINS = {
   flag_violet: { icon: Flag, name: 'Violet Flag', price: 900, color: '#A855F7' },
   flag_silver: { icon: Flag, name: 'Silver Flag', price: 2000, color: '#CBD5E1' },
   flag_mono: { icon: Flag, name: 'Mono Flag', price: 1200, color: '#E2E8F0' },
-  flag_rainbow: { icon: Flag, name: 'Rainbow Flag', price: 1200, color: '#00E5FF' },
+  flag_rainbow: { icon: Flag, name: 'Rainbow Flag', price: 1200, color: 'rainbow' },
 };
 
 const EQUIP_KEY = 'mg_equipped_v2';

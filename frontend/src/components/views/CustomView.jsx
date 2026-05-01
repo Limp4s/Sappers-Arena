@@ -15,6 +15,9 @@ export default function CustomView({ onStartCustom, onStartCustomWithLobby, play
   const [cols, setCols] = useState(10);
   const [mines, setMines] = useState(15);
   const [lives, setLives] = useState(3);
+  const [narc, setNarc] = useState(false);
+  const [randomMode, setRandomMode] = useState(false);
+  const [noFlags, setNoFlags] = useState(false);
   const [equipped, setEquipped] = useState(() => loadEquipped(player?.nick));
   const [showLobby, setShowLobby] = useState(false);
 
@@ -41,6 +44,9 @@ export default function CustomView({ onStartCustom, onStartCustomWithLobby, play
   const buildConfig = () => ({
     rows: clamp(rows, 5, 30), cols: clamp(cols, 5, 30),
     mines: safeMines, lives: clamp(lives, 1, 10),
+    narc: !!narc,
+    random_mode: !!randomMode,
+    no_flags: !!noFlags,
     difficulty: 'custom', mode: 'custom', label: t('custom.title'),
   });
 
@@ -59,7 +65,7 @@ export default function CustomView({ onStartCustom, onStartCustomWithLobby, play
   };
 
   const owned = new Set(player?.owned_items || []);
-  owned.add('mine_default'); owned.add('cell_default'); owned.add('fx_default');
+  owned.add('mine_default'); owned.add('cell_default'); owned.add('fx_default'); owned.add('flag_default');
 
   const mineCapHit = mines >= maxMines;
   useLang();
@@ -80,6 +86,24 @@ export default function CustomView({ onStartCustom, onStartCustomWithLobby, play
             onChange={(v) => setMines(clamp(v, 1, maxMines))} testid="slider-mines"
             suffix={<span className="text-[10px] text-slate-500 font-mono">({density}% · max {maxMines})</span>} />
           <SliderRow icon={<Heart size={14} className="neon-coral" fill="currentColor" />} label={t('custom.lives')} value={lives} min={1} max={10} onChange={setLives} testid="slider-lives" />
+
+          <div className="glass-panel-light rounded-lg px-4 py-3" data-testid="custom-mods">
+            <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// {t('custom.modsTitle')}</div>
+            <div className="space-y-2">
+              <label className="flex items-center justify-between gap-3 text-[12px] text-slate-300 font-mono">
+                <span>{t('custom.modNarc')}</span>
+                <input type="checkbox" checked={narc} onChange={(e) => setNarc(e.target.checked)} />
+              </label>
+              <label className="flex items-center justify-between gap-3 text-[12px] text-slate-300 font-mono">
+                <span>{t('custom.modRandom')}</span>
+                <input type="checkbox" checked={randomMode} onChange={(e) => setRandomMode(e.target.checked)} />
+              </label>
+              <label className="flex items-center justify-between gap-3 text-[12px] text-slate-300 font-mono">
+                <span>{t('custom.modNoFlags')}</span>
+                <input type="checkbox" checked={noFlags} onChange={(e) => setNoFlags(e.target.checked)} />
+              </label>
+            </div>
+          </div>
 
           {mineCapHit && (
             <div className="glass-panel-light rounded-lg px-4 py-3 flex items-start gap-3" data-testid="cap-notice">

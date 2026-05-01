@@ -791,6 +791,9 @@ class LobbyCreateRequest(BaseModel):
     cols: int = Field(..., ge=5, le=30)
     mines: int = Field(..., ge=1, le=500)
     lives: int = Field(default=3, ge=1, le=10)
+    narc: bool = False
+    random_mode: bool = False
+    no_flags: bool = False
 
 
 class CampaignLevelResultRequest(BaseModel):
@@ -1800,6 +1803,9 @@ async def create_lobby(payload: LobbyCreateRequest, nick: str = Depends(require_
         "config": {
             "rows": payload.rows, "cols": payload.cols,
             "mines": payload.mines, "lives": payload.lives,
+            "narc": bool(payload.narc),
+            "random_mode": bool(payload.random_mode),
+            "no_flags": bool(payload.no_flags),
         },
         "seed": seed,
         "status": "waiting",
@@ -2214,7 +2220,22 @@ class _LobbyGame:
         cfg = lobby.get("config") or {}
         self.rows = int(cfg.get("rows") or 10)
         self.cols = int(cfg.get("cols") or 10)
-        self.mines = int(cfg.get("mines") or 10)
+        # Optional modifiers
+        self.narc = bool(cfg.get("narc"))
+        self.random_mode = bool(cfg.get("random_mode"))
+        self.no_flags = bool(cfg.get("no_flags"))
+
+        mines_req = int(cfg.get("mines") or 10)
+        if self.random_mode:
+            # Deterministic random mines derived from the lobby seed.
+            try:
+                total = self.rows * self.cols
+                max_mines = max(1, min(int(total * 0.6), total - 10))
+                r = _rng(int(lobby.get("seed") or 0) ^ 0xA11CE)
+                mines_req = max(1, min(max_mines, 1 + int(r.random() * max_mines)))
+            except Exception:
+                mines_req = int(cfg.get("mines") or 10)
+        self.mines = mines_req
         self.lives = int(cfg.get("lives") or 1)
         self.seed = int(lobby.get("seed") or 0)
         self.host = lobby.get("host")
@@ -2414,6 +2435,8 @@ async def ws_lobby(code: str, websocket: WebSocket):
                     continue
 
             elif mtype == "flag":
+                if game and getattr(game, "no_flags", False):
+                    continue
                 r = int(msg.get("r"))
                 c = int(msg.get("c"))
                 res = game.players[nick].flag(r, c)
