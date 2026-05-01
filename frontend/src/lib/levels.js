@@ -108,78 +108,8 @@ export const syncCampaignProgress = async () => {
     const axios = (await import('axios')).default;
     const server = (await axios.get(`${API}/campaign/progress`, { headers: sessionHeaders() })).data;
     const serverProgress = server?.progress || {};
-    const localProgress = loadProgress();
-    let merged = _mergeProgress(localProgress, serverProgress);
-
-    // Linear-campaign gap repair:
-    // If a higher level is completed (e.g. 29) but some previous levels are missing (e.g. 27/28),
-    // backfill earlier levels as completed so the path doesn't show holes across devices.
-    try {
-      const completedIds = Object.keys(merged || {})
-        .map((k) => Number(k))
-        .filter((n) => Number.isFinite(n) && n > 0 && merged[String(n)]?.completed);
-      const highestCompleted = completedIds.length ? Math.max(...completedIds) : 0;
-      if (highestCompleted > 1) {
-        for (let i = 1; i < highestCompleted; i++) {
-          const key = String(i);
-          const cur = merged[key];
-          if (cur?.completed) continue;
-          merged[key] = {
-            stars: Math.max(1, Number(cur?.stars || 0)),
-            bestScore: Number(cur?.bestScore || 0),
-            bestTime: cur?.bestTime == null ? null : Number(cur.bestTime),
-            completed: true,
-          };
-        }
-      }
-    } catch {}
+    const merged = _mergeProgress(loadProgress(), serverProgress);
     saveProgress(merged);
-
-    // Cross-device repair: if local progress contains levels that weren't uploaded earlier
-    // (e.g. temporary network issues on mobile), push the better entries back to server.
-    try {
-      const sp = (serverProgress && typeof serverProgress === 'object') ? serverProgress : {};
-      const lp = (localProgress && typeof localProgress === 'object') ? localProgress : {};
-      const keys = new Set([...Object.keys(lp || {}), ...Object.keys(merged || {})]);
-      const toUpload = [];
-      keys.forEach((k) => {
-        const key = String(k);
-        const loc = lp[key] || {};
-        const srv = sp[key] || {};
-        const locStars = Number(loc.stars || 0);
-        const srvStars = Number(srv.stars || 0);
-        const locCompleted = !!loc.completed;
-        const srvCompleted = !!srv.completed;
-        const locBestScore = Number(loc.bestScore || 0);
-        const srvBestScore = Number(srv.bestScore || 0);
-
-        const mergedEntry = merged[key] || loc;
-        const mergedCompleted = !!mergedEntry?.completed;
-        const mergedStars = Number(mergedEntry?.stars || 0);
-        const mergedBestScore = Number(mergedEntry?.bestScore || 0);
-
-        const better = (locCompleted && !srvCompleted)
-          || (locStars > srvStars)
-          || (locBestScore > srvBestScore)
-          || (mergedCompleted && !srvCompleted)
-          || (mergedStars > srvStars)
-          || (mergedBestScore > srvBestScore);
-        if (!better) return;
-        toUpload.push({ key, entry: mergedEntry });
-      });
-
-      if (toUpload.length) {
-        toUpload.forEach(({ key, entry }) => {
-          axios.post(`${API}/campaign/level_result`, {
-            level_id: Number(key),
-            stars: Number(entry?.stars || 0),
-            bestScore: Number(entry?.bestScore || 0),
-            bestTime: entry?.bestTime == null ? null : Number(entry.bestTime),
-            completed: !!entry?.completed,
-          }, { headers: sessionHeaders() }).catch(() => {});
-        });
-      }
-    } catch {}
     return merged;
   } catch {
     return loadProgress();

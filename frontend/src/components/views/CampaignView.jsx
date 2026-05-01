@@ -124,24 +124,13 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
   const CURVE_WIDTH = (() => {
     try {
       const vw = Math.max(320, Math.min(520, window.innerWidth || 340));
-      return Math.max(220, Math.min(320, vw - 56));
+      return Math.max(260, Math.min(340, vw - 40));
     } catch {
       return 340;
     }
   })();
   const PATH_H_OFFSET = CURVE_WIDTH / 2;
-
-  const curveX = (idx) => {
-    const raw = Math.sin(idx * 0.7) * PATH_H_OFFSET;
-    try {
-      const vw = Math.max(320, window.innerWidth || 340);
-      // Keep nodes within viewport with some padding (approx node half-width + margins)
-      const max = Math.max(70, Math.min(160, Math.floor((vw - 110) / 2)));
-      return Math.max(-max, Math.min(max, raw));
-    } catch {
-      return raw;
-    }
-  };
+  const curveX = (idx) => Math.sin(idx * 0.7) * PATH_H_OFFSET;
 
   const segmentForId = (id) => Math.floor((Number(id) - 1) / 10);
   const isMilestone = (id) => Number(id) % 10 === 0;
@@ -188,7 +177,7 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
           style={{ height: '76vh', minHeight: '620px', cursor: 'grab' }}
           data-testid="campaign-scroller"
         >
-          <div className="relative mx-auto" style={{ width: '100%', maxWidth: CURVE_WIDTH + 260, height: totalHeight }}>
+          <div className="relative mx-auto" style={{ width: '100%', maxWidth: CURVE_WIDTH + 320, height: totalHeight }}>
             {/* SVG curvy path */}
             <svg className="absolute left-1/2 -translate-x-1/2 top-0 pointer-events-none"
               width={CURVE_WIDTH + 40} height={totalHeight}
