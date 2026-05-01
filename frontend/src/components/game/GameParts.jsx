@@ -93,9 +93,9 @@ export const Cell = React.memo(function Cell({
   } else if (cell.flagged) {
     className += ' cell-flag';
     if (flagColor === 'rainbow') {
-      const gid = `rf-${svgUid}`;
+      const gid = `rf-${String(svgUid).replace(/:/g, '')}`;
       content = (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ overflow: 'visible' }}>
           <defs>
             <linearGradient id={gid} x1="0" y1="0" x2="24" y2="0">
               <stop offset="0%" stopColor="#00E5FF" />

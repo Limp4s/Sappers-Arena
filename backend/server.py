@@ -1836,7 +1836,7 @@ async def _start_bot_if_needed(code: str):
                 # Ranked: smarter and adapts to player rating.
                 delay_min = 0.60 + (1.0 - skill) * 0.25
                 delay_max = 1.40 + (1.0 - skill) * 0.45
-                mistake_chance = 0.008 + (1.0 - skill) * 0.02
+                mistake_chance = 0.002 + (1.0 - skill) * 0.008
                 use_logic_chance = 0.92 + skill * 0.07
                 flag_chance = 0.55 + skill * 0.25
             else:
@@ -2012,6 +2012,9 @@ async def _start_bot_if_needed(code: str):
                     continue
 
                 wrong_flag_chance = 0.005
+                if mode == "battle_ranked":
+                    # Ranked should be more reliable (still tiny chance to feel human).
+                    wrong_flag_chance = max(0.001, 0.004 * (1.0 - skill))
 
                 # Rare wrong flag (human-like), only if flags are allowed.
                 if (not getattr(game, "no_flags", False)) and r.random() < wrong_flag_chance:
