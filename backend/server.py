@@ -1834,17 +1834,17 @@ async def _start_bot_if_needed(code: str):
 
             if mode == "battle_ranked":
                 # Ranked: smarter and adapts to player rating.
-                delay_min = 0.25 + (1.0 - skill) * 0.15
-                delay_max = 0.65 + (1.0 - skill) * 0.25
+                delay_min = 0.35 + (1.0 - skill) * 0.20
+                delay_max = 0.85 + (1.0 - skill) * 0.35
                 mistake_chance = 0.02 + (1.0 - skill) * 0.06
                 use_logic_chance = 0.55 + skill * 0.35
                 flag_chance = 0.35 + skill * 0.30
             else:
-                # Simple: 400-800ms, not too strong, sometimes errors.
-                delay_min = 0.40
-                delay_max = 0.80
+                # Simple: slower (roughly 2x), not too strong, sometimes errors.
+                delay_min = 0.80
+                delay_max = 1.60
                 mistake_chance = 0.08
-                use_logic_chance = 0.45
+                use_logic_chance = 0.60
                 flag_chance = 0.25
 
             r = _rng(int(game.seed) ^ 0xB07B07)
@@ -1900,6 +1900,21 @@ async def _start_bot_if_needed(code: str):
                         tr, tc = hidden[int(r.random() * len(hidden))]
                         return ("open", tr, tc)
                 return None
+
+            def _frontier_hidden(p: _PlayerGame) -> List[tuple[int, int]]:
+                # Hidden cells adjacent to revealed ones (feels more human than pure random).
+                s = set()
+                for (rr, cc) in list(p.revealed):
+                    for dr in (-1, 0, 1):
+                        for dc in (-1, 0, 1):
+                            if dr == 0 and dc == 0:
+                                continue
+                            rrr = rr + dr
+                            ccc = cc + dc
+                            if 0 <= rrr < p.rows and 0 <= ccc < p.cols:
+                                if (rrr, ccc) not in p.revealed and (rrr, ccc) not in p.flags:
+                                    s.add((rrr, ccc))
+                return list(s)
 
             async def _do_open(pnick: str, rr: int, cc: int):
                 res = game.players[pnick].open(rr, cc)
@@ -1978,15 +1993,18 @@ async def _start_bot_if_needed(code: str):
 
                 # Fallback: random safe-ish exploration
                 if move is None:
-                    hidden = [
-                        (rr, cc)
-                        for rr in range(bp.rows)
-                        for cc in range(bp.cols)
-                        if (rr, cc) not in bp.revealed and (rr, cc) not in bp.flags
-                    ]
-                    if not hidden:
+                    frontier = _frontier_hidden(bp)
+                    pool = frontier
+                    if not pool:
+                        pool = [
+                            (rr, cc)
+                            for rr in range(bp.rows)
+                            for cc in range(bp.cols)
+                            if (rr, cc) not in bp.revealed and (rr, cc) not in bp.flags
+                        ]
+                    if not pool:
                         return
-                    rr, cc = hidden[int(r.random() * len(hidden))]
+                    rr, cc = pool[int(r.random() * len(pool))]
                     move = ("open", rr, cc)
 
                 act, rr, cc = move
