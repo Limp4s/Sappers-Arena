@@ -183,7 +183,7 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
           style={{ height: '76vh', minHeight: '620px', cursor: 'grab' }}
           data-testid="campaign-scroller"
         >
-          <div className="relative mx-auto" style={{ width: '100%', maxWidth: CURVE_WIDTH + 260, height: totalHeight }}>
+          <div className="relative mx-auto" style={{ width: '100%', maxWidth: CURVE_WIDTH + 260, height: totalHeight, paddingBottom: 'calc(env(safe-area-inset-bottom) + 90px)' }}>
             {/* SVG curvy path */}
             <svg className="absolute left-1/2 -translate-x-1/2 top-0 pointer-events-none"
               width={CURVE_WIDTH + 40} height={totalHeight}
