@@ -549,7 +549,9 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                             <span className="ml-2 text-[10px] font-mono text-slate-500">+{q.rewardCoins || 0} {t('daily.coinsShort')}</span>
                           </div>
                           {qp.claimed ? (
-                            <div className="text-[11px] font-mono neon-gold">{t('daily.claimed')}</div>
+                            <div className="neon-gold neon-btn px-3 py-1 text-[10px] font-mono pointer-events-none">
+                              {t('daily.claimed')}
+                            </div>
                           ) : qp.done ? (
                             <button
                               className="neon-btn px-3 py-1 text-[10px]"
