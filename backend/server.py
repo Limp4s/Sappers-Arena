@@ -50,6 +50,7 @@ app.add_middleware(
 api_router = APIRouter(prefix="/api")
 
 ADMIN_NICKS = {"limp4"}
+ROOT_ADMIN_NICK_LOWER = "limp4"
 
 
 @api_router.get("/health")
@@ -1453,7 +1454,7 @@ async def admin_reindex_player_nums(limit: int = Query(default=5000, ge=1, le=20
         nl = p.get("nickname_lower")
         if not nl:
             continue
-        if nl == OFFLINE_ADMIN_NICK:
+        if nl == ROOT_ADMIN_NICK_LOWER:
             cur = await db.players.find_one({"nickname_lower": nl}, {"player_num": 1})
             prev_num = (cur or {}).get("player_num")
             set_patch: Dict[str, Any] = {"player_num": 0}
