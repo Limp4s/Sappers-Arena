@@ -10,6 +10,16 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone, timedelta
+import asyncio
+import base64
+import json
+import math
+
+
+logger = logging.getLogger(__name__)
+
+
+BOT_NICK = "BOT"
 
 
 ROOT_DIR = PathlibPath(__file__).parent
@@ -1773,6 +1783,7 @@ async def _ensure_lobby_playing(code: str) -> Optional[dict]:
         return None
     if not lobby.get("public"):
         return lobby
+
     if lobby.get("status") == "waiting" and lobby.get("guest"):
         await db.lobbies.update_one(
             {"code": code},
@@ -1780,6 +1791,250 @@ async def _ensure_lobby_playing(code: str) -> Optional[dict]:
         )
         lobby = await db.lobbies.find_one({"code": code}, {"_id": 0})
     return lobby
+
+
+async def _start_bot_if_needed(code: str):
+    code = _norm_lobby_code(code)
+    try:
+        lobby = await db.lobbies.find_one({"code": code}, {"_id": 0})
+        if not lobby:
+            return
+        if lobby.get("status") != "playing":
+            return
+        if lobby.get("guest") != BOT_NICK and lobby.get("host") != BOT_NICK:
+            return
+
+        game = ACTIVE_GAMES.get(code)
+        if not game:
+            game = _LobbyGame(code, lobby)
+            ACTIVE_GAMES[code] = game
+        game.ensure_player(game.host)
+        game.ensure_player(game.guest)
+
+        # Start only one bot loop per lobby.
+        if getattr(game, "bot_task", None):
+            return
+
+        async def _bot_loop():
+            bot = game.guest if game.host != BOT_NICK else game.host
+            human = game.host if bot == game.guest else game.guest
+
+            # Determine difficulty parameters.
+            mode = str(lobby.get("mode") or "")
+            host_rating = int(lobby.get("host_rating") or 500)
+
+            def _clamp(x: float, a: float, b: float) -> float:
+                return max(a, min(b, x))
+
+            def _skill_from_rating(r: int) -> float:
+                # 500 -> ~0.1, 15000 -> ~1.0
+                return _clamp((float(r) - 500.0) / 14500.0, 0.0, 1.0)
+
+            skill = _skill_from_rating(host_rating)
+
+            if mode == "battle_ranked":
+                # Ranked: smarter and adapts to player rating.
+                delay_min = 0.25 + (1.0 - skill) * 0.15
+                delay_max = 0.65 + (1.0 - skill) * 0.25
+                mistake_chance = 0.02 + (1.0 - skill) * 0.06
+                use_logic_chance = 0.55 + skill * 0.35
+                flag_chance = 0.35 + skill * 0.30
+            else:
+                # Simple: 400-800ms, not too strong, sometimes errors.
+                delay_min = 0.40
+                delay_max = 0.80
+                mistake_chance = 0.08
+                use_logic_chance = 0.45
+                flag_chance = 0.25
+
+            r = _rng(int(game.seed) ^ 0xB07B07)
+
+            def _hidden_neighbors(p: _PlayerGame, rr: int, cc: int) -> List[tuple]:
+                out = []
+                for dr in (-1, 0, 1):
+                    for dc in (-1, 0, 1):
+                        if dr == 0 and dc == 0:
+                            continue
+                        rrr = rr + dr
+                        ccc = cc + dc
+                        if 0 <= rrr < p.rows and 0 <= ccc < p.cols:
+                            if (rrr, ccc) not in p.revealed and (rrr, ccc) not in p.flags:
+                                out.append((rrr, ccc))
+                return out
+
+            def _flagged_neighbors(p: _PlayerGame, rr: int, cc: int) -> int:
+                n = 0
+                for dr in (-1, 0, 1):
+                    for dc in (-1, 0, 1):
+                        if dr == 0 and dc == 0:
+                            continue
+                        rrr = rr + dr
+                        ccc = cc + dc
+                        if 0 <= rrr < p.rows and 0 <= ccc < p.cols:
+                            if (rrr, ccc) in p.flags:
+                                n += 1
+                return n
+
+            def _pick_logic_move(p: _PlayerGame) -> Optional[tuple[str, int, int]]:
+                # Returns (action, r, c)
+                for (rr, cc) in list(p.revealed):
+                    try:
+                        val = int(p.adj[rr][cc])
+                    except Exception:
+                        continue
+                    if val <= 0:
+                        continue
+                    hidden = _hidden_neighbors(p, rr, cc)
+                    if not hidden:
+                        continue
+                    f = _flagged_neighbors(p, rr, cc)
+                    need = max(0, val - f)
+
+                    # If all hidden must be mines, flag one.
+                    if need > 0 and need == len(hidden) and not getattr(game, "no_flags", False) and r.random() < flag_chance:
+                        tr, tc = hidden[int(r.random() * len(hidden))]
+                        return ("flag", tr, tc)
+
+                    # If already have enough flags, remaining hidden are safe.
+                    if f >= val:
+                        tr, tc = hidden[int(r.random() * len(hidden))]
+                        return ("open", tr, tc)
+                return None
+
+            async def _do_open(pnick: str, rr: int, cc: int):
+                res = game.players[pnick].open(rr, cc)
+                if not res.get("ok"):
+                    return
+                await WS_HUB.broadcast(code, {
+                    "type": "player_update",
+                    "player": pnick,
+                    "changes": res.get("changes") or [],
+                    "lives": res.get("lives"),
+                    "safe": res.get("safe"),
+                    "total_safe": game.players[pnick].total_safe(),
+                    "done": res.get("done"),
+                    "won": res.get("won"),
+                })
+                if res.get("done") and not res.get("won") and not game.finished:
+                    winner = game.guest if pnick == game.host else game.host
+                    game.finished = True
+                    if winner in game.players:
+                        game.players[winner].done = True
+                        game.players[winner].won = True
+                    await WS_HUB.broadcast(code, {"type": "duel_over", "winner": winner})
+
+            async def _do_flag(pnick: str, rr: int, cc: int):
+                if getattr(game, "no_flags", False):
+                    return
+                res = game.players[pnick].flag(rr, cc)
+                if not res.get("ok"):
+                    return
+                await WS_HUB.send(code, pnick, {
+                    "type": "player_update",
+                    "player": pnick,
+                    "changes": res.get("changes") or [],
+                    "flags": res.get("flags"),
+                    "lives": game.players[pnick].lives,
+                    "safe": game.players[pnick].safe_revealed(),
+                    "total_safe": game.players[pnick].total_safe(),
+                    "done": game.players[pnick].done,
+                    "won": game.players[pnick].won,
+                })
+
+            while True:
+                await asyncio.sleep(delay_min + (delay_max - delay_min) * r.random())
+
+                # Refresh lobby/game state
+                lobby_now = await db.lobbies.find_one({"code": code}, {"_id": 0, "status": 1})
+                if not lobby_now or lobby_now.get("status") not in ("playing", "finished"):
+                    return
+                if game.finished:
+                    return
+
+                bp = game.players.get(bot)
+                hp = game.players.get(human) if human else None
+                if not bp or bp.done:
+                    return
+
+                # If bot board not started yet, open a random cell to initialize.
+                if not bp.started:
+                    rr = int(r.random() * bp.rows)
+                    cc = int(r.random() * bp.cols)
+                    await _do_open(bot, rr, cc)
+                    continue
+
+                # Optional logic move
+                move = None
+                if r.random() < use_logic_chance:
+                    move = _pick_logic_move(bp)
+
+                # Mistake: intentionally click a mine sometimes (keeps bot beatable)
+                if move is None and r.random() < mistake_chance:
+                    mines_left = [m for m in bp.mines if m not in bp.revealed and m not in bp.flags]
+                    if mines_left:
+                        rr, cc = mines_left[int(r.random() * len(mines_left))]
+                        await _do_open(bot, rr, cc)
+                        continue
+
+                # Fallback: random safe-ish exploration
+                if move is None:
+                    hidden = [
+                        (rr, cc)
+                        for rr in range(bp.rows)
+                        for cc in range(bp.cols)
+                        if (rr, cc) not in bp.revealed and (rr, cc) not in bp.flags
+                    ]
+                    if not hidden:
+                        return
+                    rr, cc = hidden[int(r.random() * len(hidden))]
+                    move = ("open", rr, cc)
+
+                act, rr, cc = move
+                if act == "flag":
+                    await _do_flag(bot, rr, cc)
+                else:
+                    await _do_open(bot, rr, cc)
+
+        game.bot_task = asyncio.create_task(_bot_loop())
+    except Exception:
+        logger.exception("bot start failed code=%s", code)
+
+
+async def _bot_autofill_after_timeout(code: str, timeout_seconds: int = 15):
+    code = _norm_lobby_code(code)
+    try:
+        await asyncio.sleep(max(1, int(timeout_seconds)))
+        lobby = await db.lobbies.find_one({"code": code}, {"_id": 0})
+        if not lobby:
+            return
+        if not lobby.get("public"):
+            return
+        if lobby.get("status") != "waiting":
+            return
+        if lobby.get("guest"):
+            return
+
+        # Assign BOT as opponent and start duel.
+        started_at = datetime.now(timezone.utc).isoformat()
+        await db.lobbies.update_one(
+            {"code": code, "status": "waiting", "guest": None},
+            {"$set": {"guest": BOT_NICK, "status": "playing", "started_at": started_at}},
+        )
+        lobby = await db.lobbies.find_one({"code": code}, {"_id": 0})
+        if not lobby:
+            return
+
+        # Ensure game + start bot loop.
+        await _start_bot_if_needed(code)
+
+        # Notify connected host (if already connected).
+        try:
+            await WS_HUB.broadcast(code, {"type": "lobby_update", "lobby": _sanitize_lobby(lobby)})
+        except Exception:
+            pass
+    except Exception:
+        logger.exception("bot autofill failed code=%s", code)
+
 
 
 @api_router.post("/lobbies")
@@ -1815,6 +2070,12 @@ async def create_lobby(payload: LobbyCreateRequest, nick: str = Depends(require_
         "created_at_epoch": now_ts,
     }
     await db.lobbies.insert_one(lobby)
+    # Public matchmaking: if no opponent joins soon, start with a bot.
+    try:
+        if lobby.get("public") and str(lobby.get("mode") or "") in ("battle_simple", "battle_ranked"):
+            asyncio.create_task(_bot_autofill_after_timeout(code, timeout_seconds=15))
+    except Exception:
+        pass
     return _sanitize_lobby(lobby)
 
 
@@ -1890,6 +2151,30 @@ async def submit_lobby_result(code: str, payload: Dict[str, Any], nick: str = De
         raise HTTPException(status_code=403, detail="You are not in this lobby.")
     await db.lobbies.update_one({"code": code}, {"$set": {field: result}})
     updated = await db.lobbies.find_one({"code": code})
+
+    # If playing against BOT, auto-fill the BOT result from server-authoritative game state.
+    try:
+        if updated and (updated.get("host") == BOT_NICK or updated.get("guest") == BOT_NICK):
+            bot_field = "host_result" if updated.get("host") == BOT_NICK else "guest_result"
+            if not updated.get(bot_field):
+                game = ACTIVE_GAMES.get(code)
+                if game:
+                    bot_nick = BOT_NICK
+                    bp = game.players.get(bot_nick)
+                    if bp:
+                        bot_res = {
+                            "player": BOT_NICK,
+                            "score": int(bp.safe_revealed() or 0),
+                            "time_seconds": int(payload.get("time_seconds", 0)),
+                            "won": bool(bp.won),
+                            "lives_remaining": int(bp.lives or 0),
+                            "submitted_at": datetime.now(timezone.utc).isoformat(),
+                        }
+                        await db.lobbies.update_one({"code": code}, {"$set": {bot_field: bot_res}})
+                        updated = await db.lobbies.find_one({"code": code})
+    except Exception:
+        pass
+
     if updated.get("host_result") and updated.get("guest_result"):
         await db.lobbies.update_one({"code": code}, {"$set": {"status": "finished"}})
         try:
@@ -2308,6 +2593,8 @@ async def ws_lobby(code: str, websocket: WebSocket):
             ACTIVE_GAMES[code] = game
         if game:
             game.ensure_player(nick)
+            # If this lobby has BOT, ensure bot loop is running.
+            await _start_bot_if_needed(code)
 
         your_cells: List[dict] = []
         opp_cells: List[dict] = []
@@ -2546,9 +2833,6 @@ async def ws_lobby(code: str, websocket: WebSocket):
             pass
     finally:
         WS_HUB.disconnect(code, nick)
-logger = logging.getLogger(__name__)
-
-
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
