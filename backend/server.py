@@ -1834,17 +1834,17 @@ async def _start_bot_if_needed(code: str):
 
             if mode == "battle_ranked":
                 # Ranked: smarter and adapts to player rating.
-                delay_min = 0.35 + (1.0 - skill) * 0.20
-                delay_max = 0.85 + (1.0 - skill) * 0.35
-                mistake_chance = 0.02 + (1.0 - skill) * 0.06
-                use_logic_chance = 0.55 + skill * 0.35
+                delay_min = 0.60 + (1.0 - skill) * 0.25
+                delay_max = 1.40 + (1.0 - skill) * 0.45
+                mistake_chance = 0.015 + (1.0 - skill) * 0.05
+                use_logic_chance = 0.75 + skill * 0.20
                 flag_chance = 0.35 + skill * 0.30
             else:
                 # Simple: slower (roughly 2x), not too strong, sometimes errors.
-                delay_min = 0.80
-                delay_max = 1.60
+                delay_min = 1.20
+                delay_max = 2.40
                 mistake_chance = 0.08
-                use_logic_chance = 0.60
+                use_logic_chance = 0.75
                 flag_chance = 0.25
 
             r = _rng(int(game.seed) ^ 0xB07B07)
@@ -1915,6 +1915,39 @@ async def _start_bot_if_needed(code: str):
                                 if (rrr, ccc) not in p.revealed and (rrr, ccc) not in p.flags:
                                     s.add((rrr, ccc))
                 return list(s)
+
+            def _risk_for_cell(p: _PlayerGame, cell: tuple[int, int]) -> float:
+                # Very rough estimate: look at neighboring revealed numbered cells and compute
+                # remaining mines / remaining hidden around them. Lower = safer.
+                rr, cc = cell
+                best = None
+                for dr in (-1, 0, 1):
+                    for dc in (-1, 0, 1):
+                        if dr == 0 and dc == 0:
+                            continue
+                        rrr = rr + dr
+                        ccc = cc + dc
+                        if not (0 <= rrr < p.rows and 0 <= ccc < p.cols):
+                            continue
+                        if (rrr, ccc) not in p.revealed:
+                            continue
+                        try:
+                            val = int(p.adj[rrr][ccc])
+                        except Exception:
+                            continue
+                        if val <= 0:
+                            continue
+                        hidden = _hidden_neighbors(p, rrr, ccc)
+                        if not hidden:
+                            continue
+                        f = _flagged_neighbors(p, rrr, ccc)
+                        remaining_mines = max(0, val - f)
+                        remaining_hidden = max(1, len(hidden))
+                        risk = float(remaining_mines) / float(remaining_hidden)
+                        if best is None or risk < best:
+                            best = risk
+                # If we have no info, treat as medium risk.
+                return float(best) if best is not None else 0.5
 
             async def _do_open(pnick: str, rr: int, cc: int):
                 res = game.players[pnick].open(rr, cc)
@@ -1995,17 +2028,24 @@ async def _start_bot_if_needed(code: str):
                 if move is None:
                     frontier = _frontier_hidden(bp)
                     pool = frontier
-                    if not pool:
+                    if pool:
+                        # Prefer lowest-risk frontier cell.
+                        pool.sort(key=lambda x: _risk_for_cell(bp, x))
+                        # Take from the best few to keep it from being too perfect.
+                        topk = max(1, min(6, len(pool)))
+                        rr, cc = pool[int(r.random() * topk)]
+                        move = ("open", rr, cc)
+                    else:
                         pool = [
                             (rr, cc)
                             for rr in range(bp.rows)
                             for cc in range(bp.cols)
                             if (rr, cc) not in bp.revealed and (rr, cc) not in bp.flags
                         ]
-                    if not pool:
-                        return
-                    rr, cc = pool[int(r.random() * len(pool))]
-                    move = ("open", rr, cc)
+                        if not pool:
+                            return
+                        rr, cc = pool[int(r.random() * len(pool))]
+                        move = ("open", rr, cc)
 
                 act, rr, cc = move
                 if act == "flag":
