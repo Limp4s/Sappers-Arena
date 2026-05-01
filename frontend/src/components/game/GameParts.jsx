@@ -60,6 +60,11 @@ export const Cell = React.memo(function Cell({
   let content = null;
   const numColor = cellTheme?.number?.[cell.adjacent] || '#00E5FF';
   const accent = cellTheme?.accent || '#00E5FF';
+  const accentColor = accent === 'rainbow'
+    ? '#00E5FF'
+    : (accent === 'gold_premium' ? '#D4AF37' : accent);
+  if (accent === 'rainbow') className += ' cell-rainbow';
+  if (accent === 'gold_premium') className += ' cell-gold-premium';
 
   if (cell.revealed) {
     if (cell.mine) {
@@ -87,8 +92,8 @@ export const Cell = React.memo(function Cell({
   // Apply themed accent for hover/revealed border via inline style for non-default themes
   const themedStyle = {};
   if (cell.revealed && !cell.mine && cellTheme && cellTheme.accent !== '#00E5FF') {
-    themedStyle.borderColor = `${accent}33`;
-    themedStyle.boxShadow = `inset 0 0 12px ${accent}14`;
+    themedStyle.borderColor = `${accentColor}33`;
+    themedStyle.boxShadow = `inset 0 0 12px ${accentColor}14`;
   }
 
   return (

@@ -92,12 +92,13 @@ export default function ShopView({ player, onPlayerUpdate }) {
     if (id.startsWith('cell_')) {
       const def = CELL_THEMES[id];
       if (!def) return null;
+      const accent = def.accent === 'rainbow' ? '#00E5FF' : (def.accent === 'gold_premium' ? '#D4AF37' : def.accent);
       return (
         <div className="flex items-center justify-center h-16">
           <div className="grid grid-cols-3 gap-1">
             {[1,2,3,4,5,6].map(n => (
               <div key={n} className="w-4 h-4 rounded-sm border" style={{
-                borderColor: def.accent, background: 'rgba(0,0,0,0.5)',
+                borderColor: accent, background: 'rgba(0,0,0,0.5)',
                 color: def.number[n], fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontFamily: 'JetBrains Mono', fontWeight: 700,
               }}>{n}</div>
@@ -109,9 +110,13 @@ export default function ShopView({ player, onPlayerUpdate }) {
     if (id.startsWith('fx_')) {
       const def = FX_EFFECTS[id];
       if (!def) return null;
-      const bg = def.color === 'rainbow'
-        ? 'radial-gradient(circle at center, rgba(255,215,0,0.45), rgba(0,229,255,0.35), rgba(255,42,109,0.35), transparent 70%)'
-        : def.color;
+      const bg = def.color === 'rainbow_premium'
+        ? 'linear-gradient(90deg, #00E5FF, #00FF9D, #FFD700, #FF2A6D, #A855F7, #00E5FF)'
+        : (def.color === 'gold_premium'
+          ? 'linear-gradient(90deg, #7a5b18, #d4af37, #ffec8b, #d4af37, #7a5b18)'
+          : (def.color === 'rainbow'
+            ? 'radial-gradient(circle at center, rgba(255,215,0,0.45), rgba(0,229,255,0.35), rgba(255,42,109,0.35), transparent 70%)'
+            : def.color));
       return <div className="h-16 rounded-lg" style={{ background: bg }} />;
     }
     return null;

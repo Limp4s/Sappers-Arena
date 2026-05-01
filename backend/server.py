@@ -88,18 +88,25 @@ SHOP_CATALOG = {
     "mine_gem":        {"price": 2200, "category": "mine",     "name": "Gem"},
     # cells
     "cell_gold":       {"price": 900, "category": "cell",      "name": "Gold Grid"},
+    "cell_gold_premium": {"price": 4500, "category": "cell",   "name": "Solid Gold"},
     "cell_coral":      {"price": 900, "category": "cell",      "name": "Coral Grid"},
     "cell_ice":        {"price": 900, "category": "cell",      "name": "Ice Grid"},
     "cell_retro":      {"price": 1400, "category": "cell",     "name": "Retro Green"},
+    "cell_plasma":     {"price": 2400, "category": "cell",     "name": "Plasma"},
     "cell_sunset":     {"price": 1800, "category": "cell",     "name": "Sunset"},
     "cell_violet":     {"price": 1900, "category": "cell",     "name": "Violet"},
     "cell_mono":       {"price": 1600, "category": "cell",     "name": "Monochrome"},
+    "cell_rainbow_premium": {"price": 5000, "category": "cell", "name": "Prismatic Grid"},
     # explosion FX
     "fx_gold":         {"price": 600, "category": "explosion", "name": "Gold Burst"},
+    "fx_gold_premium": {"price": 4500, "category": "explosion", "name": "Liquid Gold"},
     "fx_rainbow":      {"price": 1200, "category": "explosion", "name": "Rainbow"},
+    "fx_rainbow_premium": {"price": 5000, "category": "explosion", "name": "Prismatic Nova"},
     "fx_shockwave":    {"price": 1600, "category": "explosion", "name": "Shockwave"},
     "fx_void":         {"price": 1800, "category": "explosion", "name": "Void"},
     "fx_lime":         {"price": 1400, "category": "explosion", "name": "Lime Burst"},
+    "fx_ultraviolet":  {"price": 2400, "category": "explosion", "name": "Ultraviolet"},
+    "fx_ember":        {"price": 2600, "category": "explosion", "name": "Ember"},
 }
 
 

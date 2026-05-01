@@ -224,9 +224,16 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
   const minesLeft = Math.max(0, mines - flagsCount);
   const gridStyle = { display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: '3px' };
-  const fxColor = fxDef.color === 'rainbow'
-    ? 'radial-gradient(ellipse at center, rgba(255,215,0,0.5), rgba(0,229,255,0.4), rgba(255,42,109,0.5), transparent 70%)'
-    : `radial-gradient(ellipse at center, ${fxDef.color.replace(/0\.\d+/, '0.8')}, transparent 70%)`;
+  const fxClass = fxDef.color === 'rainbow_premium'
+    ? 'explosion-flash fx-rainbow-premium'
+    : (fxDef.color === 'gold_premium' ? 'explosion-flash fx-gold-premium' : 'explosion-flash');
+  const fxColor = fxDef.color === 'rainbow_premium'
+    ? 'linear-gradient(90deg, #00E5FF, #00FF9D, #FFD700, #FF2A6D, #A855F7, #00E5FF)'
+    : (fxDef.color === 'gold_premium'
+      ? 'linear-gradient(90deg, #7a5b18, #d4af37, #ffec8b, #d4af37, #7a5b18)'
+      : (fxDef.color === 'rainbow'
+        ? 'radial-gradient(ellipse at center, rgba(255,215,0,0.5), rgba(0,229,255,0.4), rgba(255,42,109,0.5), transparent 70%)'
+        : `radial-gradient(ellipse at center, ${fxDef.color.replace(/0\.\d+/, '0.8')}, transparent 70%)`));
 
   return (
     <div className="min-h-screen w-full relative flex flex-col" data-testid="game-screen">
@@ -243,7 +250,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
             return (
               <>
                 <div
-                  className="explosion-flash"
+                  className={fxClass}
                   style={{
                     left: `${x}px`,
                     top: `${y}px`,
