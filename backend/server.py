@@ -944,7 +944,10 @@ async def get_player_public(nickname: str):
 
 @api_router.get("/players/by-num/{player_num}")
 async def get_player_by_num(player_num: int = FPath(..., ge=0, le=2000000)):
-    doc = await db.players.find_one({"player_num": int(player_num)}, {"_id": 0})
+    pn = int(player_num)
+    doc = await db.players.find_one({"player_num": pn}, {"_id": 0})
+    if not doc:
+        doc = await db.players.find_one({"player_num_prev": pn}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Player not found.")
     doc = await _ensure_player_ids(doc)
@@ -1444,7 +1447,12 @@ async def admin_reindex_player_nums(limit: int = Query(default=5000, ge=1, le=20
         nl = p.get("nickname_lower")
         if not nl:
             continue
-        await db.players.update_one({"nickname_lower": nl}, {"$set": {"player_num": seq}})
+        cur = await db.players.find_one({"nickname_lower": nl}, {"player_num": 1, "player_num_prev": 1})
+        prev_num = (cur or {}).get("player_num")
+        set_patch: Dict[str, Any] = {"player_num": seq}
+        if prev_num is not None and prev_num != seq:
+            set_patch["player_num_prev"] = int(prev_num)
+        await db.players.update_one({"nickname_lower": nl}, {"$set": set_patch})
         updated += 1
         seq += 1
 
