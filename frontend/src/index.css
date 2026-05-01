@@ -156,6 +156,11 @@ body::after {
     100% { background-position: 100% 50%; }
 }
 
+@keyframes premiumRainbowShimmer {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
 @keyframes premiumFrostPulse {
     0% { opacity: 0.85; background-position: 0% 50%; }
     50% { opacity: 1; background-position: 100% 50%; }
@@ -187,17 +192,9 @@ body::after {
 }
 
 .cell-rainbow::before {
-    background: conic-gradient(
-        from 0deg,
-        #00E5FF,
-        #00FF9D,
-        #FFD700,
-        #FF2A6D,
-        #A855F7,
-        #00E5FF
-    );
-    will-change: transform;
-    animation: premiumSpin 2.8s linear infinite;
+    background: linear-gradient(90deg, #00E5FF, #00FF9D, #FFD700, #FF2A6D, #A855F7, #00E5FF);
+    background-size: 260% 260%;
+    animation: premiumRainbowShimmer 2.2s ease-in-out infinite;
 }
 
 .cell-gold-premium::before {
@@ -511,8 +508,7 @@ body::after {
 
 .fx-rainbow-premium {
     background-size: 260% 260% !important;
-    will-change: transform;
-    animation: explosionFlash 460ms cubic-bezier(0.16, 1, 0.3, 1), premiumSpin 1.2s linear infinite;
+    animation: explosionFlash 460ms cubic-bezier(0.16, 1, 0.3, 1), premiumRainbowShimmer 900ms ease-in-out infinite;
 }
 
 .fx-gold-premium {

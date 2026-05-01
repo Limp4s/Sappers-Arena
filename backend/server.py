@@ -2223,6 +2223,7 @@ class _LobbyGame:
         self.finished = False
         self.rematch_votes: set = set()
         self.players: Dict[str, _PlayerGame] = {}
+        self.themes: Dict[str, dict] = {}
 
     def role_of(self, nick: str) -> str:
         if nick == self.host:
@@ -2312,6 +2313,7 @@ async def ws_lobby(code: str, websocket: WebSocket):
             "started_at": int((game.started_at_epoch if game else (_parse_iso_to_epoch_seconds(lobby.get('started_at')) or int(datetime.now(timezone.utc).timestamp())))),
             "your_cells": your_cells,
             "opp_cells": opp_cells,
+            "themes": (getattr(game, "themes", {}) if game else {}),
         })
 
         while True:
@@ -2332,6 +2334,23 @@ async def ws_lobby(code: str, websocket: WebSocket):
                 game = _LobbyGame(code, lobby)
                 ACTIVE_GAMES[code] = game
             game.ensure_player(nick)
+
+            if mtype == "theme":
+                try:
+                    th = msg.get("theme") or {}
+                    if isinstance(th, dict):
+                        # Expect keys mine/cell/fx/flag, ignore anything else.
+                        patch = {
+                            "mine": th.get("mine"),
+                            "cell": th.get("cell"),
+                            "fx": th.get("fx"),
+                            "flag": th.get("flag"),
+                        }
+                        game.themes[nick] = patch
+                        await WS_HUB.broadcast(code, {"type": "themes", "themes": game.themes})
+                except Exception:
+                    pass
+                continue
 
             # Time limit: resolve duel if it took too long.
             try:

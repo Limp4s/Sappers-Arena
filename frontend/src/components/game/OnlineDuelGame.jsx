@@ -44,11 +44,21 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   } = config;
 
   const playerName = player?.nick;
-  const theme = loadEquipped(playerName);
-  const mineDef = MINE_ICONS[theme.mine] || MINE_ICONS.mine_default;
-  const cellTheme = CELL_THEMES[theme.cell] || CELL_THEMES.cell_default;
-  const fxDef = FX_EFFECTS[theme.fx] || FX_EFFECTS.fx_default;
-  const flagDef = FLAG_SKINS[theme.flag] || FLAG_SKINS.flag_default;
+  const localTheme = loadEquipped(playerName);
+  const [themes, setThemes] = useState({});
+
+  const myTheme = themes?.[playerName] || localTheme;
+  const oppName = opponent;
+  const oppTheme = (oppName && themes?.[oppName]) ? themes[oppName] : null;
+
+  const mineDef = MINE_ICONS[myTheme.mine] || MINE_ICONS.mine_default;
+  const cellTheme = CELL_THEMES[myTheme.cell] || CELL_THEMES.cell_default;
+  const fxDef = FX_EFFECTS[myTheme.fx] || FX_EFFECTS.fx_default;
+  const flagDef = FLAG_SKINS[myTheme.flag] || FLAG_SKINS.flag_default;
+
+  const oppMineDef = MINE_ICONS[oppTheme?.mine] || mineDef;
+  const oppCellTheme = CELL_THEMES[oppTheme?.cell] || cellTheme;
+  const oppFlagDef = FLAG_SKINS[oppTheme?.flag] || flagDef;
 
   const [myBoard, setMyBoard] = useState(() => makeEmptyBoard(rows, cols));
   const [oppBoard, setOppBoard] = useState(() => makeEmptyBoard(rows, cols));
@@ -201,6 +211,11 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
             try { wsRef.current?.send?.({ type: 'rematch' }); } catch {}
             rematchSendRef.current.queued = false;
           }
+
+          // Send our current theme to the server so opponent can render it.
+          try {
+            wsRef.current?.send?.({ type: 'theme', theme: localTheme });
+          } catch {}
         },
         onError: (e) => {
           const url = e?.url ? ` ${e.url}` : '';
@@ -216,6 +231,12 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
         },
         onMessage: (msg) => {
         if (!msg) return;
+        if (msg.type === 'themes') {
+          if (msg.themes && typeof msg.themes === 'object') {
+            setThemes(msg.themes || {});
+          }
+        }
+
         if (msg.type === 'init') {
           setWsError(null);
           roleRef.current = msg.role;
@@ -224,6 +245,10 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
           const sStart = typeof msg.started_at === 'number' ? msg.started_at : null;
           if (sNow != null) setServerOffset(sNow - Math.floor(Date.now() / 1000));
           if (sStart != null) setStartedAt(sStart);
+
+          if (msg.themes && typeof msg.themes === 'object') {
+            setThemes(msg.themes || {});
+          }
 
           const nextStatus = msg.status === 'playing' ? 'playing' : 'idle';
           const prevStatus = statusRef.current;
@@ -533,7 +558,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
               <div style={gridStyle}>
                 {oppBoard.map((row, r) => row.map((cell, c) => (
                   <Cell key={`o-${r}-${c}`} cell={cell} r={r} c={c} onReveal={() => {}} onFlag={() => {}}
-                    disabled={true} revealDelay={0} mineIcon={mineDef.icon} cellTheme={cellTheme} flagColor={flagDef.color} />
+                    disabled={true} revealDelay={0} mineIcon={oppMineDef.icon} cellTheme={oppCellTheme} flagColor={oppFlagDef.color} />
                 )))}
               </div>
             </div>
