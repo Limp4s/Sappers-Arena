@@ -6,7 +6,7 @@ import { sfx } from '../../lib/sounds';
 import { Cell, StatsBar, GameOverModal } from './GameParts';
 import { computeStars, recordLevelResult } from '../../lib/levels';
 import { submitScore, sessionHeaders } from '../../lib/player';
-import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, loadEquipped } from '../../lib/shop';
+import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, FLAG_SKINS, loadEquipped } from '../../lib/shop';
 import { submitLobbyResult, createSeededRandom, getLobby } from '../../lib/lobby';
 import { recordDailyProgress } from '../../lib/dailies';
 import { t, useLang } from '../../lib/i18n';
@@ -22,6 +22,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const mineDef = MINE_ICONS[theme.mine] || MINE_ICONS.mine_default;
   const cellTheme = CELL_THEMES[theme.cell] || CELL_THEMES.cell_default;
   const fxDef = FX_EFFECTS[theme.fx] || FX_EFFECTS.fx_default;
+  const flagDef = FLAG_SKINS[theme.flag] || FLAG_SKINS.flag_default;
 
   const [board, setBoard] = useState(() => createEmptyBoard(rows, cols));
   const [minesPlaced, setMinesPlaced] = useState(false);
@@ -312,6 +313,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
                     disabled={status === 'won' || status === 'lost'}
                     revealDelay={Math.min(300, (r + c) * 4)}
                     mineIcon={mineDef.icon} cellTheme={cellTheme}
+                    flagColor={flagDef.color}
                     flagMode={flagMode}
                   />
                 ))

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Coins, Check, Lock, ShoppingBag, Bomb } from 'lucide-react';
-import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, loadEquipped, saveEquipped, getItemCategory } from '../../lib/shop';
+import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, FLAG_SKINS, loadEquipped, saveEquipped, getItemCategory } from '../../lib/shop';
 import { purchaseItem } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 
@@ -35,6 +35,10 @@ export default function ShopView({ player, onPlayerUpdate }) {
         if (id === 'fx_default') return;
         localCatalog.push({ id, category: 'explosion', name: def.name, price: def.price || 0 });
       });
+      Object.entries(FLAG_SKINS).forEach(([id, def]) => {
+        if (id === 'flag_default') return;
+        localCatalog.push({ id, category: 'flag', name: def.name, price: def.price || 0 });
+      });
 
       setItems(localCatalog);
       setLoading(false);
@@ -49,7 +53,7 @@ export default function ShopView({ player, onPlayerUpdate }) {
 
   const owned = new Set(player?.owned_items || []);
   // Defaults always owned
-  owned.add('mine_default'); owned.add('cell_default'); owned.add('fx_default');
+  owned.add('mine_default'); owned.add('cell_default'); owned.add('fx_default'); owned.add('flag_default');
 
   const handleBuy = async (itemId, price) => {
     if (!player) return;
@@ -129,6 +133,12 @@ export default function ShopView({ player, onPlayerUpdate }) {
             : def.color))));
       return <div className="h-16 rounded-lg" style={{ background: bg }} />;
     }
+    if (id.startsWith('flag_')) {
+      const def = FLAG_SKINS[id];
+      if (!def) return null;
+      const Icon = def.icon;
+      return <div className="flex items-center justify-center h-16"><Icon size={28} strokeWidth={2.5} style={{ color: def.color || '#FFD700' }} /></div>;
+    }
     return null;
   };
 
@@ -143,12 +153,14 @@ export default function ShopView({ player, onPlayerUpdate }) {
     mine: items.filter(i => i.category === 'mine').slice().sort(sortByPrice),
     cell: items.filter(i => i.category === 'cell').slice().sort(sortByPrice),
     explosion: items.filter(i => i.category === 'explosion').slice().sort(sortByPrice),
+    flag: items.filter(i => i.category === 'flag').slice().sort(sortByPrice),
   };
 
   const GROUPS = [
     { key: 'mine', label: t('shop.groups.mine'), defaultItem: { id: 'mine_default', name: t('shop.defaultBomb'), price: 0 } },
     { key: 'cell', label: t('shop.groups.cell'), defaultItem: { id: 'cell_default', name: t('shop.defaultCell'), price: 0 } },
     { key: 'explosion', label: t('shop.groups.explosion'), defaultItem: { id: 'fx_default', name: t('shop.defaultFx'), price: 0 } },
+    { key: 'flag', label: t('shop.groups.flag'), defaultItem: { id: 'flag_default', name: t('shop.defaultFlag'), price: 0 } },
   ];
 
   return (

@@ -6,6 +6,7 @@ export const Cell = React.memo(function Cell({
   cell, r, c, onReveal, onFlag, disabled, revealDelay = 0,
   mineIcon: MineIcon = Bomb,
   cellTheme,
+  flagColor = '#FFD700',
   flagMode = false,
 }) {
   const touchRef = React.useRef({ timer: null, triggered: false, skipClick: false });
@@ -90,7 +91,7 @@ export const Cell = React.memo(function Cell({
     }
   } else if (cell.flagged) {
     className += ' cell-flag';
-    content = <Flag size={12} strokeWidth={2.5} style={{ color: '#FFD700' }} />;
+    content = <Flag size={12} strokeWidth={2.5} style={{ color: flagColor }} />;
   } else {
     className += ' cell-hidden';
   }

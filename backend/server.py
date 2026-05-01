@@ -115,6 +115,15 @@ SHOP_CATALOG = {
     "fx_ultraviolet":  {"price": 2400, "category": "explosion", "name": "Ultraviolet"},
     "fx_ember":        {"price": 2600, "category": "explosion", "name": "Ember"},
     "fx_aurora":       {"price": 3000, "category": "explosion", "name": "Aurora Wave"},
+
+    # flags
+    "flag_cyan":       {"price": 900, "category": "flag", "name": "Cyan Flag"},
+    "flag_coral":      {"price": 900, "category": "flag", "name": "Coral Flag"},
+    "flag_ice":        {"price": 900, "category": "flag", "name": "Ice Flag"},
+    "flag_lime":       {"price": 900, "category": "flag", "name": "Lime Flag"},
+    "flag_violet":     {"price": 900, "category": "flag", "name": "Violet Flag"},
+    "flag_silver":     {"price": 1200, "category": "flag", "name": "Silver Flag"},
+    "flag_mono":       {"price": 1200, "category": "flag", "name": "Mono Flag"},
 }
 
 
@@ -419,6 +428,12 @@ ACHIEVEMENTS = [
     {"id": "coins_balance_10000", "title": "Last Money", "desc": "Ты долго копил? Или просто не тратил?"},
     {"id": "coins_earned_total_10000", "title": "Rich", "desc": "Неплохо поднялся."},
 
+    {"id": "collect_mines_all", "title": "Collector: Mines", "desc": "Собери все скины мин."},
+    {"id": "collect_cells_all", "title": "Collector: Cells", "desc": "Собери все скины клеток."},
+    {"id": "collect_fx_all", "title": "Collector: FX", "desc": "Собери все эффекты взрыва."},
+    {"id": "collect_flags_all", "title": "Collector: Flags", "desc": "Собери все скины флажков."},
+    {"id": "collect_shop_all", "title": "Shop Completion", "desc": "Купи всё в магазине."},
+
     {"id": "daily_claim_1", "title": "Daily Claimer", "desc": "Забрать награду — святое."},
     {"id": "daily_streak_5", "title": "Daily Streak", "desc": "Дисциплина. Железная. Почти."},
 ]
@@ -511,6 +526,28 @@ def _ach_should_unlock(player_after: dict, payload: Optional[Any] = None, coins_
 
     if ce >= 10000: add("coins_earned_total_10000")
     if int(coins_balance_after or 0) >= 10000: add("coins_balance_10000")
+
+    try:
+        owned = set([str(x) for x in (player_after.get("owned_items") or []) if x])
+        owned |= {"mine_default", "cell_default", "fx_default", "flag_default"}
+
+        def _cat_ids(cat: str) -> set[str]:
+            return set([k for k, v in (SHOP_CATALOG or {}).items() if (v or {}).get("category") == cat])
+
+        if _cat_ids("mine") and _cat_ids("mine").issubset(owned):
+            add("collect_mines_all")
+        if _cat_ids("cell") and _cat_ids("cell").issubset(owned):
+            add("collect_cells_all")
+        if _cat_ids("explosion") and _cat_ids("explosion").issubset(owned):
+            add("collect_fx_all")
+        if _cat_ids("flag") and _cat_ids("flag").issubset(owned):
+            add("collect_flags_all")
+
+        all_shop = set([k for k in (SHOP_CATALOG or {}).keys() if k])
+        if all_shop and all_shop.issubset(owned):
+            add("collect_shop_all")
+    except Exception:
+        pass
 
     dc = int(st.get("daily_claims") or 0)
     dcs = int(st.get("daily_claim_streak") or 0)
@@ -1050,6 +1087,7 @@ async def purchase_item(payload: PurchaseRequest, nick: str = Depends(require_se
         {"nickname_lower": player["nickname_lower"]},
         {"$inc": {"coins": -item["price"]}, "$push": {"owned_items": payload.item_id}},
     )
+    await _ach_recheck_and_persist(nick)
     updated = await _get_player(nick)
     return {"ok": True, "item_id": payload.item_id, "player": _sanitize_player(updated)}
 

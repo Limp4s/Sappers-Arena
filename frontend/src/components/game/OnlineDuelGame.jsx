@@ -5,7 +5,7 @@ import { t, useLang } from '../../lib/i18n';
 import { connectLobbyWs } from '../../lib/lobby_ws';
 import { submitScore } from '../../lib/player';
 import { submitLobbyResult } from '../../lib/lobby';
-import { loadEquipped, MINE_ICONS, CELL_THEMES, FX_EFFECTS } from '../../lib/shop';
+import { loadEquipped, MINE_ICONS, CELL_THEMES, FX_EFFECTS, FLAG_SKINS } from '../../lib/shop';
 import { recordDailyProgress } from '../../lib/dailies';
 import AchievementBanner from '../ui/AchievementBanner';
 
@@ -48,6 +48,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   const mineDef = MINE_ICONS[theme.mine] || MINE_ICONS.mine_default;
   const cellTheme = CELL_THEMES[theme.cell] || CELL_THEMES.cell_default;
   const fxDef = FX_EFFECTS[theme.fx] || FX_EFFECTS.fx_default;
+  const flagDef = FLAG_SKINS[theme.flag] || FLAG_SKINS.flag_default;
 
   const [myBoard, setMyBoard] = useState(() => makeEmptyBoard(rows, cols));
   const [oppBoard, setOppBoard] = useState(() => makeEmptyBoard(rows, cols));
@@ -513,7 +514,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
               <div style={gridStyle}>
                 {myBoard.map((row, r) => row.map((cell, c) => (
                   <Cell key={`m-${r}-${c}`} cell={cell} r={r} c={c} onReveal={revealCell} onFlag={flagCell}
-                    disabled={status === 'won' || status === 'lost'} revealDelay={0} mineIcon={mineDef.icon} cellTheme={cellTheme} />
+                    disabled={status === 'won' || status === 'lost'} revealDelay={0} mineIcon={mineDef.icon} cellTheme={cellTheme} flagColor={flagDef.color} />
                 )))}
               </div>
             </div>
@@ -532,7 +533,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
               <div style={gridStyle}>
                 {oppBoard.map((row, r) => row.map((cell, c) => (
                   <Cell key={`o-${r}-${c}`} cell={cell} r={r} c={c} onReveal={() => {}} onFlag={() => {}}
-                    disabled={true} revealDelay={0} mineIcon={mineDef.icon} cellTheme={cellTheme} />
+                    disabled={true} revealDelay={0} mineIcon={mineDef.icon} cellTheme={cellTheme} flagColor={flagDef.color} />
                 )))}
               </div>
             </div>

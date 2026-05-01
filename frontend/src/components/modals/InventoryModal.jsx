@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Package, Bomb, Sparkles, Palette, X, Check, Lock } from 'lucide-react';
-import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, loadEquipped, saveEquipped } from '../../lib/shop';
+import { Package, Bomb, Sparkles, Palette, X, Check, Lock, Flag } from 'lucide-react';
+import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, FLAG_SKINS, loadEquipped, saveEquipped } from '../../lib/shop';
 import { t, useLang } from '../../lib/i18n';
 
 const TABS = [
   { key: 'bomb',   labelKey: 'inventory.tabs.bombs',     icon: Bomb,          items: MINE_ICONS,  slot: 'mine' },
   { key: 'fx',     labelKey: 'inventory.tabs.explosions', icon: Sparkles,      items: FX_EFFECTS, slot: 'fx' },
   { key: 'theme',  labelKey: 'inventory.tabs.themes',    icon: Palette,       items: CELL_THEMES, slot: 'cell' },
+  { key: 'flag',   labelKey: 'inventory.tabs.flags',     icon: Flag,          items: FLAG_SKINS,  slot: 'flag' },
 ];
 
 export default function InventoryModal({ player, onClose }) {
@@ -15,7 +16,7 @@ export default function InventoryModal({ player, onClose }) {
   useLang();
 
   const owned = new Set(player?.owned_items || []);
-  Object.keys(MINE_ICONS).concat(Object.keys(CELL_THEMES), Object.keys(FX_EFFECTS))
+  Object.keys(MINE_ICONS).concat(Object.keys(CELL_THEMES), Object.keys(FX_EFFECTS), Object.keys(FLAG_SKINS))
     .forEach(id => { const cat = TABS.find(t => Object.prototype.hasOwnProperty.call(t.items, id)); if (cat?.items[id]?.free) owned.add(id); });
 
   const handleEquip = (slot, id) => {
@@ -34,7 +35,8 @@ export default function InventoryModal({ player, onClose }) {
   const renderPreview = (id, def) => {
     if (def?.icon) {
       const Icon = def.icon;
-      return <div className="flex items-center justify-center h-14 neon-cyan"><Icon size={28} strokeWidth={2} /></div>;
+      const isFlag = String(id || '').startsWith('flag_');
+      return <div className="flex items-center justify-center h-14 neon-cyan"><Icon size={28} strokeWidth={2} style={isFlag ? { color: def.color || '#FFD700' } : undefined} /></div>;
     }
     if (def?.number) {
       const accent = def.accent === 'rainbow'

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Play, Grid3x3, Bomb, Heart, Zap, Info, AlertTriangle, Palette, Users } from 'lucide-react';
-import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, loadEquipped, saveEquipped } from '../../lib/shop';
+import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, FLAG_SKINS, loadEquipped, saveEquipped } from '../../lib/shop';
 import FriendLobbyModal from '../modals/FriendLobbyModal';
 import { t, useLang } from '../../lib/i18n';
 
@@ -107,6 +107,7 @@ export default function CustomView({ onStartCustom, onStartCustomWithLobby, play
             <SkinGroup label={t('custom.skin.mine')}   items={Object.entries(MINE_ICONS)}  selected={equipped.mine}   owned={owned} onSelect={(id) => setEquipped(e => ({ ...e, mine: id }))}   testidPrefix="skin-mine" />
             <SkinGroup label={t('custom.skin.cell')}   items={Object.entries(CELL_THEMES)} selected={equipped.cell}   owned={owned} onSelect={(id) => setEquipped(e => ({ ...e, cell: id }))}   testidPrefix="skin-cell" />
             <SkinGroup label={t('custom.skin.fx')}     items={Object.entries(FX_EFFECTS)}  selected={equipped.fx}     owned={owned} onSelect={(id) => setEquipped(e => ({ ...e, fx: id }))}     testidPrefix="skin-fx" />
+            <SkinGroup label={t('custom.skin.flag')}   items={Object.entries(FLAG_SKINS)}  selected={equipped.flag}   owned={owned} onSelect={(id) => setEquipped(e => ({ ...e, flag: id }))}   testidPrefix="skin-flag" />
           </div>
 
           <div className="flex gap-2 flex-wrap">
