@@ -147,13 +147,16 @@ async def _next_player_num() -> int:
         )
         return int((doc or {}).get("seq") or 0)
     except Exception as e:
-        # Fallback: keep registration working even if counters collection isn't writable.
-        # This is only used for display/debug; uniqueness isn't critical for core gameplay.
         try:
             print(f"_next_player_num failed: {e!r}")
         except Exception:
             pass
-        return int(datetime.now(timezone.utc).timestamp())
+        try:
+            last = await db.players.find({}, {"player_num": 1}).sort("player_num", -1).limit(1).to_list(length=1)
+            cur = int((last[0] or {}).get("player_num") or 0) if last else 0
+            return max(1, cur + 1)
+        except Exception:
+            return 1
 
 
 async def _ensure_player_ids(player: dict) -> dict:
@@ -1426,6 +1429,31 @@ async def demote_admin(payload: AdminPromoteRequest, nick: str = Depends(require
         raise HTTPException(status_code=404, detail="Target player not found.")
     await db.players.update_one({"nickname_lower": target["nickname_lower"]}, {"$set": {"is_admin": False}})
     return {"ok": True}
+
+
+@api_router.post("/admin/reindex-player-nums")
+async def admin_reindex_player_nums(limit: int = Query(default=5000, ge=1, le=20000), nick: str = Depends(require_session)):
+    await _require_admin(nick)
+    players = await db.players.find({}, {"_id": 0, "nickname_lower": 1}).sort("nickname_lower", 1).limit(limit).to_list(length=limit)
+    if not players:
+        return {"ok": True, "updated": 0}
+
+    updated = 0
+    seq = 1
+    for p in players:
+        nl = p.get("nickname_lower")
+        if not nl:
+            continue
+        await db.players.update_one({"nickname_lower": nl}, {"$set": {"player_num": seq}})
+        updated += 1
+        seq += 1
+
+    try:
+        await db.counters.update_one({"_id": "player_num"}, {"$set": {"seq": seq - 1}}, upsert=True)
+    except Exception:
+        pass
+
+    return {"ok": True, "updated": updated, "last": seq - 1}
 
 
 @api_router.post("/admin/ratings/fix-negative")

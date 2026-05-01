@@ -24,8 +24,8 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
   const prettyPlayerId = useMemo(() => {
     const n = player?.player_num;
     if (typeof n === 'number' && Number.isFinite(n)) {
-      const v = Math.max(0, Math.floor(n) - 1);
-      return String(v).padStart(3, '0');
+      const v = Math.max(1, Math.floor(n));
+      return String(v).padStart(8, '0');
     }
     return '—';
   }, [player?.player_num]);
