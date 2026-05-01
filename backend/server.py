@@ -1836,7 +1836,7 @@ async def _start_bot_if_needed(code: str):
                 # Ranked: smarter and adapts to player rating.
                 delay_min = 0.60 + (1.0 - skill) * 0.25
                 delay_max = 1.40 + (1.0 - skill) * 0.45
-                mistake_chance = 0.002 + (1.0 - skill) * 0.008
+                mistake_chance = 0.001 + (1.0 - skill) * 0.004
                 use_logic_chance = 0.92 + skill * 0.07
                 flag_chance = 0.55 + skill * 0.25
             else:

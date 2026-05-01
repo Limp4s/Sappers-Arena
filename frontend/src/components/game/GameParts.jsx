@@ -95,7 +95,7 @@ export const Cell = React.memo(function Cell({
     if (flagColor === 'rainbow') {
       const gid = `rf-${String(svgUid).replace(/[^a-zA-Z0-9_-]/g, '')}`;
       content = (
-        <svg width="14" height="14" viewBox="0 0 24 24" style={{ overflow: 'visible', display: 'block' }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ overflow: 'visible', display: 'block' }}>
           <defs>
             <linearGradient id={gid} x1="0" y1="0" x2="24" y2="0" gradientUnits="userSpaceOnUse">
               <stop offset="0%" stopColor="#00E5FF" />
@@ -104,11 +104,11 @@ export const Cell = React.memo(function Cell({
               <stop offset="60%" stopColor="#FF2A6D" />
               <stop offset="80%" stopColor="#A855F7" />
               <stop offset="100%" stopColor="#00E5FF" />
-              <animateTransform attributeName="gradientTransform" type="translate" values="0 0; 24 0" dur="1.6s" repeatCount="indefinite" />
+              <animateTransform attributeName="gradientTransform" type="translate" values="-24 0; 24 0" dur="3.2s" repeatCount="indefinite" />
             </linearGradient>
           </defs>
-          <path d="M5 22V3" stroke="#E2E8F0" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M7 4H17l-2 4 2 4H7Z" fill={`url(#${gid})`} stroke="rgba(255,255,255,0.25)" strokeWidth="1" strokeLinejoin="round" />
+          <path d="M4 22V4" stroke={`url(#${gid})`} />
+          <path d="M4 4H14l-1.5 4L14 12H4" stroke={`url(#${gid})`} />
         </svg>
       );
     } else {
