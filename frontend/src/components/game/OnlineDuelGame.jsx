@@ -469,7 +469,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
   };
 
   return (
-    <div className="min-h-screen w-full relative flex flex-col" data-testid="online-duel-screen">
+    <div className="min-h-screen w-full relative flex flex-col" data-testid="online-duel-screen" onContextMenu={(e) => e.preventDefault()}>
       <AchievementBanner
         items={newUnlocked}
         onDone={() => setNewUnlocked([])}

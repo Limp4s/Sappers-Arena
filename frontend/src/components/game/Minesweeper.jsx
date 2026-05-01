@@ -245,7 +245,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
             : `radial-gradient(ellipse at center, ${fxDef.color.replace(/0\.\d+/, '0.8')}, transparent 70%)`))));
 
   return (
-    <div className="min-h-screen w-full relative flex flex-col" data-testid="game-screen">
+    <div className="min-h-screen w-full relative flex flex-col" data-testid="game-screen" onContextMenu={(e) => e.preventDefault()}>
       <AchievementBanner
         items={newUnlocked}
         onDone={() => setNewUnlocked([])}

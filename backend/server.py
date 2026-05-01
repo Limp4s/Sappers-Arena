@@ -117,13 +117,15 @@ SHOP_CATALOG = {
     "fx_aurora":       {"price": 3000, "category": "explosion", "name": "Aurora Wave"},
 
     # flags
+    "flag_gold":       {"price": 600, "category": "flag", "name": "Gold Flag"},
     "flag_cyan":       {"price": 900, "category": "flag", "name": "Cyan Flag"},
     "flag_coral":      {"price": 900, "category": "flag", "name": "Coral Flag"},
     "flag_ice":        {"price": 900, "category": "flag", "name": "Ice Flag"},
     "flag_lime":       {"price": 900, "category": "flag", "name": "Lime Flag"},
     "flag_violet":     {"price": 900, "category": "flag", "name": "Violet Flag"},
-    "flag_silver":     {"price": 1200, "category": "flag", "name": "Silver Flag"},
+    "flag_silver":     {"price": 2000, "category": "flag", "name": "Silver Flag"},
     "flag_mono":       {"price": 1200, "category": "flag", "name": "Mono Flag"},
+    "flag_rainbow":    {"price": 1200, "category": "flag", "name": "Rainbow Flag"},
 }
 
 

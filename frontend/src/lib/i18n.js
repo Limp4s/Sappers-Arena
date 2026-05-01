@@ -274,6 +274,7 @@ const DICTS = {
         fx_aurora: 'Aurora Wave',
 
         flag_default: 'Gold Flag',
+        flag_gold: 'Gold Flag',
         flag_cyan: 'Cyan Flag',
         flag_coral: 'Coral Flag',
         flag_ice: 'Ice Flag',
@@ -281,6 +282,7 @@ const DICTS = {
         flag_violet: 'Violet Flag',
         flag_silver: 'Silver Flag',
         flag_mono: 'Mono Flag',
+        flag_rainbow: 'Rainbow Flag',
       },
     },
     inventory: {
@@ -647,6 +649,7 @@ const DICTS = {
         fx_aurora: 'Волна авроры',
 
         flag_default: 'Золотой флажок',
+        flag_gold: 'Золотой флажок',
         flag_cyan: 'Циан флажок',
         flag_coral: 'Коралловый флажок',
         flag_ice: 'Ледяной флажок',
@@ -654,6 +657,7 @@ const DICTS = {
         flag_violet: 'Фиолетовый флажок',
         flag_silver: 'Серебряный флажок',
         flag_mono: 'Моно флажок',
+        flag_rainbow: 'Радужный флажок',
       },
     },
     inventory: {
@@ -1030,6 +1034,7 @@ const DICTS = {
         fx_aurora: 'Хвиля аврори',
 
         flag_default: 'Золотий прапорець',
+        flag_gold: 'Золотий прапорець',
         flag_cyan: 'Ціан прапорець',
         flag_coral: 'Кораловий прапорець',
         flag_ice: 'Крижаний прапорець',
@@ -1037,6 +1042,7 @@ const DICTS = {
         flag_violet: 'Фіолетовий прапорець',
         flag_silver: 'Срібний прапорець',
         flag_mono: 'Моно прапорець',
+        flag_rainbow: 'Райдужний прапорець',
       },
     },
     inventory: {

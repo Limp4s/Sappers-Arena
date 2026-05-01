@@ -67,13 +67,15 @@ export const FX_EFFECTS = {
 
 export const FLAG_SKINS = {
   flag_default: { icon: Flag, name: 'Gold Flag', free: true, color: '#FFD700' },
+  flag_gold: { icon: Flag, name: 'Gold Flag', price: 600, color: '#FFD700' },
   flag_cyan: { icon: Flag, name: 'Cyan Flag', price: 900, color: '#00E5FF' },
   flag_coral: { icon: Flag, name: 'Coral Flag', price: 900, color: '#FF2A6D' },
   flag_ice: { icon: Flag, name: 'Ice Flag', price: 900, color: '#A5F3FC' },
   flag_lime: { icon: Flag, name: 'Lime Flag', price: 900, color: '#00FF9D' },
   flag_violet: { icon: Flag, name: 'Violet Flag', price: 900, color: '#A855F7' },
-  flag_silver: { icon: Flag, name: 'Silver Flag', price: 1200, color: '#CBD5E1' },
+  flag_silver: { icon: Flag, name: 'Silver Flag', price: 2000, color: '#CBD5E1' },
   flag_mono: { icon: Flag, name: 'Mono Flag', price: 1200, color: '#E2E8F0' },
+  flag_rainbow: { icon: Flag, name: 'Rainbow Flag', price: 1200, color: '#00E5FF' },
 };
 
 const EQUIP_KEY = 'mg_equipped_v2';
