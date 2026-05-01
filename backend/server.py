@@ -545,6 +545,29 @@ def _ach_should_unlock(player_after: dict, payload: Optional[Any] = None, coins_
     return list(dict.fromkeys(ids))
 
 
+async def _ach_recheck_and_persist(nick: str):
+    try:
+        player = await _get_player(nick)
+        if not player:
+            return
+        unlocked, st = _ach_get(player)
+        coins_after = int((player.get("coins") or 0))
+        player_after = {**player, "achievements_unlocked": unlocked, "achievements_stats": st}
+        to_unlock = _ach_should_unlock(player_after, payload=None, coins_balance_after=coins_after)
+        if not to_unlock:
+            return
+        ts = int(datetime.now(timezone.utc).timestamp() * 1000)
+        set_doc: Dict[str, Any] = {}
+        for aid in to_unlock:
+            set_doc[f"achievements_unlocked.{aid}"] = ts
+        await db.players.update_one(
+            {"nickname_lower": (player.get("nickname_lower") or (nick or "").lower())},
+            {"$set": set_doc},
+        )
+    except Exception:
+        return
+
+
 def _daily_now_local() -> datetime:
     return datetime.now(timezone.utc) + timedelta(hours=DAILY_TZ_OFFSET_HOURS)
 
@@ -932,6 +955,7 @@ async def change_password(payload: ChangePasswordRequest, nick: str = Depends(re
 
 @api_router.get("/me")
 async def me(nick: str = Depends(require_session)):
+    await _ach_recheck_and_persist(nick)
     player = await _get_player(nick)
     player = await _ensure_player_ids(player)
     out = _sanitize_player(player)
@@ -980,6 +1004,7 @@ async def get_achievement_defs():
 
 @api_router.get("/achievements/me")
 async def get_my_achievements(nick: str = Depends(require_session)):
+    await _ach_recheck_and_persist(nick)
     player = await _get_player(nick)
     if not player:
         raise HTTPException(status_code=404, detail="Player not found.")
