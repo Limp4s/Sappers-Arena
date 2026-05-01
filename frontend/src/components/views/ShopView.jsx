@@ -201,6 +201,9 @@ export default function ShopView({ player, onPlayerUpdate }) {
 }
 
 function ItemCard({ item, isOwned, isEquipped, preview, onBuy, onEquip, disabled }) {
+  const nameKey = `shop.items.${item.id}`;
+  const localized = t(nameKey);
+  const name = localized === nameKey ? item.name : localized;
   return (
     <div
       className={`glass-panel rounded-xl p-4 flex flex-col gap-3 transition-all border ${
@@ -210,7 +213,7 @@ function ItemCard({ item, isOwned, isEquipped, preview, onBuy, onEquip, disabled
     >
       <div className="glass-panel-light rounded-lg">{preview}</div>
       <div>
-        <div className="font-display text-xs font-bold tracking-wider text-slate-200">{item.name}</div>
+        <div className="font-display text-xs font-bold tracking-wider text-slate-200">{name}</div>
         <div className="flex items-center gap-1 mt-1 text-[11px]">
           {item.price > 0 ? (
             <>

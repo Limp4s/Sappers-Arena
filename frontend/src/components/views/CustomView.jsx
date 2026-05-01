@@ -162,16 +162,19 @@ function SkinGroup({ label, items, selected, owned, onSelect, testidPrefix }) {
           const isOwned = owned.has(id) || def.free;
           const isSelected = selected === id;
           const Icon = def.icon;
+          const key = `shop.items.${id}`;
+          const translated = t(key);
+          const name = translated === key ? def.name : translated;
           return (
             <button key={id} onClick={() => isOwned && onSelect(id)} disabled={!isOwned}
               className={`px-2 py-1.5 rounded-md border text-[10px] font-mono transition-all flex items-center gap-1.5 ${
                 isSelected ? 'border-[#00E5FF] bg-[rgba(0,229,255,0.12)] neon-cyan' : 'border-white/10 text-slate-400 hover:border-white/30'
               } ${!isOwned ? 'opacity-40 cursor-not-allowed' : ''}`}
               data-testid={`${testidPrefix}-${id}`}
-              title={!isOwned ? t('custom.lockedTooltip') : def.name}
+              title={!isOwned ? t('custom.lockedTooltip') : name}
             >
               {Icon && <Icon size={11} />}
-              <span className="truncate max-w-[80px]">{def.name}</span>
+              <span className="truncate max-w-[80px]">{name}</span>
             </button>
           );
         })}

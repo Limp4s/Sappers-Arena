@@ -23,6 +23,12 @@ export default function InventoryModal({ player, onClose }) {
     setEquipped(next); saveEquipped(next, player?.nick);
   };
 
+  const displayName = (id, fallback) => {
+    const key = `shop.items.${id}`;
+    const v = t(key);
+    return v === key ? fallback : v;
+  };
+
   const active = TABS.find(t => t.key === tab);
 
   const renderPreview = (id, def) => {
@@ -31,12 +37,15 @@ export default function InventoryModal({ player, onClose }) {
       return <div className="flex items-center justify-center h-14 neon-cyan"><Icon size={28} strokeWidth={2} /></div>;
     }
     if (def?.number) {
+      const accent = def.accent === 'rainbow'
+        ? '#00E5FF'
+        : (def.accent === 'gold_premium' ? '#D4AF37' : def.accent);
       return (
         <div className="flex items-center justify-center h-14">
           <div className="grid grid-cols-3 gap-1">
             {[1,2,3,4,5,6].map(n => (
               <div key={n} className="w-3.5 h-3.5 rounded-sm border" style={{
-                borderColor: def.accent, background: 'rgba(0,0,0,0.5)',
+                borderColor: accent, background: 'rgba(0,0,0,0.5)',
                 color: def.number[n], fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontFamily: 'JetBrains Mono', fontWeight: 700,
               }}>{n}</div>
@@ -46,9 +55,13 @@ export default function InventoryModal({ player, onClose }) {
       );
     }
     if (def?.color) {
-      const bg = def.color === 'rainbow'
-        ? 'radial-gradient(circle, #00E5FF, #FF2A6D, #FFD700, #00FF9D)'
-        : def.color.replace(/0\.\d+/, '0.8');
+      const bg = def.color === 'rainbow_premium'
+        ? 'linear-gradient(90deg, #00E5FF, #00FF9D, #FFD700, #FF2A6D, #A855F7, #00E5FF)'
+        : (def.color === 'gold_premium'
+          ? 'linear-gradient(90deg, #7a5b18, #d4af37, #ffec8b, #d4af37, #7a5b18)'
+          : (def.color === 'rainbow'
+            ? 'radial-gradient(circle, #00E5FF, #FF2A6D, #FFD700, #00FF9D)'
+            : def.color.replace(/0\.\d+/, '0.8')));
       return <div className="flex items-center justify-center h-14">
         <div className="w-10 h-10 rounded-full" style={{ background: bg, filter: 'blur(2px)' }} />
       </div>;
@@ -90,7 +103,7 @@ export default function InventoryModal({ player, onClose }) {
                   data-testid={`inv-item-${id}`}
                 >
                   {renderPreview(id, def)}
-                  <div className="text-[11px] text-center font-display font-bold text-slate-200 mt-1 truncate">{def.name}</div>
+                  <div className="text-[11px] text-center font-display font-bold text-slate-200 mt-1 truncate">{displayName(id, def.name)}</div>
                   {isOwned ? (
                     <button onClick={() => handleEquip(active.slot, id)}
                       disabled={isEquipped}
