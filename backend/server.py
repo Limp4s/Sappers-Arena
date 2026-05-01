@@ -1977,7 +1977,7 @@ async def _start_bot_if_needed(code: str):
                 res = game.players[pnick].flag(rr, cc)
                 if not res.get("ok"):
                     return
-                await WS_HUB.send(code, pnick, {
+                await WS_HUB.broadcast(code, {
                     "type": "player_update",
                     "player": pnick,
                     "changes": res.get("changes") or [],
@@ -2010,6 +2010,24 @@ async def _start_bot_if_needed(code: str):
                     cc = int(r.random() * bp.cols)
                     await _do_open(bot, rr, cc)
                     continue
+
+                wrong_flag_chance = 0.005
+
+                # Rare wrong flag (human-like), only if flags are allowed.
+                if (not getattr(game, "no_flags", False)) and r.random() < wrong_flag_chance:
+                    frontier = _frontier_hidden(bp)
+                    pool = frontier
+                    if not pool:
+                        pool = [
+                            (rr, cc)
+                            for rr in range(bp.rows)
+                            for cc in range(bp.cols)
+                            if (rr, cc) not in bp.revealed and (rr, cc) not in bp.flags
+                        ]
+                    if pool:
+                        rr, cc = pool[int(r.random() * len(pool))]
+                        await _do_flag(bot, rr, cc)
+                        continue
 
                 # Optional logic move
                 move = None
@@ -2046,6 +2064,14 @@ async def _start_bot_if_needed(code: str):
                             if (rr, cc) not in bp.revealed and (rr, cc) not in bp.flags
                         ]
                         if not pool:
+                            # If we have no cells to open (often because we flagged everything), unflag something.
+                            if (not getattr(game, "no_flags", False)) and bp.flags:
+                                flags_list = list(bp.flags)
+                                # Unflag a high-risk flag first.
+                                flags_list.sort(key=lambda x: _risk_for_cell(bp, x), reverse=True)
+                                rr, cc = flags_list[0]
+                                await _do_flag(bot, rr, cc)
+                                continue
                             return
                         rr, cc = pool[int(r.random() * len(pool))]
                         move = ("open", rr, cc)
@@ -2667,7 +2693,8 @@ async def ws_lobby(code: str, websocket: WebSocket):
                 other = (game.guest if nick == game.host else game.host)
                 if other in game.players:
                     op = game.players[other]
-                    opp_cells = _serialize_cells(set(op.revealed), op.mines, op.adj, op.revealed, set(), exploded=op.exploded)
+                    opp_union = set(op.revealed) | set(op.flags)
+                    opp_cells = _serialize_cells(opp_union, op.mines, op.adj, op.revealed, op.flags, exploded=op.exploded)
         except Exception:
             pass
 
