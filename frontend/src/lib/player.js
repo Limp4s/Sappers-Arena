@@ -39,6 +39,12 @@ const KEY_TOKEN = 'mg_session_token';
 const KEY_USERS = 'mg_local_users';
 const KEY_IDS = 'mg_player_ids';
 const KEY_ID_COUNTER = 'mg_player_id_counter';
+const ACCOUNT_SCOPED_STORAGE_KEYS = [
+  'mg_campaign_progress_v1',
+  'mg_dailies_v1',
+  'mg_daily_coins_v1',
+  'mg_achievements_v1',
+];
 const OFFLINE_ADMIN_NICK = 'limp4';
 const OFFLINE_ADMIN_PASSWORD = 'Limon626';
 
@@ -114,6 +120,10 @@ export const isAdmin = () => {
 };
 
 export const saveSession = (nick, token, admin) => {
+  const prevNick = getStoredNickname();
+  if (prevNick && prevNick !== nick) {
+    try { ACCOUNT_SCOPED_STORAGE_KEYS.forEach((k) => localStorage.removeItem(k)); } catch {}
+  }
   const normalizedAdmin = isAdminNick(nick) ? true : !!admin;
   localStorage.setItem(KEY_NICK, nick);
   localStorage.setItem(KEY_TOKEN, token);
@@ -125,6 +135,7 @@ export const clearSession = () => {
   localStorage.removeItem(KEY_NICK);
   localStorage.removeItem(KEY_TOKEN);
   localStorage.removeItem(KEY_ADMIN);
+  try { ACCOUNT_SCOPED_STORAGE_KEYS.forEach((k) => localStorage.removeItem(k)); } catch {}
 };
 
 const NICK_RE = /^[\p{L}0-9_-]{3,20}$/u;
