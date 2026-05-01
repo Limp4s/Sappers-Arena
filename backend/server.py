@@ -1440,7 +1440,10 @@ async def demote_admin(payload: AdminPromoteRequest, nick: str = Depends(require
 @api_router.post("/admin/reindex-player-nums")
 async def admin_reindex_player_nums(limit: int = Query(default=5000, ge=1, le=20000), nick: str = Depends(require_session)):
     await _require_admin(nick)
-    players = await db.players.find({}, {"_id": 0, "nickname_lower": 1}).sort("nickname_lower", 1).limit(limit).to_list(length=limit)
+    players = await db.players.find(
+        {},
+        {"nickname_lower": 1, "created_at": 1},
+    ).sort([("created_at", 1), ("_id", 1)]).limit(limit).to_list(length=limit)
     if not players:
         return {"ok": True, "updated": 0}
 
@@ -1449,6 +1452,15 @@ async def admin_reindex_player_nums(limit: int = Query(default=5000, ge=1, le=20
     for p in players:
         nl = p.get("nickname_lower")
         if not nl:
+            continue
+        if nl == OFFLINE_ADMIN_NICK:
+            cur = await db.players.find_one({"nickname_lower": nl}, {"player_num": 1})
+            prev_num = (cur or {}).get("player_num")
+            set_patch: Dict[str, Any] = {"player_num": 0}
+            if prev_num is not None and prev_num != 0:
+                set_patch["player_num_prev"] = int(prev_num)
+            await db.players.update_one({"nickname_lower": nl}, {"$set": set_patch})
+            updated += 1
             continue
         cur = await db.players.find_one({"nickname_lower": nl}, {"player_num": 1, "player_num_prev": 1})
         prev_num = (cur or {}).get("player_num")
