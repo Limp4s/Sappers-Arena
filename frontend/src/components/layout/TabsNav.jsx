@@ -48,10 +48,34 @@ export default function TabsNav({ current, onChange, player }) {
               )}
             </button>
           )}
+
+          {/* Desktop tabs (restore old layout: tabs in top bar) */}
+          <div className="glass-panel rounded-full p-1 hidden md:flex gap-1 flex-wrap" data-testid="tabs-row-desktop">
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const active = current === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => onChange(tab.key)}
+                  className={`px-2.5 md:px-3 py-2 rounded-full flex items-center gap-1.5 transition-all font-display text-[10px] tracking-[0.2em] font-semibold uppercase ${
+                    active
+                      ? 'bg-[rgba(0,229,255,0.12)] text-[#00E5FF] shadow-[0_0_16px_rgba(0,229,255,0.35)]'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                  data-testid={`tab-${tab.key}`}
+                >
+                  <Icon size={12} />
+                  <span>{t(tab.labelKey)}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      <div className="glass-panel rounded-full p-1 flex gap-1 overflow-x-auto md:overflow-x-visible hide-scrollbar flex-nowrap md:flex-wrap" data-testid="tabs-row">
+      {/* Mobile tabs row (with labels visible) */}
+      <div className="glass-panel rounded-full p-1 flex md:hidden gap-1 overflow-x-auto hide-scrollbar flex-nowrap" data-testid="tabs-row">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const active = current === tab.key;
@@ -59,15 +83,15 @@ export default function TabsNav({ current, onChange, player }) {
             <button
               key={tab.key}
               onClick={() => onChange(tab.key)}
-              className={`shrink-0 md:shrink px-2.5 md:px-3 py-2 rounded-full flex items-center gap-1.5 transition-all font-display text-[10px] tracking-[0.2em] font-semibold uppercase ${
+              className={`shrink-0 px-2.5 py-2 rounded-full flex items-center gap-1.5 transition-all font-display text-[10px] tracking-[0.2em] font-semibold uppercase ${
                 active
                   ? 'bg-[rgba(0,229,255,0.12)] text-[#00E5FF] shadow-[0_0_16px_rgba(0,229,255,0.35)]'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
-              data-testid={`tab-${tab.key}`}
+              data-testid={`tab-mobile-${tab.key}`}
             >
               <Icon size={12} />
-              <span className="hidden md:inline">{t(tab.labelKey)}</span>
+              <span>{t(tab.labelKey)}</span>
             </button>
           );
         })}
