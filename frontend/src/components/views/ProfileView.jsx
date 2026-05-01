@@ -61,6 +61,26 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   }, [tab]);
 
   useEffect(() => {
+    if (tab !== 'daily') return;
+    const tok = getToken?.();
+    const online = !!tok && !(tok || '').startsWith('offline-');
+    setDailyOnline(online);
+    if (!online) {
+      setDailyOnlineState(null);
+      return;
+    }
+
+    axios.get(`${API}/daily/state`, { headers: authHeaders() })
+      .then((r) => {
+        const data = r?.data || {};
+        setDailyOnlineState({ ...(data || {}), offline: false });
+      })
+      .catch(() => {
+        setDailyOnlineState({ offline: true });
+      });
+  }, [tab]);
+
+  useEffect(() => {
     if (!player?.isAdmin) return;
     const tok = getToken?.();
     if (!tok || (tok || '').startsWith('offline-')) { setAdminPlayers([]); return; }
@@ -552,6 +572,14 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                                     .catch((e) => {
                                       const detail = e?.response?.data?.detail || t('profile.failed');
                                       setDailyMsg({ ok: false, text: detail });
+
+                                      // If the server says it's already claimed (or any other 409), refresh state so UI matches.
+                                      axios.get(`${API}/daily/state`, { headers: authHeaders() })
+                                        .then((r2) => {
+                                          const data2 = r2?.data || {};
+                                          setDailyOnlineState({ ...(data2 || {}), offline: false });
+                                        })
+                                        .catch(() => {});
                                     });
                                   return;
                                 }
