@@ -1534,6 +1534,30 @@ async def admin_grant_coins(amount: int = Query(default=100, ge=1, le=100000), n
         {"nickname_lower": player.get("nickname_lower")},
         {"$inc": {"coins": inc}},
     )
+
+    updated0 = await _get_player(nick)
+    if not updated0:
+        raise HTTPException(status_code=404, detail="Player not found.")
+
+    # Count admin-granted coins towards the "earned" statistic too.
+    unlocked, st = _ach_get(updated0)
+    next_st = dict(st)
+    next_st["coins_earned_total"] = int(next_st.get("coins_earned_total") or 0) + max(0, inc)
+
+    coins_after = int((updated0.get("coins") or 0))
+    player_after = {**updated0, "achievements_unlocked": unlocked, "achievements_stats": next_st}
+    to_unlock = _ach_should_unlock(player_after, payload=None, coins_balance_after=coins_after)
+
+    set_doc: Dict[str, Any] = {"achievements_stats": next_st}
+    if to_unlock:
+        ts = int(datetime.now(timezone.utc).timestamp() * 1000)
+        for aid in to_unlock:
+            set_doc[f"achievements_unlocked.{aid}"] = ts
+    await db.players.update_one(
+        {"nickname_lower": updated0.get("nickname_lower")},
+        {"$set": set_doc},
+    )
+
     updated = await _get_player(nick)
     return {"ok": True, "coins_delta": inc, "player": _sanitize_player(updated)}
 
