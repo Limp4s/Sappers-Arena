@@ -10,11 +10,6 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
   const startedAutoRef = useRef(false);
 
   useEffect(() => {
-    const isCoarse = (() => {
-      try { return window.matchMedia && window.matchMedia('(pointer: coarse)').matches; } catch { return false; }
-    })();
-    if (isCoarse) return undefined;
-
     const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
     const prevBody = {
       overflowY: document.body.style.overflowY,

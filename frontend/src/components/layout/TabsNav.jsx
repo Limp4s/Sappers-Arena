@@ -49,7 +49,7 @@ export default function TabsNav({ current, onChange, player }) {
             </button>
           )}
 
-          <div className="glass-panel rounded-full p-1 hidden md:flex gap-1 flex-wrap">
+          <div className="glass-panel rounded-full p-1 flex gap-1 flex-wrap">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const active = current === tab.key;
@@ -65,39 +65,6 @@ export default function TabsNav({ current, onChange, player }) {
                 </button>
               );
             })}
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile fixed bottom nav */}
-      <div
-        className="md:hidden fixed left-0 right-0 bottom-0 z-50"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-        data-testid="tabs-nav-mobile"
-      >
-        <div className="mx-auto w-full px-3 pb-2">
-          <div className="glass-panel rounded-2xl border border-white/10 px-2 py-2 shadow-[0_-10px_30px_rgba(0,0,0,0.55)]">
-            <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar">
-              {TABS.map((tab) => {
-                const Icon = tab.icon;
-                const active = current === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    onClick={() => onChange(tab.key)}
-                    className={`shrink-0 px-3 py-2 rounded-xl flex items-center gap-2 transition-all font-display text-[10px] tracking-[0.2em] font-semibold uppercase ${
-                      active
-                        ? 'bg-[rgba(0,229,255,0.12)] text-[#00E5FF] shadow-[0_0_16px_rgba(0,229,255,0.25)]'
-                        : 'text-slate-300 hover:text-white'
-                    }`}
-                    data-testid={`tab-mobile-${tab.key}`}
-                  >
-                    <Icon size={14} />
-                    <span>{t(tab.labelKey)}</span>
-                  </button>
-                );
-              })}
-            </div>
           </div>
         </div>
       </div>

@@ -194,7 +194,7 @@ function Home() {
   }
 
   return (
-    <div className="min-h-screen w-full pb-[92px] md:pb-0">
+    <div className="min-h-screen w-full">
       <AchievementBanner
         items={newUnlocked}
         onDone={() => setNewUnlocked([])}
