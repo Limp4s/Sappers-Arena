@@ -111,6 +111,13 @@ const DICTS = {
         rating_15000: { title: 'LEGEND', cond: 'Reach rating 15000', desc: 'A real legend.' },
         coins_balance_10000: { title: 'LAST MONEY', cond: 'Have 10000 coins balance', desc: 'Did you save for long? Or just never spend?' },
         coins_earned_total_10000: { title: 'RICH', cond: 'Earn 10000 coins total', desc: 'Not bad at all.' },
+
+        collect_mines_all: { title: 'MINE COLLECTOR', cond: 'Collect all mine skins', desc: 'Collect all mine skins in the shop.' },
+        collect_cells_all: { title: 'CELL COLLECTOR', cond: 'Collect all cell skins', desc: 'Collect all cell skins in the shop.' },
+        collect_fx_all: { title: 'FX COLLECTOR', cond: 'Collect all explosion effects', desc: 'Collect all explosion effects in the shop.' },
+        collect_flags_all: { title: 'FLAG COLLECTOR', cond: 'Collect all flag skins', desc: 'Collect all flag skins in the shop.' },
+        collect_shop_all: { title: 'TRUE COLLECTOR', cond: 'Collect all shop items', desc: 'Collect every item available in the shop.' },
+
         daily_claim_1: { title: 'DAILY CLAIMER', cond: 'Claim 1 daily quest', desc: 'Claiming rewards is sacred.' },
         daily_streak_5: { title: 'DAILY STREAK', cond: 'Claim dailies in 5 windows in a row', desc: 'Discipline. Iron.' },
       },
@@ -490,6 +497,13 @@ const DICTS = {
         rating_15000: { title: 'ЛЕГЕНДА', cond: 'Достичь рейтинга 15000', desc: 'Легенда. Живая. Опасная.' },
         coins_balance_10000: { title: 'ПОСЛЕДНИЕ ДЕНЬГИ', cond: 'Иметь 10000 монет на балансе', desc: 'Ты долго копил? Или просто не тратил?' },
         coins_earned_total_10000: { title: 'БОГАТЫЙ', cond: 'Заработать 10000 монет суммарно', desc: 'Неплохо поднялся.' },
+
+        collect_mines_all: { title: 'КОЛЛЕКЦИОНЕР МИН', cond: 'Собрать все скины мин', desc: 'Собери все скины мин в магазине.' },
+        collect_cells_all: { title: 'КОЛЛЕКЦИОНЕР КЛЕТОК', cond: 'Собрать все скины клеток', desc: 'Собери все скины клеток в магазине.' },
+        collect_fx_all: { title: 'КОЛЛЕКЦИОНЕР ЭФФЕКТОВ', cond: 'Собрать все эффекты взрыва', desc: 'Собери все эффекты взрыва в магазине.' },
+        collect_flags_all: { title: 'КОЛЛЕКЦИОНЕР ФЛАЖКОВ', cond: 'Собрать все скины флажков', desc: 'Собери все скины флажков в магазине.' },
+        collect_shop_all: { title: 'ИСТИННЫЙ КОЛЛЕКЦИОНЕР', cond: 'Собрать все предметы', desc: 'Собери все предметы в магазине.' },
+
         daily_claim_1: { title: 'СБОРЩИК', cond: 'Забрать 1 дейлик', desc: 'Забрать награду — святое.' },
         daily_streak_5: { title: 'СЕРИЯ ДЕЙЛИКОВ', cond: 'Забрать дейлики в 5 окнах подряд', desc: 'Дисциплина. Железная. Почти.' },
       },
