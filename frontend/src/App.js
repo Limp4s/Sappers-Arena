@@ -176,35 +176,22 @@ function Home() {
     setOnboardingStep(0);
   }, [player?.nick, accountKey]);
 
-  if (!privacyAccepted) {
-    return (
-      <div className="modal-backdrop" data-testid="privacy-modal">
-        <div className="glass-panel slide-up rounded-2xl p-8 max-w-md w-[92%] relative overflow-hidden">
-          <div className="scanline" />
-          <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// privacy</div>
-          <h2 className="font-display text-2xl font-black tracking-tight neon-cyan mb-3">PRIVACY POLICY</h2>
-          <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed bg-black/20 border border-white/10 rounded-lg p-4 max-h-[45vh] overflow-auto">{PRIVACY_TEXT}</pre>
-          <button
-            className="neon-btn w-full py-3 mt-4"
-            onClick={() => { localStorage.setItem(accountKey(PRIVACY_KEY), '1'); setPrivacyAccepted(true); }}
-            data-testid="privacy-accept-btn"
-          >I AGREE</button>
-        </div>
-      </div>
-    );
-  }
-
   if (!termsAccepted) {
     return (
       <div className="modal-backdrop" data-testid="terms-modal">
         <div className="glass-panel slide-up rounded-2xl p-8 max-w-md w-[92%] relative overflow-hidden">
           <div className="scanline" />
-          <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// terms</div>
-          <h2 className="font-display text-2xl font-black tracking-tight neon-cyan mb-3">TERMS OF USE</h2>
-          <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed bg-black/20 border border-white/10 rounded-lg p-4 max-h-[45vh] overflow-auto">{TERMS_TEXT}</pre>
+          <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// agreement</div>
+          <h2 className="font-display text-2xl font-black tracking-tight neon-cyan mb-3">USER AGREEMENT</h2>
+          <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed bg-black/20 border border-white/10 rounded-lg p-4 max-h-[55vh] overflow-auto">{PRIVACY_TEXT}</pre>
           <button
             className="neon-btn w-full py-3 mt-4"
-            onClick={() => { localStorage.setItem(accountKey(TERMS_KEY), '1'); setTermsAccepted(true); }}
+            onClick={() => {
+              localStorage.setItem(accountKey(TERMS_KEY), '1');
+              localStorage.setItem(accountKey(PRIVACY_KEY), '1');
+              setTermsAccepted(true);
+              setPrivacyAccepted(true);
+            }}
             data-testid="terms-accept-btn"
           >I AGREE</button>
         </div>

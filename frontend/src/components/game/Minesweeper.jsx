@@ -64,6 +64,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const [tutorialExplained, setTutorialExplained] = useState(() => ({}));
   const [tutorialExplainedNums, setTutorialExplainedNums] = useState(() => ({}));
   const [tutorialHintsStarted, setTutorialHintsStarted] = useState(false);
+  const [tutorialSkipConfirm, setTutorialSkipConfirm] = useState(false);
   useLang();
   const timerRef = useRef(null);
   const tutorialTimerRef = useRef(null);
@@ -589,7 +590,8 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
           {tutorialStep != null && (
             <div className="absolute inset-0 z-30 pointer-events-none">
               <div className="absolute inset-0 bg-black/55" />
-              <div className="absolute top-4 right-4 pointer-events-auto">
+
+              <div className="hidden md:block absolute top-4 right-4 pointer-events-auto">
                 <button
                   className="neon-btn px-4 py-2 text-[11px]"
                   onClick={() => {
@@ -597,6 +599,27 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
                     setTutorialStep(null);
                   }}
                 >{t('onboarding.skip')}</button>
+              </div>
+
+              <div className="md:hidden absolute top-4 left-1/2 -translate-x-1/2 pointer-events-auto">
+                {!tutorialSkipConfirm ? (
+                  <button
+                    className="neon-btn px-4 py-2 text-[11px]"
+                    onClick={() => setTutorialSkipConfirm(true)}
+                  >{t('onboarding.skip')}</button>
+                ) : (
+                  <div className="glass-panel rounded-xl px-4 py-3 border border-white/20 w-[92vw] max-w-[360px]">
+                    <div className="text-[12px] font-mono text-slate-200">Пропустить обучение?</div>
+                    <div className="mt-3 flex gap-2">
+                      <button className="neon-btn neon-btn-coral flex-1" onClick={() => setTutorialSkipConfirm(false)} type="button">{t('common.no')}</button>
+                      <button className="neon-btn flex-1" onClick={() => {
+                        try { markTutorialDone(); } catch {}
+                        setTutorialSkipConfirm(false);
+                        setTutorialStep(null);
+                      }} type="button">{t('common.yes')}</button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {tutorialStep === 0 && (
