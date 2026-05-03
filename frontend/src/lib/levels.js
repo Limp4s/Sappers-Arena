@@ -232,6 +232,8 @@ export const recordLevelResult = (levelId, { stars, score, time, won }) => {
 };
 export const isLevelUnlocked = (levelId, progress) => {
   if (levelId === 1) return true;
-  const prev = progress[levelId - 1];
+  const cur = progress?.[levelId];
+  if (cur && cur.completed) return true;
+  const prev = progress?.[levelId - 1];
   return !!(prev && prev.completed);
 };
