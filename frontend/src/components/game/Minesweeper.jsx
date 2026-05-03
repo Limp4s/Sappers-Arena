@@ -256,6 +256,18 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     return n;
   }, []);
 
+  const countRevealedAll = useCallback((b) => {
+    let n = 0;
+    for (let rr = 0; rr < b.length; rr++) {
+      const row = b[rr];
+      for (let cc = 0; cc < row.length; cc++) {
+        const cl = row[cc];
+        if (cl && cl.revealed) n++;
+      }
+    }
+    return n;
+  }, []);
+
   useEffect(() => {
     if (tutorialMode) return;
     if (status === 'playing') {
@@ -411,6 +423,10 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
     const totalSafeEff = rows * cols - effectiveMines;
     if (newSafeCount >= totalSafeEff) endGame(true, workingBoard, newSafeCount, lives);
+    else if (tutorialMode) {
+      const allRevealed = countRevealedAll(workingBoard);
+      if (allRevealed >= rows * cols) endGame(true, workingBoard, newSafeCount, lives);
+    }
   };
 
   const flagCell = (r, c) => {
@@ -553,6 +569,11 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               <div className="text-xl font-mono font-bold neon-coral leading-none mt-0.5">{String(minesLeft).padStart(3, '0')}</div>
             </div>
             <div className="flex items-center gap-2">
+              {tutorialStep != null && (
+                <button className="neon-btn px-4 py-2 text-[11px] md:hidden" onClick={() => setTutorialSkipConfirm(true)} type="button" data-testid="tutorial-skip-btn">
+                  {t('onboarding.skip')}
+                </button>
+              )}
               <button className={`neon-btn flex items-center gap-2 ${flagMode ? 'neon-btn-gold' : ''}`}
                 onClick={() => setFlagMode((v) => !v)} type="button" data-testid="flag-mode-btn">
                 {t('game.flag')}
@@ -566,6 +587,22 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
           <StatsBar timer={timer} lives={lives} livesTotal={displayLives} score={score} minesLeft={minesLeft}
             onReset={reset} infiniteLives={infiniteLives}
             flagMode={flagMode} onToggleFlagMode={() => setFlagMode((v) => !v)} />
+        )}
+
+        {tutorialMode && tutorialStep != null && tutorialSkipConfirm && (
+          <div className="md:hidden fixed left-1/2 top-[88px] -translate-x-1/2 z-[80] pointer-events-auto">
+            <div className="glass-panel rounded-xl px-4 py-3 border border-white/20 w-[92vw] max-w-[360px]">
+              <div className="text-[12px] font-mono text-slate-200">Пропустить обучение?</div>
+              <div className="mt-3 flex gap-2">
+                <button className="neon-btn neon-btn-coral flex-1" onClick={() => setTutorialSkipConfirm(false)} type="button">{t('common.no')}</button>
+                <button className="neon-btn flex-1" onClick={() => {
+                  try { markTutorialDone(); } catch {}
+                  setTutorialSkipConfirm(false);
+                  setTutorialStep(null);
+                }} type="button">{t('common.yes')}</button>
+              </div>
+            </div>
+          </div>
         )}
 
         <div ref={tutorialContainerRef} className={`glass-panel rounded-xl p-4 md:p-6 flex-1 flex items-center justify-center relative overflow-hidden ${shaking ? 'shake' : ''} ${tutorialStep != null ? 'md:pl-[440px]' : ''}`}
@@ -599,27 +636,6 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
                     setTutorialStep(null);
                   }}
                 >{t('onboarding.skip')}</button>
-              </div>
-
-              <div className="md:hidden absolute top-4 left-1/2 -translate-x-1/2 pointer-events-auto">
-                {!tutorialSkipConfirm ? (
-                  <button
-                    className="neon-btn px-4 py-2 text-[11px]"
-                    onClick={() => setTutorialSkipConfirm(true)}
-                  >{t('onboarding.skip')}</button>
-                ) : (
-                  <div className="glass-panel rounded-xl px-4 py-3 border border-white/20 w-[92vw] max-w-[360px]">
-                    <div className="text-[12px] font-mono text-slate-200">Пропустить обучение?</div>
-                    <div className="mt-3 flex gap-2">
-                      <button className="neon-btn neon-btn-coral flex-1" onClick={() => setTutorialSkipConfirm(false)} type="button">{t('common.no')}</button>
-                      <button className="neon-btn flex-1" onClick={() => {
-                        try { markTutorialDone(); } catch {}
-                        setTutorialSkipConfirm(false);
-                        setTutorialStep(null);
-                      }} type="button">{t('common.yes')}</button>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {tutorialStep === 0 && (
