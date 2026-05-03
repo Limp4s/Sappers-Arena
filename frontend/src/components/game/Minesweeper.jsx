@@ -18,6 +18,14 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     onExit, player, infiniteLives, lobbyCode, seed, opponent,
   } = config;
   const playerName = player?.nick;
+  const tutorialStorageKey = useMemo(() => {
+    const base = 'mg_tutorial_lvl1_done_v1';
+    try {
+      const nick = (playerName || '').trim().toLowerCase();
+      if (nick) return `${base}:${nick}`;
+    } catch {}
+    return base;
+  }, [playerName]);
   const theme = loadEquipped(playerName);
   const mineDef = MINE_ICONS[theme.mine] || MINE_ICONS.mine_default;
   const cellTheme = CELL_THEMES[theme.cell] || CELL_THEMES.cell_default;
@@ -44,7 +52,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const [flagMode, setFlagMode] = useState(false);
   const tutorialEnabled = (() => {
     try {
-      const done = localStorage.getItem('mg_tutorial_lvl1_done') === '1';
+      const done = localStorage.getItem(tutorialStorageKey) === '1';
       if (done) return false;
     } catch {}
     return (mode === 'campaign' && Number(levelId) === 1);
@@ -133,7 +141,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const displayLabel = tutorialMode ? 'TUTORIAL' : (label || t('game.defaultLabel'));
 
   const markTutorialDone = () => {
-    try { localStorage.setItem('mg_tutorial_lvl1_done', '1'); } catch {}
+    try { localStorage.setItem(tutorialStorageKey, '1'); } catch {}
   };
 
   const recomputeAdjacent = (b) => {

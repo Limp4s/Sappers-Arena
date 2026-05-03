@@ -71,10 +71,22 @@ The game is not intended for children under 13. If you believe a child has provi
 Support: limp976@gmail.com`;
 
 function Home() {
-  const [privacyAccepted, setPrivacyAccepted] = useState(() => localStorage.getItem(PRIVACY_KEY) === '1');
-  const [termsAccepted, setTermsAccepted] = useState(() => localStorage.getItem(TERMS_KEY) === '1');
+  const accountKey = useCallback((base) => {
+    try {
+      const nick = (getStoredNickname?.() || '').trim().toLowerCase();
+      if (nick) return `${base}:${nick}`;
+    } catch {}
+    return base;
+  }, []);
+
+  const [privacyAccepted, setPrivacyAccepted] = useState(() => {
+    try { return localStorage.getItem(accountKey(PRIVACY_KEY)) === '1'; } catch { return false; }
+  });
+  const [termsAccepted, setTermsAccepted] = useState(() => {
+    try { return localStorage.getItem(accountKey(TERMS_KEY)) === '1'; } catch { return false; }
+  });
   const [onboardingDone, setOnboardingDone] = useState(() => {
-    try { return localStorage.getItem(ONBOARDING_KEY) === '1'; } catch { return false; }
+    try { return localStorage.getItem(accountKey(ONBOARDING_KEY)) === '1'; } catch { return false; }
   });
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [tab, setTab] = useState('campaign');
@@ -152,10 +164,17 @@ function Home() {
 
   const showOnboarding = !!player && !gameConfig && !onboardingDone;
   const finishOnboarding = useCallback(() => {
-    try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch {}
+    try { localStorage.setItem(accountKey(ONBOARDING_KEY), '1'); } catch {}
     setOnboardingDone(true);
     setOnboardingStep(0);
-  }, []);
+  }, [accountKey]);
+
+  useEffect(() => {
+    try { setPrivacyAccepted(localStorage.getItem(accountKey(PRIVACY_KEY)) === '1'); } catch { setPrivacyAccepted(false); }
+    try { setTermsAccepted(localStorage.getItem(accountKey(TERMS_KEY)) === '1'); } catch { setTermsAccepted(false); }
+    try { setOnboardingDone(localStorage.getItem(accountKey(ONBOARDING_KEY)) === '1'); } catch { setOnboardingDone(false); }
+    setOnboardingStep(0);
+  }, [player?.nick, accountKey]);
 
   if (!privacyAccepted) {
     return (
@@ -167,7 +186,7 @@ function Home() {
           <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed bg-black/20 border border-white/10 rounded-lg p-4 max-h-[45vh] overflow-auto">{PRIVACY_TEXT}</pre>
           <button
             className="neon-btn w-full py-3 mt-4"
-            onClick={() => { localStorage.setItem(PRIVACY_KEY, '1'); setPrivacyAccepted(true); }}
+            onClick={() => { localStorage.setItem(accountKey(PRIVACY_KEY), '1'); setPrivacyAccepted(true); }}
             data-testid="privacy-accept-btn"
           >I AGREE</button>
         </div>
@@ -185,7 +204,7 @@ function Home() {
           <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed bg-black/20 border border-white/10 rounded-lg p-4 max-h-[45vh] overflow-auto">{TERMS_TEXT}</pre>
           <button
             className="neon-btn w-full py-3 mt-4"
-            onClick={() => { localStorage.setItem(TERMS_KEY, '1'); setTermsAccepted(true); }}
+            onClick={() => { localStorage.setItem(accountKey(TERMS_KEY), '1'); setTermsAccepted(true); }}
             data-testid="terms-accept-btn"
           >I AGREE</button>
         </div>
