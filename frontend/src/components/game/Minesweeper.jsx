@@ -50,13 +50,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const [lobbyResult, setLobbyResult] = useState(null);
   const [newUnlocked, setNewUnlocked] = useState([]);
   const [flagMode, setFlagMode] = useState(false);
-  const tutorialEnabled = (() => {
-    try {
-      const done = localStorage.getItem(tutorialStorageKey) === '1';
-      if (done) return false;
-    } catch {}
-    return (mode === 'campaign' && Number(levelId) === 1);
-  })();
+  const tutorialEnabled = (mode === 'campaign' && Number(levelId) === 1);
 
   const [tutorialStep, setTutorialStep] = useState(() => (tutorialEnabled ? 0 : null));
   const [tutorialOneCell, setTutorialOneCell] = useState(null);
@@ -138,6 +132,11 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const displayLives = infiniteLives ? 99 : livesTotal;
 
   const tutorialMode = useMemo(() => tutorialEnabled, [tutorialEnabled]);
+  const effectiveMines = useMemo(() => {
+    if (!tutorialMode) return mines;
+    // Tutorial should be easier: fewer bombs.
+    return Math.max(5, Math.min(mines, Math.floor(Number(mines || 0) * 0.6)));
+  }, [tutorialMode, mines]);
   const displayLabel = tutorialMode ? 'TUTORIAL' : (label || t('game.defaultLabel'));
 
   const markTutorialDone = () => {
@@ -223,32 +222,35 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     setScore(finalScore);
 
     try {
-      recordDailyProgress({
-        played: 1,
-        won: won ? 1 : 0,
-        lost: won ? 0 : 1,
-        flags: flagsCount,
-        safe: finalSafe,
-        timeSeconds: timer,
-        livesRemaining: finalLives,
-        livesTotal: livesTotal,
-        mode,
-      });
+      if (!tutorialMode) {
+        recordDailyProgress({
+          played: 1,
+          won: won ? 1 : 0,
+          lost: won ? 0 : 1,
+          flags: flagsCount,
+          safe: finalSafe,
+          timeSeconds: timer,
+          livesRemaining: finalLives,
+          livesTotal: livesTotal,
+          mode,
+        });
+      }
     } catch {}
 
     if (won) {
       setVictory(true); sfx.victory();
       if (mode === 'campaign' && levelId != null) {
-        const stars = computeStars(finalLives, livesTotal);
-        recordLevelResult(levelId, { stars, score: finalScore, time: timer, won: true });
-        if (tutorialMode) {
-          try { markTutorialDone(); } catch {}
+        if (!tutorialMode) {
+          const stars = computeStars(finalLives, livesTotal);
+          recordLevelResult(levelId, { stars, score: finalScore, time: timer, won: true });
         }
       }
     } else {
-      sfx.gameOver();
-      if (mode === 'campaign' && levelId != null) {
-        recordLevelResult(levelId, { stars: 0, score: 0, time: timer, won: false });
+      if (!tutorialMode) {
+        sfx.gameOver();
+        if (mode === 'campaign' && levelId != null) {
+          recordLevelResult(levelId, { stars: 0, score: 0, time: timer, won: false });
+        }
       }
     }
     const revealed = finalBoard.map((row) => row.map((c) => ({ ...c, revealed: c.mine ? true : c.revealed })));
@@ -269,7 +271,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
     if (!minesPlaced) {
       const rng = seed != null ? createSeededRandom(seed) : Math.random;
-      workingBoard = placeMines(workingBoard, mines, r, c, rng);
+      workingBoard = placeMines(workingBoard, effectiveMines, r, c, rng);
       setMinesPlaced(true); setStatus('playing');
     }
 
@@ -319,7 +321,8 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     if (!tutorialMode) {
       setScore(calculateScore({ difficulty, safeRevealed: newSafeCount, timeSeconds: timer, livesRemaining: lives, won: false }));
     }
-    if (newSafeCount >= totalSafe) endGame(true, workingBoard, newSafeCount, lives);
+    const totalSafeEff = rows * cols - effectiveMines;
+    if (newSafeCount >= totalSafeEff) endGame(true, workingBoard, newSafeCount, lives);
   };
 
   const flagCell = (r, c) => {
@@ -334,6 +337,10 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   };
 
   const doSubmit = async () => {
+    if (tutorialMode) {
+      setSubmitted(true);
+      return;
+    }
     if (!playerName) return;
     try {
       const res = await submitScore({
@@ -362,7 +369,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     }
   };
 
-  const minesLeft = Math.max(0, mines - flagsCount);
+  const minesLeft = Math.max(0, effectiveMines - flagsCount);
   const gridStyle = { display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: '3px' };
   const fxClass = fxDef.color === 'rainbow_premium'
     ? 'explosion-flash fx-rainbow-premium'
