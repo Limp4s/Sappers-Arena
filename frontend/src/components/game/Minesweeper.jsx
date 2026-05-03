@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
 import { ArrowLeft, ShieldAlert, Infinity as InfinityIcon, Swords } from 'lucide-react';
 import { createEmptyBoard, placeMines, floodReveal, calculateScore } from '../../lib/game';
@@ -42,16 +42,20 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const [lobbyResult, setLobbyResult] = useState(null);
   const [newUnlocked, setNewUnlocked] = useState([]);
   const [flagMode, setFlagMode] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(() => {
+  const tutorialEnabled = (() => {
     try {
       const done = localStorage.getItem('mg_tutorial_lvl1_done') === '1';
-      if (done) return null;
+      if (done) return false;
     } catch {}
-    if (mode === 'campaign' && Number(levelId) === 1) return 0;
-    return null;
-  });
+    return (mode === 'campaign' && Number(levelId) === 1);
+  })();
+
+  const [tutorialStep, setTutorialStep] = useState(() => (tutorialEnabled ? 0 : null));
   const [tutorialOneCell, setTutorialOneCell] = useState(null);
   const [tutorialOneRect, setTutorialOneRect] = useState(null);
+  const [tutorialMineCell, setTutorialMineCell] = useState(null);
+  const [tutorialMineRect, setTutorialMineRect] = useState(null);
+  const [tutorialProofRects, setTutorialProofRects] = useState([]);
   useLang();
   const timerRef = useRef(null);
   const tutorialTimerRef = useRef(null);
@@ -85,8 +89,67 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     };
   }, [tutorialStep, tutorialOneCell]);
 
+  useEffect(() => {
+    if (tutorialStep !== 4 || !tutorialMineCell) return;
+    const compute = () => {
+      try {
+        const cont = tutorialContainerRef.current;
+        if (!cont) return;
+
+        const mineEl = document.querySelector(`[data-testid="grid-cell-${tutorialMineCell.r}-${tutorialMineCell.c}"]`);
+        if (mineEl) {
+          const r1 = mineEl.getBoundingClientRect();
+          const r2 = cont.getBoundingClientRect();
+          setTutorialMineRect({ left: r1.left - r2.left, top: r1.top - r2.top, width: r1.width, height: r1.height });
+        }
+
+        const proof = [];
+        const around = tutorialMineCell?.around || [];
+        around.forEach(({ r, c }) => {
+          const el = document.querySelector(`[data-testid="grid-cell-${r}-${c}"]`);
+          if (!el) return;
+          const rr = el.getBoundingClientRect();
+          const cr = cont.getBoundingClientRect();
+          proof.push({ left: rr.left - cr.left, top: rr.top - cr.top, width: rr.width, height: rr.height });
+        });
+        setTutorialProofRects(proof);
+      } catch {}
+    };
+    compute();
+    const onResize = () => compute();
+    const onScroll = () => compute();
+    try { window.addEventListener('resize', onResize); } catch {}
+    try { window.addEventListener('scroll', onScroll, true); } catch {}
+    return () => {
+      try { window.removeEventListener('resize', onResize); } catch {}
+      try { window.removeEventListener('scroll', onScroll, true); } catch {}
+    };
+  }, [tutorialStep, tutorialMineCell]);
+
   const totalSafe = rows * cols - mines;
   const displayLives = infiniteLives ? 99 : livesTotal;
+
+  const tutorialMode = useMemo(() => tutorialEnabled, [tutorialEnabled]);
+  const displayLabel = tutorialMode ? 'TUTORIAL' : (label || t('game.defaultLabel'));
+
+  const markTutorialDone = () => {
+    try { localStorage.setItem('mg_tutorial_lvl1_done', '1'); } catch {}
+  };
+
+  const recomputeAdjacent = (b) => {
+    const rr = b.length;
+    const cc = b[0]?.length || 0;
+    for (let r = 0; r < rr; r++) for (let c = 0; c < cc; c++) {
+      if (b[r][c].mine) { b[r][c].adjacent = 0; continue; }
+      let count = 0;
+      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < rr && nc >= 0 && nc < cc && b[nr][nc].mine) count++;
+      }
+      b[r][c].adjacent = count;
+    }
+  };
 
   const countRevealedSafe = useCallback((b) => {
     let n = 0;
@@ -101,11 +164,12 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   }, []);
 
   useEffect(() => {
+    if (tutorialMode) return;
     if (status === 'playing') {
       timerRef.current = setInterval(() => setTimer((t) => Math.min(t + 1, 999)), 1000);
       return () => clearInterval(timerRef.current);
     }
-  }, [status]);
+  }, [status, tutorialMode]);
 
   // Poll lobby for opponent result if in lobby mode
   useEffect(() => {
@@ -137,6 +201,9 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     setFlagMode(false);
     setTutorialOneCell(null);
     setTutorialOneRect(null);
+    setTutorialMineCell(null);
+    setTutorialMineRect(null);
+    setTutorialProofRects([]);
     if (tutorialTimerRef.current) clearTimeout(tutorialTimerRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
   }, [rows, cols, livesTotal]);
@@ -144,7 +211,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const endGame = useCallback((won, finalBoard, finalSafe, finalLives) => {
     setStatus(won ? 'won' : 'lost');
     if (timerRef.current) clearInterval(timerRef.current);
-    const finalScore = calculateScore({ difficulty, safeRevealed: finalSafe, timeSeconds: timer, livesRemaining: finalLives, won });
+    const finalScore = tutorialMode ? 0 : calculateScore({ difficulty, safeRevealed: finalSafe, timeSeconds: timer, livesRemaining: finalLives, won });
     setScore(finalScore);
 
     try {
@@ -166,6 +233,9 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
       if (mode === 'campaign' && levelId != null) {
         const stars = computeStars(finalLives, livesTotal);
         recordLevelResult(levelId, { stars, score: finalScore, time: timer, won: true });
+        if (tutorialMode) {
+          try { markTutorialDone(); } catch {}
+        }
       }
     } else {
       sfx.gameOver();
@@ -176,7 +246,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     const revealed = finalBoard.map((row) => row.map((c) => ({ ...c, revealed: c.mine ? true : c.revealed })));
     setBoard(revealed);
     setTimeout(() => setModalOpen(true), 900);
-  }, [difficulty, timer, mode, levelId, livesTotal, flagsCount]);
+  }, [difficulty, timer, mode, levelId, livesTotal, flagsCount, tutorialMode]);
 
   const revealCell = (r, c) => {
     if (status === 'won' || status === 'lost') return;
@@ -197,6 +267,17 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
     const target = workingBoard[r][c];
     if (target.mine) {
+      if (tutorialMode) {
+        // Tutorial can't be failed: auto-flag mines instead of losing lives.
+        if (!target.flagged) {
+          target.flagged = true;
+          setFlagsCount((f) => f + 1);
+          sfx.flag();
+        }
+        setBoard(workingBoard);
+        return;
+      }
+
       target.revealed = true; target.exploded = true;
       const newLives = infiniteLives ? lives : lives - 1;
       if (!infiniteLives) setLives(newLives);
@@ -226,42 +307,10 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     setSafeRevealed(newSafeCount);
     setBoard(workingBoard);
 
-    if (tutorialStep === 1) {
-      try {
-        let found = null;
-        for (let rr = 0; rr < workingBoard.length; rr++) {
-          for (let cc = 0; cc < workingBoard[rr].length; cc++) {
-            const cl = workingBoard[rr][cc];
-            if (cl?.revealed && !cl?.mine) { found = { r: rr, c: cc }; break; }
-          }
-          if (found) break;
-        }
-        if (found) {
-          if (tutorialTimerRef.current) clearTimeout(tutorialTimerRef.current);
-          tutorialTimerRef.current = setTimeout(() => setTutorialStep(2), 1200);
-        }
-      } catch {}
-    }
-
-    if (tutorialStep === 2) {
-      // Find a revealed "1" cell and point at it.
-      try {
-        let one = null;
-        for (let rr = 0; rr < workingBoard.length; rr++) {
-          for (let cc = 0; cc < workingBoard[rr].length; cc++) {
-            const cl = workingBoard[rr][cc];
-            if (cl?.revealed && !cl?.mine && Number(cl?.adjacent) === 1) { one = { r: rr, c: cc }; break; }
-          }
-          if (one) break;
-        }
-        if (one) {
-          setTutorialOneCell(one);
-          setTutorialStep(3);
-        }
-      } catch {}
-    }
     sfx.reveal();
-    setScore(calculateScore({ difficulty, safeRevealed: newSafeCount, timeSeconds: timer, livesRemaining: lives, won: false }));
+    if (!tutorialMode) {
+      setScore(calculateScore({ difficulty, safeRevealed: newSafeCount, timeSeconds: timer, livesRemaining: lives, won: false }));
+    }
     if (newSafeCount >= totalSafe) endGame(true, workingBoard, newSafeCount, lives);
   };
 
@@ -364,7 +413,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
             <ShieldAlert size={22} className="neon-cyan" />
             <div>
               <div className="font-display text-xl font-black tracking-tight neon-cyan leading-none">
-                {label || t('game.defaultLabel')}
+                {displayLabel}
               </div>
               <div className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display mt-1">
                 // {mode.toUpperCase()} · {rows}×{cols} · {mines} {t('game.minesLower')} · {infiniteLives ? '∞' : livesTotal} {t('game.livesLower')}
@@ -380,9 +429,27 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
       </header>
 
       <main className="relative z-10 flex-1 max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-8 flex flex-col gap-4">
-        <StatsBar timer={timer} lives={lives} livesTotal={displayLives} score={score} minesLeft={minesLeft}
-          onReset={reset} infiniteLives={infiniteLives}
-          flagMode={flagMode} onToggleFlagMode={() => setFlagMode((v) => !v)} />
+        {tutorialMode ? (
+          <div className="glass-panel rounded-xl px-5 py-4 flex flex-wrap items-center justify-between gap-4" data-testid="tutorial-bar">
+            <div>
+              <div className="text-[9px] tracking-[0.25em] uppercase text-slate-400 font-display">{t('game.mines')}</div>
+              <div className="text-xl font-mono font-bold neon-coral leading-none mt-0.5">{String(minesLeft).padStart(3, '0')}</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className={`neon-btn flex items-center gap-2 ${flagMode ? 'neon-btn-gold' : ''}`}
+                onClick={() => setFlagMode((v) => !v)} type="button" data-testid="flag-mode-btn">
+                {t('game.flag')}
+              </button>
+              <button className="neon-btn flex items-center gap-2" onClick={reset} data-testid="reset-btn" type="button">
+                {t('game.reset')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <StatsBar timer={timer} lives={lives} livesTotal={displayLives} score={score} minesLeft={minesLeft}
+            onReset={reset} infiniteLives={infiniteLives}
+            flagMode={flagMode} onToggleFlagMode={() => setFlagMode((v) => !v)} />
+        )}
 
         <div ref={tutorialContainerRef} className={`glass-panel rounded-xl p-4 md:p-6 flex-1 flex items-center justify-center relative overflow-hidden ${shaking ? 'shake' : ''}`}
           style={{ borderColor: `${cellTheme.accent}33` }}>
@@ -410,23 +477,53 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
                 <button
                   className="neon-btn px-4 py-2 text-[11px]"
                   onClick={() => {
-                    try { localStorage.setItem('mg_tutorial_lvl1_done', '1'); } catch {}
+                    try { markTutorialDone(); } catch {}
                     setTutorialStep(null);
                   }}
                 >{t('onboarding.skip')}</button>
               </div>
 
               {tutorialStep === 0 && (
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 max-w-[340px] glass-panel rounded-xl p-4 border border-[#00E5FF]/30">
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[360px] glass-panel rounded-xl p-5 border border-[#00E5FF]/30">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">Нажми в любое место на поле.</div>
                 </div>
               )}
 
               {tutorialStep === 1 && (
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 max-w-[360px] glass-panel rounded-xl p-4 border border-[#00FF9D]/30">
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[420px] glass-panel rounded-xl p-5 border border-[#00FF9D]/30">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">Теперь у нас есть открытое поле.</div>
+                  <div className="mt-4 flex gap-2 pointer-events-auto">
+                    <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => setTutorialStep(2)}>{t('common.continue')}</button>
+                  </div>
+                </div>
+              )}
+
+              {tutorialStep === 2 && (
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[520px] glass-panel rounded-xl p-5 border border-[#00E5FF]/30">
+                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
+                  <div className="text-[12px] font-mono text-slate-200">Видишь цифры? Они показывают сколько в радиусе 1 клетки от этой цифры бомб.</div>
+                  <div className="mt-4 flex gap-2 pointer-events-auto">
+                    <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => {
+                      try {
+                        // Find a revealed "1" cell and point at it.
+                        const b = board;
+                        let one = null;
+                        for (let rr = 0; rr < b.length; rr++) {
+                          for (let cc = 0; cc < b[rr].length; cc++) {
+                            const cl = b[rr][cc];
+                            if (cl?.revealed && !cl?.mine && Number(cl?.adjacent) === 1) { one = { r: rr, c: cc }; break; }
+                          }
+                          if (one) break;
+                        }
+                        if (one) {
+                          setTutorialOneCell(one);
+                          setTutorialStep(3);
+                        }
+                      } catch {}
+                    }}>{t('common.continue')}</button>
+                  </div>
                 </div>
               )}
 
@@ -443,18 +540,120 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
                 />
               )}
 
+              {tutorialStep === 3 && tutorialOneCell && tutorialOneRect && (
+                <svg className="absolute inset-0" style={{ width: '100%', height: '100%' }}>
+                  <line
+                    x1={420}
+                    y1="50%"
+                    x2={tutorialOneRect.left + tutorialOneRect.width / 2}
+                    y2={tutorialOneRect.top + tutorialOneRect.height / 2}
+                    stroke="rgba(255,255,255,0.95)"
+                    strokeWidth="2"
+                  />
+                </svg>
+              )}
+
               {tutorialStep === 3 && tutorialOneCell && (
-                <div className="absolute left-4 bottom-4 max-w-[520px] glass-panel rounded-xl p-4 border border-[#FFD700]/30">
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[560px] glass-panel rounded-xl p-5 border border-[#FFD700]/30">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
-                  <div className="text-[12px] font-mono text-slate-200">Видишь цифры? Они показывают сколько в радиусе 1 клетки от этой цифры бомб.</div>
+                  <div className="text-[12px] font-mono text-slate-200">Вот это <span className="neon-gold font-bold">1</span>. Значит рядом (8 клеток вокруг) есть ровно 1 бомба.</div>
                   <div className="mt-3 flex gap-2 pointer-events-auto">
                     <button
                       className="neon-btn px-4 py-2 text-[11px]"
                       onClick={() => {
-                        try { localStorage.setItem('mg_tutorial_lvl1_done', '1'); } catch {}
-                        setTutorialStep(null);
+                        try {
+                          const b = board.map((row) => row.map((cl) => ({ ...cl })));
+                          const one = tutorialOneCell;
+                          const cand = [];
+                          for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            const rr = one.r + dr;
+                            const cc = one.c + dc;
+                            if (rr < 0 || rr >= b.length || cc < 0 || cc >= b[0].length) continue;
+                            if (b[rr][cc].revealed) continue;
+                            cand.push({ r: rr, c: cc });
+                          }
+                          const target = cand[0];
+                          if (target) {
+                            // Ensure there is a mine at target by swapping with an existing mine.
+                            if (!b[target.r][target.c].mine) {
+                              let swap = null;
+                              for (let rr = 0; rr < b.length; rr++) {
+                                for (let cc = 0; cc < b[rr].length; cc++) {
+                                  if (b[rr][cc].mine && !(rr === target.r && cc === target.c)) { swap = { r: rr, c: cc }; break; }
+                                }
+                                if (swap) break;
+                              }
+                              if (swap) {
+                                b[swap.r][swap.c].mine = false;
+                                b[target.r][target.c].mine = true;
+                              }
+                              recomputeAdjacent(b);
+                            }
+
+                            // Reveal nearby numbered cells as proof.
+                            const around = [];
+                            for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+                              if (dr === 0 && dc === 0) continue;
+                              const rr = target.r + dr;
+                              const cc = target.c + dc;
+                              if (rr < 0 || rr >= b.length || cc < 0 || cc >= b[0].length) continue;
+                              if (!b[rr][cc].mine && b[rr][cc].adjacent > 0) {
+                                b[rr][cc].revealed = true;
+                                around.push({ r: rr, c: cc });
+                              }
+                            }
+                            setBoard(b);
+                            setTutorialMineCell({ r: target.r, c: target.c, around });
+                            setTutorialStep(4);
+                          }
+                        } catch {}
                       }}
                     >{t('common.continue')}</button>
+                  </div>
+                </div>
+              )}
+
+              {tutorialStep === 4 && tutorialMineCell && tutorialMineRect && (
+                <>
+                  <div
+                    className="absolute rounded-lg border-2 border-white"
+                    style={{
+                      left: `${tutorialMineRect.left}px`,
+                      top: `${tutorialMineRect.top}px`,
+                      width: `${tutorialMineRect.width}px`,
+                      height: `${tutorialMineRect.height}px`,
+                      boxShadow: '0 0 18px rgba(255,255,255,0.45)',
+                    }}
+                  />
+                  {tutorialProofRects.map((r, i) => (
+                    <div key={i} className="absolute rounded-lg border border-[#00E5FF]/60"
+                      style={{ left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, boxShadow: '0 0 12px rgba(0,229,255,0.25)' }}
+                    />
+                  ))}
+                </>
+              )}
+
+              {tutorialStep === 4 && tutorialMineCell && tutorialMineRect && (
+                <svg className="absolute inset-0" style={{ width: '100%', height: '100%' }}>
+                  <line
+                    x1={520}
+                    y1="50%"
+                    x2={tutorialMineRect.left + tutorialMineRect.width / 2}
+                    y2={tutorialMineRect.top + tutorialMineRect.height / 2}
+                    stroke="rgba(255,255,255,0.95)"
+                    strokeWidth="2"
+                  />
+                </svg>
+              )}
+
+              {tutorialStep === 4 && (
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[640px] glass-panel rounded-xl p-5 border border-white/25">
+                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
+                  <div className="text-[12px] font-mono text-slate-200">Вот здесь бомба на 100%, потому что цифры рядом показывают сколько бомб вокруг (радиус 1 клетки).</div>
+                  <div className="text-[12px] font-mono text-slate-200 mt-2">Поставь флажок на бомбу: ПКМ по клетке или включи режим флага.</div>
+                  <div className="mt-4 flex gap-2 pointer-events-auto">
+                    <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => setTutorialStep(null)}>{t('common.continue')}</button>
                   </div>
                 </div>
               )}
