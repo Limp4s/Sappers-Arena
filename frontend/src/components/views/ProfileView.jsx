@@ -177,6 +177,10 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
       return String(v).padStart(8, '0');
     }
     const legacy = getPlayerId(player?.nick);
+    if (typeof legacy === 'number' && Number.isFinite(legacy)) {
+      const v = Math.max(0, Math.floor(legacy));
+      return String(v).padStart(8, '0');
+    }
     return legacy ?? '—';
   })();
 

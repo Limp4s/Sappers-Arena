@@ -13,7 +13,7 @@ import MinesweeperGame from './components/game/Minesweeper';
 import OnlineDuelGame from './components/game/OnlineDuelGame';
 import AchievementBanner from './components/ui/AchievementBanner';
 import AuthGate from './components/auth/NicknameGate';
-import { getStoredNickname, isAuthed, isAdmin as getIsAdmin, isAdminNick, fetchMe } from "@/lib/player";
+import { getStoredNickname, isAuthed, isAdmin as getIsAdmin, isAdminNick, fetchMe, getPlayerId, setPlayerId } from "@/lib/player";
 import { t } from '@/lib/i18n';
 
 const TERMS_KEY = 'mg_terms_accepted_v1';
@@ -84,15 +84,25 @@ function Home() {
   const [player, setPlayer] = useState(() => {
     if (isAuthed()) {
       const nick = getStoredNickname();
-      return { nick, isAdmin: getIsAdmin() || isAdminNick(nick), coins: 0, owned_items: [], rating: 1000 };
+      const cachedId = getPlayerId(nick);
+      return { nick, isAdmin: getIsAdmin() || isAdminNick(nick), coins: 0, owned_items: [], rating: 1000, player_num: cachedId ?? undefined };
     }
     return null;
   });
+
+  useEffect(() => {
+    const onCtx = (e) => { try { e.preventDefault(); } catch {} };
+    try { window.addEventListener('contextmenu', onCtx); } catch {}
+    return () => { try { window.removeEventListener('contextmenu', onCtx); } catch {} };
+  }, []);
 
   const refreshPlayer = useCallback(async () => {
     if (!player?.nick || !isAuthed()) return;
     try {
       const data = await fetchMe();
+      if (data?.nickname && (data?.player_num != null)) {
+        try { setPlayerId(data.nickname, data.player_num); } catch {}
+      }
       setPlayer((p) => ({ ...p, ...data, nick: data.nickname, isAdmin: data.is_admin }));
     } catch {}
   }, [player?.nick]);

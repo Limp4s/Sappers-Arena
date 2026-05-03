@@ -91,6 +91,20 @@ export const getPlayerId = (nick) => {
   return ids[key] ?? null;
 };
 
+export const setPlayerId = (nick, id) => {
+  try {
+    const key = (nick || '').trim().toLowerCase();
+    if (!key) return;
+    if (key === OFFLINE_ADMIN_NICK) return;
+    const n = Number(id);
+    if (!Number.isFinite(n)) return;
+    const v = Math.max(0, Math.floor(n));
+    const ids = _loadIds();
+    ids[key] = v;
+    _saveIds(ids);
+  } catch {}
+};
+
 const _ensurePlayerId = (nick) => {
   const key = _userKey(nick);
   if (!key) return null;

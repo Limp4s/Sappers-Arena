@@ -92,15 +92,33 @@ export default function CustomView({ onStartCustom, onStartCustomWithLobby, play
             <div className="space-y-2">
               <label className="flex items-center justify-between gap-3 text-[12px] text-slate-300 font-mono">
                 <span>{t('custom.modNarc')}</span>
-                <input type="checkbox" checked={narc} onChange={(e) => setNarc(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={narc}
+                  onChange={(e) => setNarc(e.target.checked)}
+                  className="appearance-none w-10 h-5 rounded-full border border-white/15 bg-black/30 relative cursor-pointer transition-colors outline-none focus:ring-2 focus:ring-[#00E5FF]/30 checked:border-[#00E5FF]/60 checked:bg-[#00E5FF]/15"
+                  style={{ boxShadow: narc ? '0 0 10px rgba(0,229,255,0.25)' : 'none' }}
+                />
               </label>
               <label className="flex items-center justify-between gap-3 text-[12px] text-slate-300 font-mono">
                 <span>{t('custom.modRandom')}</span>
-                <input type="checkbox" checked={randomMode} onChange={(e) => setRandomMode(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={randomMode}
+                  onChange={(e) => setRandomMode(e.target.checked)}
+                  className="appearance-none w-10 h-5 rounded-full border border-white/15 bg-black/30 relative cursor-pointer transition-colors outline-none focus:ring-2 focus:ring-[#FF2A6D]/30 checked:border-[#FF2A6D]/60 checked:bg-[#FF2A6D]/15"
+                  style={{ boxShadow: randomMode ? '0 0 10px rgba(255,42,109,0.22)' : 'none' }}
+                />
               </label>
               <label className="flex items-center justify-between gap-3 text-[12px] text-slate-300 font-mono">
                 <span>{t('custom.modNoFlags')}</span>
-                <input type="checkbox" checked={noFlags} onChange={(e) => setNoFlags(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={noFlags}
+                  onChange={(e) => setNoFlags(e.target.checked)}
+                  className="appearance-none w-10 h-5 rounded-full border border-white/15 bg-black/30 relative cursor-pointer transition-colors outline-none focus:ring-2 focus:ring-[#FFD700]/30 checked:border-[#FFD700]/60 checked:bg-[#FFD700]/15"
+                  style={{ boxShadow: noFlags ? '0 0 10px rgba(255,215,0,0.20)' : 'none' }}
+                />
               </label>
             </div>
           </div>
