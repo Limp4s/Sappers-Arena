@@ -568,7 +568,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
             flagMode={flagMode} onToggleFlagMode={() => setFlagMode((v) => !v)} />
         )}
 
-        <div ref={tutorialContainerRef} className={`glass-panel rounded-xl p-4 md:p-6 flex-1 flex items-center justify-center relative overflow-hidden ${shaking ? 'shake' : ''}`}
+        <div ref={tutorialContainerRef} className={`glass-panel rounded-xl p-4 md:p-6 flex-1 flex items-center justify-center relative overflow-hidden ${shaking ? 'shake' : ''} ${tutorialStep != null ? 'md:pl-[440px]' : ''}`}
           style={{ borderColor: `${cellTheme.accent}33` }}>
           <div className="w-full" style={{ maxWidth: `min(100%, ${cols * 48}px)` }} data-testid="game-grid">
             <div style={gridStyle}>
