@@ -223,7 +223,7 @@ function Home() {
   }
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen w-full" style={{ minHeight: '100dvh' }}>
       <AchievementBanner
         items={newUnlocked}
         onDone={() => setNewUnlocked([])}

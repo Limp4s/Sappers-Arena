@@ -62,6 +62,8 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const [tutorialHintRect, setTutorialHintRect] = useState(null);
   const [tutorialHintNeighborRects, setTutorialHintNeighborRects] = useState([]);
   const [tutorialExplained, setTutorialExplained] = useState(() => ({}));
+  const [tutorialExplainedNums, setTutorialExplainedNums] = useState(() => ({}));
+  const [tutorialHintsStarted, setTutorialHintsStarted] = useState(false);
   useLang();
   const timerRef = useRef(null);
   const tutorialTimerRef = useRef(null);
@@ -213,6 +215,25 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
           if (adj <= 0) continue;
           const key = `${rr},${cc}`;
           if (explained[key]) continue;
+          return { r: rr, c: cc, adjacent: adj };
+        }
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const pickNextHintNumberCell = useCallback((b, explainedNumsMap) => {
+    try {
+      const explainedNums = explainedNumsMap && typeof explainedNumsMap === 'object' ? explainedNumsMap : {};
+      for (let rr = 0; rr < b.length; rr++) {
+        for (let cc = 0; cc < b[rr].length; cc++) {
+          const cl = b[rr][cc];
+          if (!cl?.revealed || cl?.mine) continue;
+          const adj = Number(cl?.adjacent || 0);
+          if (adj <= 0) continue;
+          if (explainedNums[String(adj)]) continue;
           return { r: rr, c: cc, adjacent: adj };
         }
       }
@@ -399,13 +420,14 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     next[r][c].flagged = !next[r][c].flagged;
     setFlagsCount((f) => {
       const nf = f + (next[r][c].flagged ? 1 : -1);
-      // After the first flag in tutorial, start guided hints.
-      if (tutorialMode && tutorialStep == null && nf >= 1) {
+      // After the first flag in tutorial, start guided hints ONCE.
+      if (tutorialMode && !tutorialHintsStarted && tutorialStep == null && nf >= 1) {
         try {
-          const pick = pickNextHintCell(next, tutorialExplained);
+          const pick = pickNextHintNumberCell(next, tutorialExplainedNums);
           if (pick) {
             setTutorialHintCell(pick);
             setTutorialStep(5);
+            setTutorialHintsStarted(true);
           }
         } catch {}
       }
@@ -470,7 +492,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
             : `radial-gradient(ellipse at center, ${fxDef.color.replace(/0\.\d+/, '0.8')}, transparent 70%)`))));
 
   return (
-    <div className="min-h-screen w-full relative flex flex-col" data-testid="game-screen" onContextMenu={(e) => e.preventDefault()}>
+    <div className="min-h-screen w-full relative flex flex-col" style={{ minHeight: '100dvh' }} data-testid="game-screen" onContextMenu={(e) => e.preventDefault()}>
       <AchievementBanner
         items={newUnlocked}
         onDone={() => setNewUnlocked([])}
@@ -578,14 +600,14 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               </div>
 
               {tutorialStep === 0 && (
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[360px] glass-panel rounded-xl p-5 border border-[#00E5FF]/30">
+                <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[360px] glass-panel rounded-xl p-5 border border-[#00E5FF]/30">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">Нажми в любое место на поле.</div>
                 </div>
               )}
 
               {tutorialStep === 1 && (
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[420px] glass-panel rounded-xl p-5 border border-[#00FF9D]/30">
+                <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[420px] glass-panel rounded-xl p-5 border border-[#00FF9D]/30">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">Теперь у нас есть открытое поле.</div>
                   <div className="mt-4 flex gap-2 pointer-events-auto">
@@ -595,7 +617,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               )}
 
               {tutorialStep === 2 && (
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[520px] glass-panel rounded-xl p-5 border border-[#00E5FF]/30">
+                <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[520px] glass-panel rounded-xl p-5 border border-[#00E5FF]/30">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">Видишь цифры? Они показывают сколько в радиусе 1 клетки от этой цифры бомб.</div>
                   <div className="mt-4 flex gap-2 pointer-events-auto">
@@ -648,7 +670,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               )}
 
               {tutorialStep === 3 && tutorialOneCell && (
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[560px] glass-panel rounded-xl p-5 border border-[#FFD700]/30">
+                <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[560px] glass-panel rounded-xl p-5 border border-[#FFD700]/30">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">Вот это <span className="neon-gold font-bold">1</span>. Значит рядом (8 клеток вокруг) есть ровно 1 бомба.</div>
                   <div className="mt-3 flex gap-2 pointer-events-auto">
@@ -742,10 +764,10 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               )}
 
               {tutorialStep === 4 && (
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[640px] glass-panel rounded-xl p-5 border border-white/25">
+                <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[640px] glass-panel rounded-xl p-5 border border-white/25">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">Вот здесь бомба на 100%, потому что цифры рядом показывают сколько бомб вокруг (радиус 1 клетки).</div>
-                  <div className="text-[12px] font-mono text-slate-200 mt-2">Поставь флажок на бомбу: ПКМ по клетке или включи режим флага.</div>
+                  <div className="text-[12px] font-mono text-slate-200 mt-2">Поставь флажок на бомбу: ПКМ по клетке или включи режим флага. На телефоне: зажми палец на клетке на пару секунд.</div>
                   <div className="mt-4 flex gap-2 pointer-events-auto">
                     <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => setTutorialStep(null)}>{t('common.continue')}</button>
                   </div>
@@ -776,7 +798,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               )}
 
               {tutorialStep === 5 && tutorialHintCell && (
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[680px] glass-panel rounded-xl p-5 border border-white/25">
+                <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[680px] glass-panel rounded-xl p-5 border border-white/25">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">Вот здесь цифра <span className="neon-cyan font-bold">{tutorialHintCell.adjacent}</span>. Значит в радиусе 1 клетки вокруг неё спрятано <span className="neon-cyan font-bold">{tutorialHintCell.adjacent}</span> бомб.</div>
                   <div className="mt-4 flex gap-2 pointer-events-auto">
@@ -785,7 +807,9 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
                         const key = `${tutorialHintCell.r},${tutorialHintCell.c}`;
                         const nextExplained = { ...(tutorialExplained || {}), [key]: true };
                         setTutorialExplained(nextExplained);
-                        const pick = pickNextHintCell(board, nextExplained);
+                        const nextNums = { ...(tutorialExplainedNums || {}), [String(tutorialHintCell.adjacent)]: true };
+                        setTutorialExplainedNums(nextNums);
+                        const pick = pickNextHintNumberCell(board, nextNums);
                         if (pick) setTutorialHintCell(pick);
                         else setTutorialStep(null);
                       } catch {
