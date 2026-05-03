@@ -592,7 +592,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
         {tutorialMode && tutorialStep != null && tutorialSkipConfirm && (
           <div className="md:hidden fixed left-1/2 top-[88px] -translate-x-1/2 z-[80] pointer-events-auto">
             <div className="glass-panel rounded-xl px-4 py-3 border border-white/20 w-[92vw] max-w-[360px]">
-              <div className="text-[12px] font-mono text-slate-200">Пропустить обучение?</div>
+              <div className="text-[12px] font-mono text-slate-200">{t('tutorial.skipConfirm')}</div>
               <div className="mt-3 flex gap-2">
                 <button className="neon-btn neon-btn-coral flex-1" onClick={() => setTutorialSkipConfirm(false)} type="button">{t('common.no')}</button>
                 <button className="neon-btn flex-1" onClick={() => {
@@ -641,14 +641,14 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               {tutorialStep === 0 && (
                 <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[360px] glass-panel rounded-xl p-5 border border-[#00E5FF]/30">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
-                  <div className="text-[12px] font-mono text-slate-200">Нажми в любое место на поле.</div>
+                  <div className="text-[12px] font-mono text-slate-200">{t('tutorial.step0')}</div>
                 </div>
               )}
 
               {tutorialStep === 1 && (
                 <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[420px] glass-panel rounded-xl p-5 border border-[#00FF9D]/30">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
-                  <div className="text-[12px] font-mono text-slate-200">Теперь у нас есть открытое поле.</div>
+                  <div className="text-[12px] font-mono text-slate-200">{t('tutorial.step1')}</div>
                   <div className="mt-4 flex gap-2 pointer-events-auto">
                     <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => setTutorialStep(2)}>{t('common.continue')}</button>
                   </div>
@@ -658,7 +658,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               {tutorialStep === 2 && (
                 <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[520px] glass-panel rounded-xl p-5 border border-[#00E5FF]/30">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
-                  <div className="text-[12px] font-mono text-slate-200">Видишь цифры? Они показывают сколько в радиусе 1 клетки от этой цифры бомб.</div>
+                  <div className="text-[12px] font-mono text-slate-200">{t('tutorial.step2')}</div>
                   <div className="mt-4 flex gap-2 pointer-events-auto">
                     <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => {
                       try {
@@ -711,7 +711,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               {tutorialStep === 3 && tutorialOneCell && (
                 <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[560px] glass-panel rounded-xl p-5 border border-[#FFD700]/30">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
-                  <div className="text-[12px] font-mono text-slate-200">Вот это <span className="neon-gold font-bold">1</span>. Значит рядом (8 клеток вокруг) есть ровно 1 бомба.</div>
+                  <div className="text-[12px] font-mono text-slate-200">{t('tutorial.step3a')}<span className="neon-gold font-bold">{t('tutorial.step3b')}</span>{t('tutorial.step3c')}</div>
                   <div className="mt-3 flex gap-2 pointer-events-auto">
                     <button
                       className="neon-btn px-4 py-2 text-[11px]"
@@ -805,8 +805,8 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               {tutorialStep === 4 && (
                 <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[640px] glass-panel rounded-xl p-5 border border-white/25">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
-                  <div className="text-[12px] font-mono text-slate-200">Вот здесь бомба на 100%, потому что цифры рядом показывают сколько бомб вокруг (радиус 1 клетки).</div>
-                  <div className="text-[12px] font-mono text-slate-200 mt-2">Поставь флажок на бомбу: ПКМ по клетке или включи режим флага. На телефоне: зажми палец на клетке на пару секунд.</div>
+                  <div className="text-[12px] font-mono text-slate-200">{t('tutorial.step4a')}</div>
+                  <div className="text-[12px] font-mono text-slate-200 mt-2">{t('tutorial.step4b')}</div>
                   <div className="mt-4 flex gap-2 pointer-events-auto">
                     <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => setTutorialStep(null)}>{t('common.continue')}</button>
                   </div>
@@ -839,7 +839,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               {tutorialStep === 5 && tutorialHintCell && (
                 <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[680px] glass-panel rounded-xl p-5 border border-white/25">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
-                  <div className="text-[12px] font-mono text-slate-200">Вот здесь цифра <span className="neon-cyan font-bold">{tutorialHintCell.adjacent}</span>. Значит в радиусе 1 клетки вокруг неё спрятано <span className="neon-cyan font-bold">{tutorialHintCell.adjacent}</span> бомб.</div>
+                  <div className="text-[12px] font-mono text-slate-200">{t('tutorial.step5a')}<span className="neon-cyan font-bold">{tutorialHintCell.adjacent}</span>{t('tutorial.step5b')}<span className="neon-cyan font-bold">{tutorialHintCell.adjacent}</span>{t('tutorial.step5c')}</div>
                   <div className="mt-4 flex gap-2 pointer-events-auto">
                     <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => {
                       try {
@@ -873,7 +873,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
             <div className="glass-panel slide-up rounded-2xl p-8 max-w-md w-[92%] relative overflow-hidden">
               <div className="scanline" />
               <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
-              <h2 className="font-display text-2xl font-black tracking-tight neon-cyan mb-4">ТУТОРИАЛ ПРОЙДЕН</h2>
+              <h2 className="font-display text-2xl font-black tracking-tight neon-cyan mb-4">{t('tutorial.doneTitle')}</h2>
               <div className="flex flex-wrap gap-2">
                 <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={() => setModalOpen(false)} data-testid="close-modal-btn">{t('common.close')}</button>
                 {onExit && (

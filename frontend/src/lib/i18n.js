@@ -37,6 +37,21 @@ const DICTS = {
       duelsTitle: 'DUELS',
       duelsBody: 'In battles, your goal is to finish with more progress (and lives) than your opponent. Speed matters.',
     },
+    tutorial: {
+      skipConfirm: 'Skip the tutorial?',
+      step0: 'Tap anywhere on the field.',
+      step1: 'Now we have an open area.',
+      step2: 'See the numbers? They show how many bombs are within 1 cell radius of that number.',
+      step3a: 'This is ',
+      step3b: '1',
+      step3c: '. That means there is exactly 1 bomb in the 8 surrounding cells.',
+      step4a: 'There is 100% a bomb here, because nearby numbers show how many bombs are around (1 cell radius).',
+      step4b: 'Place a flag: right click the cell or enable flag mode. On phone: press and hold for a couple of seconds.',
+      step5a: 'Here the number is ',
+      step5b: '. That means within 1 cell radius there are ',
+      step5c: ' bombs.',
+      doneTitle: 'TUTORIAL COMPLETED',
+    },
     daily: {
       title: 'DAILY',
       subtitle: 'DAILY QUESTS',
@@ -424,6 +439,21 @@ const DICTS = {
       flagsBody: 'Ставьте флаги, чтобы отмечать мины. Правильные флаги помогают играть быстрее и безопаснее.',
       duelsTitle: 'ДУЭЛИ',
       duelsBody: 'В битвах цель — пройти больше и сохранить больше жизней, чем соперник. Скорость важна.',
+    },
+    tutorial: {
+      skipConfirm: 'Пропустить обучение?',
+      step0: 'Нажми в любое место на поле.',
+      step1: 'Теперь у нас есть открытое поле.',
+      step2: 'Видишь цифры? Они показывают сколько в радиусе 1 клетки от этой цифры бомб.',
+      step3a: 'Вот это ',
+      step3b: '1',
+      step3c: '. Значит рядом (8 клеток вокруг) есть ровно 1 бомба.',
+      step4a: 'Вот здесь бомба на 100%, потому что цифры рядом показывают сколько бомб вокруг (радиус 1 клетки).',
+      step4b: 'Поставь флажок на бомбу: ПКМ по клетке или включи режим флага. На телефоне: зажми палец на клетке на пару секунд.',
+      step5a: 'Вот здесь цифра ',
+      step5b: '. Значит в радиусе 1 клетки вокруг неё спрятано ',
+      step5c: ' бомб.',
+      doneTitle: 'ТУТОРИАЛ ПРОЙДЕН',
     },
     daily: {
       title: 'ДЕЙЛИКИ',
@@ -823,6 +853,21 @@ const DICTS = {
       duelsTitle: 'ДУЕЛІ',
       duelsBody: 'У битвах мета — завершити з більшим прогресом (і життями), ніж суперник. Швидкість важлива.',
     },
+    tutorial: {
+      skipConfirm: 'Пропустити навчання?',
+      step0: 'Торкнися будь-де на полі.',
+      step1: 'Тепер у нас є відкрита ділянка.',
+      step2: 'Бачиш цифри? Вони показують, скільки бомб у радіусі 1 клітинки від цієї цифри.',
+      step3a: 'Ось це ',
+      step3b: '1',
+      step3c: '. Це означає: поруч (8 клітин навколо) є рівно 1 бомба.',
+      step4a: 'Тут бомба на 100%, бо цифри поруч показують, скільки бомб навколо (радіус 1 клітинки).',
+      step4b: 'Постав прапорець: ПКМ по клітинці або увімкни режим прапорця. На телефоні: затисни клітинку на пару секунд.',
+      step5a: 'Тут цифра ',
+      step5b: '. Це означає: у радіусі 1 клітинки навколо сховано ',
+      step5c: ' бомб.',
+      doneTitle: 'НАВЧАННЯ ПРОЙДЕНО',
+    },
     daily: {
       title: 'ДЕЙЛІКИ',
       subtitle: 'ЩОДЕННІ ЗАВДАННЯ',
@@ -1205,6 +1250,21 @@ const DICTS = {
       duelsTitle: 'SOUBOJE',
       duelsBody: 'V bitvách je cíl dokončit s větším postupem (a více životy) než soupeř. Rychlost rozhoduje.',
     },
+    tutorial: {
+      skipConfirm: 'Přeskočit návod?',
+      step0: 'Klikni kamkoliv na pole.',
+      step1: 'Teď máme otevřenou oblast.',
+      step2: 'Vidíš čísla? Ukazují, kolik bomb je v okruhu 1 políčka od daného čísla.',
+      step3a: 'Tohle je ',
+      step3b: '1',
+      step3c: '. To znamená, že v 8 okolních políčkách je přesně 1 bomba.',
+      step4a: 'Tady je bomba na 100 %, protože čísla kolem ukazují, kolik bomb je okolo (okruh 1 políčka).',
+      step4b: 'Dej vlajku: pravým klikem na políčko nebo zapni režim vlajky. Na telefonu: podrž prst pár sekund.',
+      step5a: 'Tady je číslo ',
+      step5b: '. To znamená, že v okruhu 1 políčka je ',
+      step5c: ' bomb.',
+      doneTitle: 'NÁVOD DOKONČEN',
+    },
     daily: {
       title: 'DENNÍ',
       subtitle: 'DENNÍ ÚKOLY',
@@ -1539,6 +1599,21 @@ const DICTS = {
       flagsBody: 'Usa banderas para marcar minas. Las banderas correctas te ayudan a jugar más rápido y seguro.',
       duelsTitle: 'DUELOS',
       duelsBody: 'En batallas, tu objetivo es terminar con más progreso (y vidas) que tu oponente. La velocidad importa.',
+    },
+    tutorial: {
+      skipConfirm: '¿Saltar el tutorial?',
+      step0: 'Toca cualquier parte del campo.',
+      step1: 'Ahora tenemos una zona abierta.',
+      step2: '¿Ves los números? Muestran cuántas bombas hay en un radio de 1 casilla de ese número.',
+      step3a: 'Esto es un ',
+      step3b: '1',
+      step3c: '. Eso significa que en las 8 casillas alrededor hay exactamente 1 bomba.',
+      step4a: 'Aquí hay una bomba al 100 %, porque los números cercanos muestran cuántas bombas hay alrededor (radio de 1 casilla).',
+      step4b: 'Pon una bandera: clic derecho o activa el modo bandera. En el móvil: mantén pulsado un par de segundos.',
+      step5a: 'Aquí el número es ',
+      step5b: '. Eso significa que en un radio de 1 casilla hay ',
+      step5c: ' bombas.',
+      doneTitle: 'TUTORIAL COMPLETADO',
     },
     daily: {
       title: 'DIARIAS',
@@ -1879,6 +1954,19 @@ _setPath(DICTS.fr, 'common.or', 'OU');
 _setPath(DICTS.fr, 'common.vs', 'VS');
 _setPath(DICTS.fr, 'common.yes', 'OUI');
 _setPath(DICTS.fr, 'common.no', 'NON');
+_setPath(DICTS.fr, 'tutorial.skipConfirm', 'Passer le tutoriel ?');
+_setPath(DICTS.fr, 'tutorial.step0', 'Appuie n’importe où sur le terrain.');
+_setPath(DICTS.fr, 'tutorial.step1', 'Maintenant, on a une zone ouverte.');
+_setPath(DICTS.fr, 'tutorial.step2', 'Tu vois les chiffres ? Ils indiquent combien de bombes se trouvent dans un rayon de 1 case autour de ce chiffre.');
+_setPath(DICTS.fr, 'tutorial.step3a', 'Voici un ');
+_setPath(DICTS.fr, 'tutorial.step3b', '1');
+_setPath(DICTS.fr, 'tutorial.step3c', '. Cela signifie qu’il y a exactement 1 bombe dans les 8 cases autour.');
+_setPath(DICTS.fr, 'tutorial.step4a', 'Ici, il y a une bombe à 100 %, car les chiffres proches indiquent combien de bombes sont autour (rayon de 1 case).');
+_setPath(DICTS.fr, 'tutorial.step4b', 'Place un drapeau : clic droit sur la case ou active le mode drapeau. Sur mobile : maintiens appuyé quelques secondes.');
+_setPath(DICTS.fr, 'tutorial.step5a', 'Ici, le chiffre est ');
+_setPath(DICTS.fr, 'tutorial.step5b', '. Donc, dans un rayon de 1 case, il y a ');
+_setPath(DICTS.fr, 'tutorial.step5c', ' bombes.');
+_setPath(DICTS.fr, 'tutorial.doneTitle', 'TUTORIEL TERMINÉ');
 _setPath(DICTS.fr, 'settings.sound', 'SON');
 _setPath(DICTS.fr, 'onboarding.skip', 'PASSER');
 _setPath(DICTS.fr, 'onboarding.next', 'SUIVANT');
@@ -2176,6 +2264,19 @@ _setPath(DICTS.de, 'common.copy', 'KOPIEREN');
 _setPath(DICTS.de, 'common.or', 'ODER');
 _setPath(DICTS.de, 'common.yes', 'JA');
 _setPath(DICTS.de, 'common.no', 'NEIN');
+_setPath(DICTS.de, 'tutorial.skipConfirm', 'Tutorial überspringen?');
+_setPath(DICTS.de, 'tutorial.step0', 'Tippe irgendwo auf das Feld.');
+_setPath(DICTS.de, 'tutorial.step1', 'Jetzt haben wir einen offenen Bereich.');
+_setPath(DICTS.de, 'tutorial.step2', 'Siehst du die Zahlen? Sie zeigen, wie viele Bomben im Radius von 1 Feld um diese Zahl liegen.');
+_setPath(DICTS.de, 'tutorial.step3a', 'Das ist ');
+_setPath(DICTS.de, 'tutorial.step3b', '1');
+_setPath(DICTS.de, 'tutorial.step3c', '. Das bedeutet: In den 8 umliegenden Feldern liegt genau 1 Bombe.');
+_setPath(DICTS.de, 'tutorial.step4a', 'Hier ist zu 100 % eine Bombe, weil die Zahlen daneben zeigen, wie viele Bomben herumliegen (Radius 1 Feld).');
+_setPath(DICTS.de, 'tutorial.step4b', 'Setze eine Flagge: Rechtsklick auf das Feld oder Flaggenmodus einschalten. Auf dem Handy: Feld ein paar Sekunden gedrückt halten.');
+_setPath(DICTS.de, 'tutorial.step5a', 'Hier ist die Zahl ');
+_setPath(DICTS.de, 'tutorial.step5b', '. Das heißt: Im Radius von 1 Feld gibt es ');
+_setPath(DICTS.de, 'tutorial.step5c', ' Bomben.');
+_setPath(DICTS.de, 'tutorial.doneTitle', 'TUTORIAL ABGESCHLOSSEN');
 _setPath(DICTS.de, 'settings.sound', 'SOUND');
 _setPath(DICTS.de, 'daily.title', 'TÄGLICH');
 _setPath(DICTS.de, 'daily.subtitle', 'TÄGLICHE AUFGABEN');
@@ -2448,6 +2549,19 @@ _setPath(DICTS.zh, 'common.or', '或');
 _setPath(DICTS.zh, 'common.vs', '对');
 _setPath(DICTS.zh, 'common.yes', '是');
 _setPath(DICTS.zh, 'common.no', '否');
+_setPath(DICTS.zh, 'tutorial.skipConfirm', '跳过教程？');
+_setPath(DICTS.zh, 'tutorial.step0', '点击棋盘任意位置。');
+_setPath(DICTS.zh, 'tutorial.step1', '现在我们已经打开了一片区域。');
+_setPath(DICTS.zh, 'tutorial.step2', '看到数字了吗？它表示在该数字周围 1 格范围内有多少颗地雷。');
+_setPath(DICTS.zh, 'tutorial.step3a', '这是 ');
+_setPath(DICTS.zh, 'tutorial.step3b', '1');
+_setPath(DICTS.zh, 'tutorial.step3c', '。这意味着周围 8 格里正好有 1 颗地雷。');
+_setPath(DICTS.zh, 'tutorial.step4a', '这里 100% 有地雷，因为附近数字显示周围地雷数量（1 格范围）。');
+_setPath(DICTS.zh, 'tutorial.step4b', '插旗：右键点击格子或开启插旗模式。手机上：长按格子几秒钟。');
+_setPath(DICTS.zh, 'tutorial.step5a', '这里的数字是 ');
+_setPath(DICTS.zh, 'tutorial.step5b', '。这表示在 1 格范围内有 ');
+_setPath(DICTS.zh, 'tutorial.step5c', ' 颗地雷。');
+_setPath(DICTS.zh, 'tutorial.doneTitle', '教程完成');
 _setPath(DICTS.zh, 'settings.sound', '声音');
 _setPath(DICTS.zh, 'daily.title', '每日');
 _setPath(DICTS.zh, 'daily.subtitle', '每日任务');
