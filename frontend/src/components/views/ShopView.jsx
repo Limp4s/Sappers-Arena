@@ -14,6 +14,7 @@ export default function ShopView({ player, onPlayerUpdate }) {
   const [equipped, setEquipped] = useState(() => loadEquipped(player?.nick));
   const [buying, setBuying] = useState(null);
   const [msg, setMsg] = useState(null);
+  const svgUid = React.useId();
   useLang();
 
   useEffect(() => {
@@ -138,20 +139,24 @@ export default function ShopView({ player, onPlayerUpdate }) {
       if (!def) return null;
       const Icon = def.icon;
       if (def.color === 'rainbow') {
+        const gid = `shop-flag-${id}-${String(svgUid).replace(/[^a-zA-Z0-9_-]/g, '')}`;
         return (
           <div className="flex items-center justify-center h-16">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <defs>
-                <linearGradient id={`shop-flag-${id}`} x1="0" y1="0" x2="24" y2="0">
+                <linearGradient id={gid} x1="0" y1="0" x2="24" y2="0" gradientUnits="userSpaceOnUse" spreadMethod="reflect">
                   <stop offset="0%" stopColor="#00E5FF" />
                   <stop offset="25%" stopColor="#00FF9D" />
                   <stop offset="50%" stopColor="#FFD700" />
                   <stop offset="75%" stopColor="#FF2A6D" />
                   <stop offset="100%" stopColor="#A855F7" />
+                  <animateTransform attributeName="gradientTransform" type="translate" values="-24 0; 24 0" dur="3.8s" repeatCount="indefinite" />
                 </linearGradient>
               </defs>
-              <path d="M4 22V4" stroke={`url(#shop-flag-${id})`} />
-              <path d="M4 4H14l-1.5 4L14 12H4" stroke={`url(#shop-flag-${id})`} />
+              <path d="M4 22V4" stroke={`url(#${gid})`} strokeWidth="4.8" opacity="0.25" style={{ filter: 'drop-shadow(0 0 2px rgba(0,229,255,0.45)) drop-shadow(0 0 3px rgba(255,42,109,0.25))' }} />
+              <path d="M4 4H14l-1.5 4L14 12H4" stroke={`url(#${gid})`} strokeWidth="4.8" opacity="0.25" style={{ filter: 'drop-shadow(0 0 2px rgba(0,255,157,0.35)) drop-shadow(0 0 3px rgba(168,85,247,0.25))' }} />
+              <path d="M4 22V4" stroke={`url(#${gid})`} />
+              <path d="M4 4H14l-1.5 4L14 12H4" stroke={`url(#${gid})`} />
             </svg>
           </div>
         );

@@ -932,6 +932,8 @@ async def check_nickname(nickname: str = Query(..., min_length=1, max_length=30)
 async def register_player(payload: RegisterRequest):
     nick = _validate_nick(payload.nickname)
     _validate_password(payload.password)
+    if _is_admin_nick(nick) or (nick or "").lower() == ROOT_ADMIN_NICK_LOWER:
+        raise HTTPException(status_code=403, detail="This nickname is reserved.")
     if await _get_player(nick):
         raise HTTPException(status_code=409, detail=f"Nickname '{nick}' is already taken.")
     doc = {
@@ -940,7 +942,7 @@ async def register_player(payload: RegisterRequest):
         "nickname": nick,
         "nickname_lower": nick.lower(),
         "password_hash": _hash_password(payload.password),
-        "is_admin": _is_admin_nick(nick),
+        "is_admin": False,
         "coins": STARTER_COINS,
         "owned_items": [],
         "rating": 500,
@@ -963,8 +965,6 @@ async def login_player(payload: LoginRequest):
         # First successful login sets the password and migrates the account.
         _validate_password(payload.password)
         patch = {"password_hash": _hash_password(payload.password)}
-        if _is_admin_nick(player.get("nickname")):
-            patch["is_admin"] = True
         await db.players.update_one(
             {"nickname_lower": player["nickname_lower"]},
             {"$set": patch},
@@ -1024,7 +1024,7 @@ async def me(nick: str = Depends(require_session)):
 
 async def _require_admin(nick: str):
     me_player = await _get_player(nick)
-    if not me_player or not (me_player.get("is_admin") or _is_admin_nick(nick)):
+    if not me_player or not me_player.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin privileges required.")
     return me_player
 
@@ -1451,15 +1451,11 @@ async def get_ranked_leaderboard(limit: int = Query(default=20, ge=1, le=500)):
 
 @api_router.delete("/leaderboard/{entry_id}")
 async def delete_leaderboard_entry(entry_id: str, nick: str = Depends(require_session)):
-    if not _is_admin_nick(nick):
-        # also check DB is_admin flag
-        p = await _get_player(nick)
-        if not p or not p.get("is_admin"):
-            raise HTTPException(status_code=403, detail="Admin privileges required.")
-    result = await db.leaderboard.delete_one({"id": entry_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Entry not found.")
-    return {"deleted": entry_id}
+    player = await _get_player(nick)
+    if not player or not player.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin privileges required.")
+    await db.leaderboard.delete_one({"_id": entry_id})
+    return {"ok": True}
 
 
 class AdminPromoteRequest(BaseModel):

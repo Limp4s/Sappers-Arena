@@ -95,20 +95,22 @@ export const Cell = React.memo(function Cell({
     if (flagColor === 'rainbow') {
       const gid = `rf-${String(svgUid).replace(/[^a-zA-Z0-9_-]/g, '')}`;
       content = (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ overflow: 'visible', display: 'block' }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ overflow: 'visible', display: 'block' }}>
           <defs>
-            <linearGradient id={gid} x1="0" y1="0" x2="24" y2="0" gradientUnits="userSpaceOnUse">
+            <linearGradient id={gid} x1="0" y1="0" x2="24" y2="0" gradientUnits="userSpaceOnUse" spreadMethod="reflect">
               <stop offset="0%" stopColor="#00E5FF" />
               <stop offset="20%" stopColor="#00FF9D" />
               <stop offset="40%" stopColor="#FFD700" />
               <stop offset="60%" stopColor="#FF2A6D" />
               <stop offset="80%" stopColor="#A855F7" />
               <stop offset="100%" stopColor="#00E5FF" />
-              <animateTransform attributeName="gradientTransform" type="translate" values="-24 0; 24 0" dur="3.2s" repeatCount="indefinite" />
+              <animateTransform attributeName="gradientTransform" type="translate" values="-24 0; 24 0" dur="3.8s" repeatCount="indefinite" />
             </linearGradient>
           </defs>
-          <path d="M4 22V4" stroke={`url(#${gid})`} />
-          <path d="M4 4H14l-1.5 4L14 12H4" stroke={`url(#${gid})`} />
+          <path d="M4 22V4" stroke={`url(#${gid})`} strokeWidth="4.6" opacity="0.28" style={{ filter: 'drop-shadow(0 0 2px rgba(0,229,255,0.45)) drop-shadow(0 0 3px rgba(255,42,109,0.25))' }} />
+          <path d="M4 4H14l-1.5 4L14 12H4" stroke={`url(#${gid})`} strokeWidth="4.6" opacity="0.28" style={{ filter: 'drop-shadow(0 0 2px rgba(0,255,157,0.35)) drop-shadow(0 0 3px rgba(168,85,247,0.25))' }} />
+          <path d="M4 22V4" stroke={`url(#${gid})`} strokeWidth="2.5" />
+          <path d="M4 4H14l-1.5 4L14 12H4" stroke={`url(#${gid})`} strokeWidth="2.5" />
         </svg>
       );
     } else {
