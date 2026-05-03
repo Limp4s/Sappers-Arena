@@ -2,7 +2,7 @@
 const DICTS = {
   en: {
     appName: 'Sappers Arena',
-    tagline: '// neural minesweeper',
+    tagline: '',
     tabs: { campaign: 'CAMPAIGN', battles: 'BATTLES', custom: 'CUSTOM', shop: 'SHOP', leaderboard: 'LEADERS', profile: 'PROFILE', friends: 'FRIENDS' },
     common: {
       login: 'ACCESS GRID', register: 'LOCK CALLSIGN', logout: 'LOG OUT · SWITCH ACCOUNT',
@@ -421,7 +421,7 @@ const DICTS = {
   },
   ru: {
     appName: 'Sappers Arena',
-    tagline: '// нейро сапёр',
+    tagline: '',
     tabs: { campaign: 'КАМПАНИЯ', battles: 'БИТВЫ', custom: 'СВОЯ', shop: 'МАГАЗИН', leaderboard: 'ЛИДЕРЫ', profile: 'ПРОФИЛЬ', friends: 'ДРУЗЬЯ' },
     common: {
       login: 'ВОЙТИ', register: 'РЕГИСТРАЦИЯ', logout: 'ВЫЙТИ · СМЕНИТЬ АККАУНТ',
@@ -841,7 +841,7 @@ const DICTS = {
   },
   uk: {
     appName: 'Sappers Arena',
-    tagline: '// нейро сапер',
+    tagline: '',
     tabs: { campaign: 'КАМПАНІЯ', battles: 'БИТВИ', custom: 'СВІЙ РЕЖИМ', shop: 'МАГАЗИН', leaderboard: 'ЛІДЕРИ', profile: 'ПРОФІЛЬ', friends: 'ДРУЗІ' },
     common: {
       login: 'УВІЙТИ', register: 'РЕЄСТРАЦІЯ', logout: 'ВИЙТИ · ЗМІНИТИ АКАУНТ',
@@ -1263,7 +1263,7 @@ const DICTS = {
   },
   cs: {
     appName: 'Sappers Arena',
-    tagline: '// neuronový minolovka',
+    tagline: '',
     tabs: { campaign: 'KAMPAŇ', battles: 'SOUBOJE', custom: 'VLASTNÍ', shop: 'OBCHOD', leaderboard: 'ŽEBŘÍČEK', profile: 'PROFIL', friends: 'PŘÁTELÉ' },
     common: {
       login: 'PŘIHLÁSIT', register: 'REGISTRACE', logout: 'ODHLÁSIT · ZMĚNIT ÚČET',
@@ -1631,7 +1631,7 @@ const DICTS = {
   },
   es: {
     appName: 'Sappers Arena',
-    tagline: '// buscaminas neural',
+    tagline: '',
     tabs: { campaign: 'CAMPAÑA', battles: 'BATALLAS', custom: 'PERSONALIZADO', shop: 'TIENDA', leaderboard: 'LÍDERES', profile: 'PERFIL', friends: 'AMIGOS' },
     common: {
       login: 'ENTRAR', register: 'REGISTRAR', logout: 'SALIR · CAMBIAR CUENTA',
@@ -2004,7 +2004,7 @@ DICTS.de = _deepClone(DICTS.en);
 DICTS.zh = _deepClone(DICTS.en);
 
 // French
-_setPath(DICTS.fr, 'tagline', '// démineur neural');
+_setPath(DICTS.fr, 'tagline', '');
 _setPath(DICTS.fr, 'tabs.campaign', 'CAMPAGNE');
 _setPath(DICTS.fr, 'tabs.battles', 'DUELS');
 _setPath(DICTS.fr, 'tabs.custom', 'PERSO');
@@ -2317,7 +2317,7 @@ _setPath(DICTS.fr, 'custom.skin.cursor', 'CURSEUR');
 _setPath(DICTS.fr, 'custom.lockedTooltip', 'Verrouillé — acheter en boutique');
 
 // German
-_setPath(DICTS.de, 'tagline', '// neuronales minesweeper');
+_setPath(DICTS.de, 'tagline', '');
 _setPath(DICTS.de, 'tabs.campaign', 'KAMPAGNE');
 _setPath(DICTS.de, 'tabs.battles', 'DUELLE');
 _setPath(DICTS.de, 'tabs.custom', 'CUSTOM');
@@ -2600,7 +2600,7 @@ _setPath(DICTS.de, 'custom.density', 'DICHTE');
 _setPath(DICTS.de, 'custom.lockedTooltip', 'Gesperrt — im Shop kaufen');
 
 // Chinese (Simplified)
-_setPath(DICTS.zh, 'tagline', '// 神经扫雷');
+_setPath(DICTS.zh, 'tagline', '');
 _setPath(DICTS.zh, 'tabs.campaign', '战役');
 _setPath(DICTS.zh, 'tabs.battles', '对战');
 _setPath(DICTS.zh, 'tabs.custom', '自定义');

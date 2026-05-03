@@ -170,20 +170,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
     setViewNick(q);
   };
 
-  const prettyPlayerId = (() => {
-    const n = player?.player_num;
-    if (typeof n === 'number' && Number.isFinite(n)) {
-      const v = Math.max(0, Math.floor(n));
-      return String(v).padStart(8, '0');
-    }
-    const legacy = getPlayerId(player?.nick);
-    if (typeof legacy === 'number' && Number.isFinite(legacy)) {
-      const v = Math.max(0, Math.floor(legacy));
-      return String(v).padStart(8, '0');
-    }
-    return legacy ?? '—';
-  })();
-
   const rankIconSrc = (league) => {
     const map = {
       wood: '/ranks/wood.png',
@@ -217,7 +203,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
       <AchievementsModal open={showAchievements} onClose={() => setShowAchievements(false)} />
       <div className="flex items-start gap-5">
         <div className="min-w-0">
-          <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// identity</div>
           <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3 flex-wrap">
             <User size={26} /> {player?.nick}
             {(player?.league || player?.ranked_place) && (
@@ -249,12 +234,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               <Award size={18} className="neon-gold" />
             </button>
           </h2>
-          <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display mt-2">
-            {t('profile.playerId')}
-            <span className="ml-2 font-mono text-[14px] font-black text-white tracking-[0.12em] no-text-shadow">
-              {prettyPlayerId}
-            </span>
-          </div>
         </div>
       </div>
 
@@ -633,7 +612,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
 
         <aside className="space-y-4">
           <div className="glass-panel rounded-xl p-5 text-center">
-            <div className="text-[9px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// wallet</div>
             <div className="flex items-center justify-center gap-2">
               <Coins size={22} className="neon-gold" />
               <span className="font-mono text-3xl font-bold neon-gold">{(player?.coins ?? 0).toLocaleString()}</span>
@@ -641,12 +619,10 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
             <div className="text-[10px] text-slate-500 mt-1 tracking-[0.2em] uppercase font-display">{t('common.coins')}</div>
           </div>
           <div className="glass-panel rounded-xl p-5 text-center">
-            <div className="text-[9px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// ranked</div>
             <span className="font-mono text-3xl font-bold neon-cyan">{player?.rating ?? 1000}</span>
             <div className="text-[10px] text-slate-500 mt-1 tracking-[0.2em] uppercase font-display">{t('common.rating')}</div>
           </div>
           <div className="glass-panel rounded-xl p-5 text-center">
-            <div className="text-[9px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// items</div>
             <span className="font-mono text-3xl font-bold neon-lime">{player?.owned_items?.length ?? 0}</span>
           </div>
         </aside>

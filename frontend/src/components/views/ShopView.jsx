@@ -191,13 +191,10 @@ export default function ShopView({ player, onPlayerUpdate }) {
     <div className="max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-10" data-testid="shop-view">
       <div className="glass-panel rounded-xl p-6 mb-5 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// cosmetics market</div>
           <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3">
             <ShoppingBag size={26} /> {t('shop.title')}
           </h2>
-          <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            {t('shop.blurb')}
-          </p>
+          <p className="text-xs text-slate-400 mt-1">{t('shop.blurb')}</p>
         </div>
         <div className="flex items-center gap-2" data-testid="shop-coin-balance">
           <div className="flex items-center gap-2 glass-panel-light rounded-full px-5 py-2.5">
@@ -221,7 +218,7 @@ export default function ShopView({ player, onPlayerUpdate }) {
           {GROUPS.map(group => (
             <section key={group.key} className="mb-6">
               <h3 className="font-display text-xs font-bold tracking-[0.3em] uppercase text-slate-300 mb-3">
-                // {group.label}
+                {group.label}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {/* Default (free) item */}

@@ -549,7 +549,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
                 {displayLabel}
               </div>
               <div className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display mt-1">
-                // {mode.toUpperCase()} · {rows}×{cols} · {mines} {t('game.minesLower')} · {infiniteLives ? '∞' : livesTotal} {t('game.livesLower')}
+                {mode.toUpperCase()} · {rows}×{cols} · {mines} {t('game.minesLower')} · {infiniteLives ? '∞' : livesTotal} {t('game.livesLower')}
                 {opponent && <> · {t('common.vs')} <span className="neon-coral">{opponent}</span></>}
               </div>
             </div>
@@ -640,14 +640,12 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
               {tutorialStep === 0 && (
                 <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[360px] glass-panel rounded-xl p-5 border border-[#00E5FF]/30">
-                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">{t('tutorial.step0')}</div>
                 </div>
               )}
 
               {tutorialStep === 1 && (
                 <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[420px] glass-panel rounded-xl p-5 border border-[#00FF9D]/30">
-                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">{t('tutorial.step1')}</div>
                   <div className="mt-4 flex gap-2 pointer-events-auto">
                     <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => setTutorialStep(2)}>{t('common.continue')}</button>
@@ -657,7 +655,6 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
               {tutorialStep === 2 && (
                 <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[520px] glass-panel rounded-xl p-5 border border-[#00E5FF]/30">
-                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">{t('tutorial.step2')}</div>
                   <div className="mt-4 flex gap-2 pointer-events-auto">
                     <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => {
@@ -710,7 +707,6 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
               {tutorialStep === 3 && tutorialOneCell && (
                 <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[560px] glass-panel rounded-xl p-5 border border-[#FFD700]/30">
-                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">{t('tutorial.step3a')}<span className="neon-gold font-bold">{t('tutorial.step3b')}</span>{t('tutorial.step3c')}</div>
                   <div className="mt-3 flex gap-2 pointer-events-auto">
                     <button
@@ -804,11 +800,10 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
               {tutorialStep === 4 && (
                 <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[640px] glass-panel rounded-xl p-5 border border-white/25">
-                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">{t('tutorial.step4a')}</div>
                   <div className="text-[12px] font-mono text-slate-200 mt-2">{t('tutorial.step4b')}</div>
                   <div className="mt-4 flex gap-2 pointer-events-auto">
-                    <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => setTutorialStep(null)}>{t('common.continue')}</button>
+                    <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => setTutorialStep(5)}>{t('common.continue')}</button>
                   </div>
                 </div>
               )}
@@ -838,7 +833,6 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
               {tutorialStep === 5 && tutorialHintCell && (
                 <div className="absolute left-4 right-4 bottom-4 md:left-6 md:right-auto md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-[680px] glass-panel rounded-xl p-5 border border-white/25">
-                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
                   <div className="text-[12px] font-mono text-slate-200">{t('tutorial.step5a')}<span className="neon-cyan font-bold">{tutorialHintCell.adjacent}</span>{t('tutorial.step5b')}<span className="neon-cyan font-bold">{tutorialHintCell.adjacent}</span>{t('tutorial.step5c')}</div>
                   <div className="mt-4 flex gap-2 pointer-events-auto">
                     <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => {
@@ -868,21 +862,18 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
       </main>
 
       {tutorialMode ? (
-        modalOpen ? (
+        tutorialCompleted && (
           <div className="modal-backdrop" data-testid="tutorial-done-modal">
             <div className="glass-panel slide-up rounded-2xl p-8 max-w-md w-[92%] relative overflow-hidden">
               <div className="scanline" />
-              <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
               <h2 className="font-display text-2xl font-black tracking-tight neon-cyan mb-4">{t('tutorial.doneTitle')}</h2>
               <div className="flex flex-wrap gap-2">
                 <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={() => setModalOpen(false)} data-testid="close-modal-btn">{t('common.close')}</button>
-                {onExit && (
-                  <button className="neon-btn flex-1 min-w-[120px]" onClick={onExit} data-testid="modal-exit-btn">{t('common.continue')}</button>
-                )}
+                <button className="neon-btn flex-1 min-w-[120px]" onClick={onContinue} data-testid="continue-btn">{t('common.continue')}</button>
               </div>
             </div>
           </div>
-        ) : null
+        )
       ) : (
         <GameOverModal open={modalOpen} won={status === 'won'} score={score} time={timer}
           livesRemaining={lives} livesTotal={displayLives} difficulty={difficulty}

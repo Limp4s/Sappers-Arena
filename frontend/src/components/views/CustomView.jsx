@@ -67,7 +67,6 @@ export default function CustomView({ onStartCustom, onStartCustomWithLobby, play
   return (
     <div className="max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-10" data-testid="custom-view">
       <div className="glass-panel rounded-xl p-6 mb-5">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// sandbox mode</div>
         <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1">{t('custom.title')}</h2>
         <p className="text-xs text-slate-400 mt-1 max-w-xl">{t('custom.blurb')}</p>
       </div>
@@ -91,7 +90,7 @@ export default function CustomView({ onStartCustom, onStartCustomWithLobby, play
           )}
 
           <div>
-            <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// {t('custom.presets')}</div>
+            <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('custom.presets')}</div>
             <div className="flex gap-2 flex-wrap">
               {presets.map((p) => (
                 <button key={p.name} onClick={() => applyPreset(p)} className="pill" data-testid={`preset-${p.name.toLowerCase()}`}>{p.name}</button>
@@ -102,7 +101,7 @@ export default function CustomView({ onStartCustom, onStartCustomWithLobby, play
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Palette size={13} className="neon-gold" />
-              <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// {t('custom.fxSkins')}</div>
+              <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">{t('custom.fxSkins')}</div>
             </div>
             <SkinGroup label={t('custom.skin.mine')}   items={Object.entries(MINE_ICONS)}  selected={equipped.mine}   owned={owned} onSelect={(id) => setEquipped(e => ({ ...e, mine: id }))}   testidPrefix="skin-mine" />
             <SkinGroup label={t('custom.skin.cell')}   items={Object.entries(CELL_THEMES)} selected={equipped.cell}   owned={owned} onSelect={(id) => setEquipped(e => ({ ...e, cell: id }))}   testidPrefix="skin-cell" />
@@ -123,7 +122,7 @@ export default function CustomView({ onStartCustom, onStartCustomWithLobby, play
         <aside className="glass-panel rounded-xl p-6 space-y-4 h-fit lg:sticky lg:top-4">
           <div className="flex items-center gap-2">
             <Info size={14} className="neon-cyan" />
-            <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// {t('custom.configPreview')}</div>
+            <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">{t('custom.configPreview')}</div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <PreviewStat label={t('battles.field')} value={`${rows}×${cols}`} color="cyan" />
@@ -134,7 +133,7 @@ export default function CustomView({ onStartCustom, onStartCustomWithLobby, play
             <PreviewStat label={t('custom.density')} value={`${density}%`} color="gold" />
           </div>
           <div className="glass-panel-light rounded-lg p-4 text-center">
-            <div className="text-[9px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// {t('custom.estChallenge')}</div>
+            <div className="text-[9px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('custom.estChallenge')}</div>
             <div className={`font-display text-2xl font-black ${diff.color} tracking-tight`}>
               <Zap size={18} className="inline mb-1" /> {diff.label}
             </div>

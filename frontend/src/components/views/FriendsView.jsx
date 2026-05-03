@@ -32,7 +32,6 @@ export default function FriendsView() {
   return (
     <div className="max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-10" data-testid="friends-view">
       <div className="glass-panel rounded-xl p-6 mb-5">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// network</div>
         <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3">
           <Users size={26} /> {t('friends.title')}
         </h2>

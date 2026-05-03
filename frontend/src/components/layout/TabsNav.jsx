@@ -25,9 +25,11 @@ export default function TabsNav({ current, onChange, player }) {
               <h1 className="font-display text-xl font-black tracking-tight neon-cyan leading-none">
                 {t('appName')}
               </h1>
-              <p className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display mt-1">
-                {t('tagline')}
-              </p>
+              {!!t('tagline') && (
+                <p className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display mt-1">
+                  {t('tagline')}
+                </p>
+              )}
             </div>
           </div>
 
@@ -76,12 +78,14 @@ export default function TabsNav({ current, onChange, player }) {
             <img src="/logo.png" alt="Sappers Arena" className="w-8 h-8 object-contain" />
           </div>
           <div className="min-w-0">
-            <h1 className="font-display text-xl md:text-2xl font-black tracking-tight neon-cyan leading-none">
+            <h1 className="font-display text-xl md:text-2xl font-black tracking-tight neon-cyan">
               {t('appName')}
             </h1>
-            <p className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display mt-1">
-              {t('tagline')}
-            </p>
+            {!!t('tagline') && (
+              <p className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display mt-1">
+                {t('tagline')}
+              </p>
+            )}
           </div>
         </div>
 

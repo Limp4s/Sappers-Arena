@@ -194,7 +194,6 @@ export default function LeaderboardView({ isAdmin = false }) {
     <div className="max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-10" data-testid="leaderboard-view">
       <div className="glass-panel rounded-xl p-6 mb-5 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// global grid</div>
           <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3">
             <Trophy size={26} className="neon-gold" />
             {t('leaderboard.title')}

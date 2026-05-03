@@ -126,14 +126,6 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
             <>
             <div className="glass-panel-light rounded-xl p-4 mb-4">
               <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// identity</div>
-                  <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display mt-2">
-                    {t('profile.playerId')}
-                    <span className="ml-2 font-mono text-[14px] font-black text-white tracking-[0.12em] no-text-shadow">{prettyPlayerId}</span>
-                  </div>
-                </div>
-
                 <div className="flex items-center gap-2">
                   {(player?.league || player?.ranked_place) && (
                     <span className="flex items-center gap-1 text-[11px] font-display tracking-[0.25em] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-slate-200">

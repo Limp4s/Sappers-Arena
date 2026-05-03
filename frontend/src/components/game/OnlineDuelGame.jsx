@@ -487,7 +487,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
                 {label || 'ONLINE'}
               </div>
               <div className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display mt-1">
-                // {mode.toUpperCase()} · {rows}×{cols} · {mines} {t('game.minesLower')} · {livesTotal} {t('game.livesLower')}
+                {mode.toUpperCase()} · {rows}×{cols} · {mines} {t('game.minesLower')} · {livesTotal} {t('game.livesLower')}
                 {opponent && <> · {t('common.vs')} <span className="neon-coral">{opponent}</span></>}
               </div>
             </div>
@@ -503,7 +503,6 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
 
         {wsErrorDisplay && (
           <div className="glass-panel rounded-xl px-5 py-4 border border-[#FF2A6D]/40" data-testid="ws-error">
-            <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display">// network</div>
             <div className="font-mono text-[12px] neon-coral">{wsErrorDisplay}</div>
           </div>
         )}
@@ -515,11 +514,10 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
                 {resultText || (winner === playerName ? t('game.victory') : t('game.defeat'))}
               </div>
               <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display mt-1">
-                // {t('common.winner')}: <span className="text-white shadow-[0_0_10px_rgba(255,255,255,0.55)]">{winner}</span>
+                {t('common.winner')}: <span className="text-white shadow-[0_0_10px_rgba(255,255,255,0.55)]">{winner}</span>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display">// time</div>
               <div className="font-mono text-2xl font-black text-white shadow-[0_0_10px_rgba(255,255,255,0.55)]">{String(timer).padStart(3, '0')}s</div>
             </div>
           </div>

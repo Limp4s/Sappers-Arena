@@ -250,7 +250,7 @@ export const GameOverModal = ({
           </h2>
         </div>
         <p className="text-xs text-slate-400 tracking-[0.2em] uppercase mb-6 font-display">
-          // {difficulty} · {won ? t('game.cleared') : t('game.terminated')}
+          {difficulty} · {won ? t('game.cleared') : t('game.terminated')}
           {playerName && <> · <span className="text-slate-300">{playerName}</span></>}
         </p>
 
@@ -302,7 +302,7 @@ export const GameOverModal = ({
 
         {lobbyResult && (
           <div className="glass-panel-light rounded-lg p-3 mb-4" data-testid="lobby-result">
-            <div className="text-[9px] tracking-[0.3em] uppercase text-slate-400 font-display text-center mb-2">// {t('game.duelResult')}</div>
+            <div className="text-[9px] tracking-[0.3em] uppercase text-slate-400 font-display text-center mb-2">{t('game.duelResult')}</div>
             <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-center">
               <div>
                 <div className="text-slate-500 text-[9px] uppercase tracking-[0.2em] font-display">{t('game.you')}</div>

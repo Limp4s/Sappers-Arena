@@ -118,13 +118,10 @@ export default function BattlesView({ onStartBattle, player }) {
   return (
     <div className="max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-10" data-testid="battles-view">
       <div className="glass-panel rounded-xl p-6 mb-6">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">// duel protocol</div>
         <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3">
           <Swords size={26} className="neon-coral" /> {t('battles.title')}
         </h2>
-        <p className="text-xs text-slate-400 mt-1 max-w-xl">
-          {t('battles.blurb')}
-        </p>
+        <p className="text-xs text-slate-400 mt-1">{t('battles.blurb')}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
