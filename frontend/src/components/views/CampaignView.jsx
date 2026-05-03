@@ -81,6 +81,8 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
   }, [progress]);
 
   const onMouseDown = useCallback((e) => {
+    // Always clear the "moved" flag so a previous scroll-drag doesn't permanently block clicks.
+    dragState.current.moved = false;
     if (e.target.closest('button')) return;
     const el = scrollerRef.current;
     if (!el) return;
@@ -99,6 +101,7 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
     const el = scrollerRef.current;
     if (el) el.style.cursor = 'grab';
     dragState.current.dragging = false;
+    dragState.current.moved = false;
   }, []);
 
   useEffect(() => {
