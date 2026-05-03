@@ -117,13 +117,17 @@ export const syncCampaignProgress = async () => {
     try {
       const completedIds = Object.keys(merged || {})
         .map((k) => Number(k))
-        .filter((n) => Number.isFinite(n) && n > 0 && merged[String(n)]?.completed);
+        .filter((n) => {
+          if (!Number.isFinite(n) || n <= 0) return false;
+          const e = merged[String(n)] || {};
+          return !!(e.completed || (Number(e.stars || 0) > 0) || (Number(e.bestScore || 0) > 0) || (e.bestTime != null));
+        });
       const highestCompleted = completedIds.length ? Math.max(...completedIds) : 0;
       if (highestCompleted > 1) {
         for (let i = 1; i < highestCompleted; i++) {
           const key = String(i);
           const cur = merged[key];
-          if (cur?.completed) continue;
+          if (cur?.completed || (Number(cur?.stars || 0) > 0) || (Number(cur?.bestScore || 0) > 0) || (cur?.bestTime != null)) continue;
           merged[key] = {
             stars: Math.max(1, Number(cur?.stars || 0)),
             bestScore: Number(cur?.bestScore || 0),
@@ -233,7 +237,7 @@ export const recordLevelResult = (levelId, { stars, score, time, won }) => {
 export const isLevelUnlocked = (levelId, progress) => {
   if (levelId === 1) return true;
   const cur = progress?.[levelId];
-  if (cur && cur.completed) return true;
+  if (cur && (cur.completed || (Number(cur.stars || 0) > 0) || (Number(cur.bestScore || 0) > 0) || (cur.bestTime != null))) return true;
   const prev = progress?.[levelId - 1];
-  return !!(prev && prev.completed);
+  return !!(prev && (prev.completed || (Number(prev.stars || 0) > 0) || (Number(prev.bestScore || 0) > 0) || (prev.bestTime != null)));
 };
