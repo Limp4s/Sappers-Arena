@@ -16,6 +16,8 @@ const DICTS = {
       or: 'OR',
       vs: 'VS',
       admin: 'ADMIN',
+      yes: 'YES',
+      no: 'NO',
     },
     settings: {
       sound: 'SOUND',
@@ -402,6 +404,8 @@ const DICTS = {
       or: 'ИЛИ',
       vs: 'ПРОТИВ',
       admin: 'АДМИН',
+      yes: 'ДА',
+      no: 'НЕТ',
     },
     settings: {
       sound: 'ЗВУК',
@@ -798,6 +802,8 @@ const DICTS = {
       or: 'АБО',
       vs: 'ПРОТИ',
       admin: 'АДМІН',
+      yes: 'ТАК',
+      no: 'НІ',
     },
     settings: {
       sound: 'ЗВУК',
@@ -1178,6 +1184,8 @@ const DICTS = {
       or: 'NEBO',
       vs: 'VS',
       admin: 'ADMIN',
+      yes: 'ANO',
+      no: 'NE',
     },
     settings: {
       sound: 'ZVUK',
@@ -1511,6 +1519,8 @@ const DICTS = {
       or: 'O',
       vs: 'VS',
       admin: 'ADMIN',
+      yes: 'SÍ',
+      no: 'NO',
     },
     settings: {
       sound: 'SONIDO',
@@ -1867,6 +1877,8 @@ _setPath(DICTS.fr, 'common.back', 'RETOUR');
 _setPath(DICTS.fr, 'common.copy', 'COPIER');
 _setPath(DICTS.fr, 'common.or', 'OU');
 _setPath(DICTS.fr, 'common.vs', 'VS');
+_setPath(DICTS.fr, 'common.yes', 'OUI');
+_setPath(DICTS.fr, 'common.no', 'NON');
 _setPath(DICTS.fr, 'settings.sound', 'SON');
 _setPath(DICTS.fr, 'onboarding.skip', 'PASSER');
 _setPath(DICTS.fr, 'onboarding.next', 'SUIVANT');
@@ -2162,6 +2174,8 @@ _setPath(DICTS.de, 'common.continue', 'WEITER');
 _setPath(DICTS.de, 'common.back', 'ZURÜCK');
 _setPath(DICTS.de, 'common.copy', 'KOPIEREN');
 _setPath(DICTS.de, 'common.or', 'ODER');
+_setPath(DICTS.de, 'common.yes', 'JA');
+_setPath(DICTS.de, 'common.no', 'NEIN');
 _setPath(DICTS.de, 'settings.sound', 'SOUND');
 _setPath(DICTS.de, 'daily.title', 'TÄGLICH');
 _setPath(DICTS.de, 'daily.subtitle', 'TÄGLICHE AUFGABEN');
@@ -2432,6 +2446,8 @@ _setPath(DICTS.zh, 'common.back', '返回');
 _setPath(DICTS.zh, 'common.copy', '复制');
 _setPath(DICTS.zh, 'common.or', '或');
 _setPath(DICTS.zh, 'common.vs', '对');
+_setPath(DICTS.zh, 'common.yes', '是');
+_setPath(DICTS.zh, 'common.no', '否');
 _setPath(DICTS.zh, 'settings.sound', '声音');
 _setPath(DICTS.zh, 'daily.title', '每日');
 _setPath(DICTS.zh, 'daily.subtitle', '每日任务');
