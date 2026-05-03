@@ -205,7 +205,6 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const pickNextHintCell = useCallback((b, explainedMap) => {
     try {
       const explained = explainedMap && typeof explainedMap === 'object' ? explainedMap : {};
-      let pick = null;
       for (let rr = 0; rr < b.length; rr++) {
         for (let cc = 0; cc < b[rr].length; cc++) {
           const cl = b[rr][cc];
@@ -214,12 +213,10 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
           if (adj <= 0) continue;
           const key = `${rr},${cc}`;
           if (explained[key]) continue;
-          if (adj >= 2) { pick = { r: rr, c: cc, adjacent: adj }; break; }
-          if (!pick) pick = { r: rr, c: cc, adjacent: adj };
+          return { r: rr, c: cc, adjacent: adj };
         }
-        if (pick && pick.adjacent >= 2) break;
       }
-      return pick;
+      return null;
     } catch {
       return null;
     }
@@ -349,13 +346,10 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     const target = workingBoard[r][c];
     if (target.mine) {
       if (tutorialMode) {
-        // Tutorial can't be failed: auto-flag mines instead of losing lives.
-        if (!target.flagged) {
-          target.flagged = true;
-          setFlagsCount((f) => f + 1);
-          sfx.flag();
-        }
+        // Tutorial can't be failed: allow clicking mines without losing.
+        target.revealed = true;
         setBoard(workingBoard);
+        try { sfx.explosion(); } catch {}
         return;
       }
 
@@ -391,15 +385,6 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     sfx.reveal();
     if (!tutorialMode) {
       setScore(calculateScore({ difficulty, safeRevealed: newSafeCount, timeSeconds: timer, livesRemaining: lives, won: false }));
-    }
-
-    // If user has already started flagging in tutorial, keep guiding through numbers as new ones appear.
-    if (tutorialMode && tutorialStep == null && flagsCount >= 1) {
-      const pick = pickNextHintCell(workingBoard, tutorialExplained);
-      if (pick) {
-        setTutorialHintCell(pick);
-        setTutorialStep(5);
-      }
     }
 
     const totalSafeEff = rows * cols - effectiveMines;
@@ -652,7 +637,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               {tutorialStep === 3 && tutorialOneCell && tutorialOneRect && (
                 <svg className="absolute inset-0" style={{ width: '100%', height: '100%' }}>
                   <line
-                    x1={420}
+                    x1="35%"
                     y1="50%"
                     x2={tutorialOneRect.left + tutorialOneRect.width / 2}
                     y2={tutorialOneRect.top + tutorialOneRect.height / 2}
@@ -746,7 +731,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               {tutorialStep === 4 && tutorialMineCell && tutorialMineRect && (
                 <svg className="absolute inset-0" style={{ width: '100%', height: '100%' }}>
                   <line
-                    x1={520}
+                    x1="35%"
                     y1="50%"
                     x2={tutorialMineRect.left + tutorialMineRect.width / 2}
                     y2={tutorialMineRect.top + tutorialMineRect.height / 2}
@@ -779,7 +764,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
                   ))}
                   <svg className="absolute inset-0" style={{ width: '100%', height: '100%' }}>
                     <line
-                      x1={520}
+                      x1="35%"
                       y1="50%"
                       x2={tutorialHintRect.left + tutorialHintRect.width / 2}
                       y2={tutorialHintRect.top + tutorialHintRect.height / 2}
@@ -827,11 +812,10 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
               <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
               <h2 className="font-display text-2xl font-black tracking-tight neon-cyan mb-4">ТУТОРИАЛ ПРОЙДЕН</h2>
               <div className="flex flex-wrap gap-2">
-                <button className="neon-btn flex-1 min-w-[120px]" onClick={reset} data-testid="new-game-btn">{t('game.replay')}</button>
+                <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={() => setModalOpen(false)} data-testid="close-modal-btn">{t('common.close')}</button>
                 {onExit && (
-                  <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={onExit} data-testid="modal-exit-btn">{t('common.back')}</button>
+                  <button className="neon-btn flex-1 min-w-[120px]" onClick={onExit} data-testid="modal-exit-btn">{t('common.continue')}</button>
                 )}
-                <button className="neon-btn neon-btn-coral" onClick={() => setModalOpen(false)} data-testid="close-modal-btn">{t('common.close')}</button>
               </div>
             </div>
           </div>
