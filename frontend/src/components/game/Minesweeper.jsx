@@ -58,6 +58,10 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const [tutorialMineCell, setTutorialMineCell] = useState(null);
   const [tutorialMineRect, setTutorialMineRect] = useState(null);
   const [tutorialProofRects, setTutorialProofRects] = useState([]);
+  const [tutorialHintCell, setTutorialHintCell] = useState(null);
+  const [tutorialHintRect, setTutorialHintRect] = useState(null);
+  const [tutorialHintNeighborRects, setTutorialHintNeighborRects] = useState([]);
+  const [tutorialExplained, setTutorialExplained] = useState(() => ({}));
   useLang();
   const timerRef = useRef(null);
   const tutorialTimerRef = useRef(null);
@@ -128,6 +132,46 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     };
   }, [tutorialStep, tutorialMineCell]);
 
+  useEffect(() => {
+    if (tutorialStep !== 5 || !tutorialHintCell) return;
+    const compute = () => {
+      try {
+        const cont = tutorialContainerRef.current;
+        if (!cont) return;
+        const cellEl = document.querySelector(`[data-testid="grid-cell-${tutorialHintCell.r}-${tutorialHintCell.c}"]`);
+        if (cellEl) {
+          const r1 = cellEl.getBoundingClientRect();
+          const r2 = cont.getBoundingClientRect();
+          setTutorialHintRect({ left: r1.left - r2.left, top: r1.top - r2.top, width: r1.width, height: r1.height });
+        }
+        const neigh = [];
+        const r0 = tutorialHintCell.r;
+        const c0 = tutorialHintCell.c;
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const rr = r0 + dr;
+          const cc = c0 + dc;
+          if (rr < 0 || rr >= rows || cc < 0 || cc >= cols) continue;
+          const el = document.querySelector(`[data-testid="grid-cell-${rr}-${cc}"]`);
+          if (!el) continue;
+          const r1 = el.getBoundingClientRect();
+          const r2 = cont.getBoundingClientRect();
+          neigh.push({ left: r1.left - r2.left, top: r1.top - r2.top, width: r1.width, height: r1.height });
+        }
+        setTutorialHintNeighborRects(neigh);
+      } catch {}
+    };
+    compute();
+    const onResize = () => compute();
+    const onScroll = () => compute();
+    try { window.addEventListener('resize', onResize); } catch {}
+    try { window.addEventListener('scroll', onScroll, true); } catch {}
+    return () => {
+      try { window.removeEventListener('resize', onResize); } catch {}
+      try { window.removeEventListener('scroll', onScroll, true); } catch {}
+    };
+  }, [tutorialStep, tutorialHintCell, rows, cols]);
+
   const totalSafe = rows * cols - mines;
   const displayLives = infiniteLives ? 99 : livesTotal;
 
@@ -157,6 +201,29 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
       b[r][c].adjacent = count;
     }
   };
+
+  const pickNextHintCell = useCallback((b, explainedMap) => {
+    try {
+      const explained = explainedMap && typeof explainedMap === 'object' ? explainedMap : {};
+      let pick = null;
+      for (let rr = 0; rr < b.length; rr++) {
+        for (let cc = 0; cc < b[rr].length; cc++) {
+          const cl = b[rr][cc];
+          if (!cl?.revealed || cl?.mine) continue;
+          const adj = Number(cl?.adjacent || 0);
+          if (adj <= 0) continue;
+          const key = `${rr},${cc}`;
+          if (explained[key]) continue;
+          if (adj >= 2) { pick = { r: rr, c: cc, adjacent: adj }; break; }
+          if (!pick) pick = { r: rr, c: cc, adjacent: adj };
+        }
+        if (pick && pick.adjacent >= 2) break;
+      }
+      return pick;
+    } catch {
+      return null;
+    }
+  }, []);
 
   const countRevealedSafe = useCallback((b) => {
     let n = 0;
@@ -211,6 +278,10 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     setTutorialMineCell(null);
     setTutorialMineRect(null);
     setTutorialProofRects([]);
+    setTutorialHintCell(null);
+    setTutorialHintRect(null);
+    setTutorialHintNeighborRects([]);
+    setTutorialExplained({});
     if (tutorialTimerRef.current) clearTimeout(tutorialTimerRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
   }, [rows, cols, livesTotal]);
@@ -321,6 +392,16 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     if (!tutorialMode) {
       setScore(calculateScore({ difficulty, safeRevealed: newSafeCount, timeSeconds: timer, livesRemaining: lives, won: false }));
     }
+
+    // If user has already started flagging in tutorial, keep guiding through numbers as new ones appear.
+    if (tutorialMode && tutorialStep == null && flagsCount >= 1) {
+      const pick = pickNextHintCell(workingBoard, tutorialExplained);
+      if (pick) {
+        setTutorialHintCell(pick);
+        setTutorialStep(5);
+      }
+    }
+
     const totalSafeEff = rows * cols - effectiveMines;
     if (newSafeCount >= totalSafeEff) endGame(true, workingBoard, newSafeCount, lives);
   };
@@ -331,7 +412,20 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     if (cell.revealed) return;
     const next = board.map((row) => row.map((cl) => ({ ...cl })));
     next[r][c].flagged = !next[r][c].flagged;
-    setFlagsCount((f) => f + (next[r][c].flagged ? 1 : -1));
+    setFlagsCount((f) => {
+      const nf = f + (next[r][c].flagged ? 1 : -1);
+      // After the first flag in tutorial, start guided hints.
+      if (tutorialMode && tutorialStep == null && nf >= 1) {
+        try {
+          const pick = pickNextHintCell(next, tutorialExplained);
+          if (pick) {
+            setTutorialHintCell(pick);
+            setTutorialStep(5);
+          }
+        } catch {}
+      }
+      return nf;
+    });
     if (next[r][c].flagged) sfx.flag(); else sfx.unflag();
     setBoard(next);
   };
@@ -672,6 +766,50 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
                   </div>
                 </div>
               )}
+
+              {tutorialStep === 5 && tutorialHintCell && tutorialHintRect && (
+                <>
+                  <div className="absolute rounded-lg border-2 border-white"
+                    style={{ left: `${tutorialHintRect.left}px`, top: `${tutorialHintRect.top}px`, width: `${tutorialHintRect.width}px`, height: `${tutorialHintRect.height}px`, boxShadow: '0 0 18px rgba(255,255,255,0.35)' }}
+                  />
+                  {tutorialHintNeighborRects.map((r, i) => (
+                    <div key={i} className="absolute rounded-lg border border-[#A855F7]/55"
+                      style={{ left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, boxShadow: '0 0 10px rgba(168,85,247,0.20)' }}
+                    />
+                  ))}
+                  <svg className="absolute inset-0" style={{ width: '100%', height: '100%' }}>
+                    <line
+                      x1={520}
+                      y1="50%"
+                      x2={tutorialHintRect.left + tutorialHintRect.width / 2}
+                      y2={tutorialHintRect.top + tutorialHintRect.height / 2}
+                      stroke="rgba(255,255,255,0.95)"
+                      strokeWidth="2"
+                    />
+                  </svg>
+                </>
+              )}
+
+              {tutorialStep === 5 && tutorialHintCell && (
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[680px] glass-panel rounded-xl p-5 border border-white/25">
+                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
+                  <div className="text-[12px] font-mono text-slate-200">Вот здесь цифра <span className="neon-cyan font-bold">{tutorialHintCell.adjacent}</span>. Значит в радиусе 1 клетки вокруг неё спрятано <span className="neon-cyan font-bold">{tutorialHintCell.adjacent}</span> бомб.</div>
+                  <div className="mt-4 flex gap-2 pointer-events-auto">
+                    <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => {
+                      try {
+                        const key = `${tutorialHintCell.r},${tutorialHintCell.c}`;
+                        const nextExplained = { ...(tutorialExplained || {}), [key]: true };
+                        setTutorialExplained(nextExplained);
+                        const pick = pickNextHintCell(board, nextExplained);
+                        if (pick) setTutorialHintCell(pick);
+                        else setTutorialStep(null);
+                      } catch {
+                        setTutorialStep(null);
+                      }
+                    }}>{t('common.continue')}</button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -681,13 +819,32 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
         </div>
       </main>
 
-      <GameOverModal open={modalOpen} won={status === 'won'} score={score} time={timer}
-        livesRemaining={lives} livesTotal={displayLives} difficulty={difficulty}
-        playerName={playerName} onSubmit={doSubmit} flags={flagsCount}
-        onClose={() => setModalOpen(false)} onNewGame={reset} onExit={onExit}
-        submitted={submitted} coinsAwarded={coinsAwarded} ratingDelta={ratingDelta}
-        noSubmit={false} mode={mode} lobbyResult={lobbyResult} opponent={opponent} levelId={levelId}
-      />
+      {tutorialMode ? (
+        modalOpen ? (
+          <div className="modal-backdrop" data-testid="tutorial-done-modal">
+            <div className="glass-panel slide-up rounded-2xl p-8 max-w-md w-[92%] relative overflow-hidden">
+              <div className="scanline" />
+              <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// tutorial</div>
+              <h2 className="font-display text-2xl font-black tracking-tight neon-cyan mb-4">ТУТОРИАЛ ПРОЙДЕН</h2>
+              <div className="flex flex-wrap gap-2">
+                <button className="neon-btn flex-1 min-w-[120px]" onClick={reset} data-testid="new-game-btn">{t('game.replay')}</button>
+                {onExit && (
+                  <button className="neon-btn neon-btn-coral flex-1 min-w-[120px]" onClick={onExit} data-testid="modal-exit-btn">{t('common.back')}</button>
+                )}
+                <button className="neon-btn neon-btn-coral" onClick={() => setModalOpen(false)} data-testid="close-modal-btn">{t('common.close')}</button>
+              </div>
+            </div>
+          </div>
+        ) : null
+      ) : (
+        <GameOverModal open={modalOpen} won={status === 'won'} score={score} time={timer}
+          livesRemaining={lives} livesTotal={displayLives} difficulty={difficulty}
+          playerName={playerName} onSubmit={doSubmit} flags={flagsCount}
+          onClose={() => setModalOpen(false)} onNewGame={reset} onExit={onExit}
+          submitted={submitted} coinsAwarded={coinsAwarded} ratingDelta={ratingDelta}
+          noSubmit={false} mode={mode} lobbyResult={lobbyResult} opponent={opponent} levelId={levelId}
+        />
+      )}
     </div>
   );
 }
