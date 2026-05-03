@@ -124,19 +124,19 @@ export default function LeaderboardView({ isAdmin = false }) {
       await axios.delete(`${API}/leaderboard/${id}`, { headers: adminHeaders() });
       await fetchLeaderboard(scope);
       await fetchRecent();
-    } catch (e) { alert('Delete failed: ' + (e?.response?.data?.detail || e.message)); }
+    } catch (e) { alert(`${t('leaderboard.deleteFailed')}: ` + (e?.response?.data?.detail || e.message)); }
   };
 
   const hideRankedPlayer = async (nickname) => {
     if (!isAdmin) return;
     if (!nickname) return;
-    if (!window.confirm(`Hide ${nickname} from ranked leaderboard?`)) return;
+    if (!window.confirm(t('leaderboard.hideRankedConfirm', { nickname }))) return;
     try {
       await axios.post(`${API}/admin/ranked/hide`, { nickname }, { headers: adminHeaders() });
       await fetchLeaderboard(scope);
       await fetchRanked();
     } catch (e) {
-      alert('Hide failed: ' + (e?.response?.data?.detail || e.message));
+      alert(`${t('leaderboard.hideFailed')}: ` + (e?.response?.data?.detail || e.message));
     }
   };
 
@@ -218,7 +218,7 @@ export default function LeaderboardView({ isAdmin = false }) {
                 : s.key === 'battle_simple' ? t('tabs.battles')
                 : s.key === 'battle_ranked' ? t('battles.rankedTitle')
                 : s.key === 'custom' ? t('tabs.custom')
-                : 'ALL'}
+                : t('common.all')}
             </button>
           ))}
         </div>
@@ -229,11 +229,11 @@ export default function LeaderboardView({ isAdmin = false }) {
           <div className="flex items-center gap-2 mb-4">
             <Trophy size={14} className="neon-gold" />
             <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">
-              {(showRankedPlayersTable ? 'TOP 500' : t('leaderboard.top'))} · {scope === 'campaign' ? t('tabs.campaign')
+              {(showRankedPlayersTable ? t('leaderboard.topRanked') : t('leaderboard.top'))} · {scope === 'campaign' ? t('tabs.campaign')
                 : scope === 'battle_simple' ? t('tabs.battles')
                 : scope === 'battle_ranked' ? t('battles.rankedTitle')
                 : scope === 'custom' ? t('tabs.custom')
-                : 'ALL'}
+                : t('common.all')}
             </h3>
           </div>
 
@@ -243,7 +243,7 @@ export default function LeaderboardView({ isAdmin = false }) {
               <div>{t('leaderboard.name')}</div>
               {showRankedPlayersTable ? (
                 <>
-                  {showLeagueCol && <div className="text-right">RANK</div>}
+                  {showLeagueCol && <div className="text-right">{t('leaderboard.rank')}</div>}
                   <div className="text-right">{t('common.rating')}</div>
                   {showAdminCol && <div />}
                 </>
@@ -251,7 +251,7 @@ export default function LeaderboardView({ isAdmin = false }) {
                 <>
                   {showLevelColEffective && <div>{t('leaderboard.lvl')}</div>}
                   <div className="text-right">{t('leaderboard.score')}</div>
-                  {showLivesCol && <div className="text-right">LIVES</div>}
+                  {showLivesCol && <div className="text-right">{t('leaderboard.lives')}</div>}
                   <div className="text-right">{t('leaderboard.time')}</div>
                   {showAdminCol && <div />}
                 </>

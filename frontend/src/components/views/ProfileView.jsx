@@ -103,19 +103,19 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   const handleResetAchievements = async (nickname) => {
     const targetNick = String(nickname || '').trim();
     if (!targetNick) return;
-    const ok = window.confirm(`Reset achievements for: ${targetNick}?`);
+    const ok = window.confirm(t('profile.admin.resetAchievementsConfirm', { nickname: targetNick }));
     if (!ok) return;
     setAdminBusy(true);
     setAdminMsg(null);
     try {
       const res = await adminResetAchievements(targetNick);
-      setAdminMsg({ ok: true, text: `Achievements reset: ${targetNick}` });
+      setAdminMsg({ ok: true, text: t('profile.admin.resetAchievementsOk', { nickname: targetNick }) });
       if (String(targetNick).toLowerCase() === String(player?.nick || '').toLowerCase() && res?.player) {
         onPlayerUpdate?.(res.player);
       }
       await refreshAdminPlayers();
     } catch (e2) {
-      setAdminMsg({ ok: false, text: e2?.response?.data?.detail || 'Failed' });
+      setAdminMsg({ ok: false, text: e2?.response?.data?.detail || t('common.failed') });
     }
     setAdminBusy(false);
   };
@@ -125,10 +125,10 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
     setAdminMsg(null);
     try {
       const res = await adminFixNegativeRatings();
-      setAdminMsg({ ok: true, text: `Fixed: ${res?.fixed ?? 0}` });
+      setAdminMsg({ ok: true, text: t('profile.admin.fixedNegativeRatings', { n: res?.fixed ?? 0 }) });
       await refreshAdminPlayers();
     } catch (e2) {
-      setAdminMsg({ ok: false, text: e2?.response?.data?.detail || 'Failed' });
+      setAdminMsg({ ok: false, text: e2?.response?.data?.detail || t('common.failed') });
     } finally {
       setAdminBusy(false);
     }
@@ -138,16 +138,16 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
     const nickToDelete = String(nickname || '').trim();
     if (!nickToDelete) return;
     if (String(nickToDelete).toLowerCase() === String(player?.nick || '').toLowerCase()) return;
-    const ok = window.confirm(`Delete account: ${nickToDelete}?`);
+    const ok = window.confirm(t('profile.admin.deleteAccountConfirm', { nickname: nickToDelete }));
     if (!ok) return;
     setAdminBusy(true);
     setAdminMsg(null);
     try {
       const res = await adminDeletePlayer(nickToDelete);
-      setAdminMsg({ ok: true, text: `Deleted: ${res?.deleted || nickToDelete}` });
+      setAdminMsg({ ok: true, text: t('profile.admin.deleteAccountOk', { nickname: res?.deleted || nickToDelete }) });
       await refreshAdminPlayers();
     } catch (e2) {
-      setAdminMsg({ ok: false, text: e2?.response?.data?.detail || 'Failed' });
+      setAdminMsg({ ok: false, text: e2?.response?.data?.detail || t('common.failed') });
     } finally {
       setAdminBusy(false);
     }

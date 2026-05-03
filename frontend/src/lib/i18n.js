@@ -18,6 +18,8 @@ const DICTS = {
       admin: 'ADMIN',
       yes: 'YES',
       no: 'NO',
+      all: 'ALL',
+      failed: 'Failed.',
     },
     settings: {
       sound: 'SOUND',
@@ -389,9 +391,14 @@ const DICTS = {
       lvl: 'LVL',
       score: 'SCORE',
       time: 'TIME',
+      rank: 'RANK',
+      lives: 'LIVES',
       loading: 'loading...',
       noRecords: 'No records yet.',
       deleteConfirm: 'Delete this leaderboard entry?',
+      deleteFailed: 'Delete failed',
+      hideRankedConfirm: 'Hide {nickname} from ranked leaderboard?',
+      hideFailed: 'Hide failed',
       topRanked: 'Top Ranked',
       noRankedRunsYet: 'no ranked runs yet.',
       agentStats: 'Agent Stats',
@@ -401,6 +408,15 @@ const DICTS = {
       enterCallsignHint: 'Enter a callsign to see lifetime stats.',
       recentActivity: 'Recent Activity',
       noRunsYet: 'no runs yet.',
+    },
+    profile: {
+      admin: {
+        resetAchievementsConfirm: 'Reset achievements for: {nickname}?',
+        resetAchievementsOk: 'Achievements reset: {nickname}',
+        fixedNegativeRatings: 'Fixed: {n}',
+        deleteAccountConfirm: 'Delete account: {nickname}?',
+        deleteAccountOk: 'Deleted: {nickname}',
+      },
     },
   },
   ru: {
@@ -421,6 +437,8 @@ const DICTS = {
       admin: 'АДМИН',
       yes: 'ДА',
       no: 'НЕТ',
+      all: 'ВСЕ',
+      failed: 'Не удалось.',
     },
     settings: {
       sound: 'ЗВУК',
@@ -786,9 +804,14 @@ const DICTS = {
       lvl: 'УР',
       score: 'СЧЁТ',
       time: 'ВРЕМЯ',
+      rank: 'РАНГ',
+      lives: 'ЖИЗНИ',
       loading: 'загрузка...',
       noRecords: 'Пока нет рекордов.',
       deleteConfirm: 'Удалить эту запись из лидерборда?',
+      deleteFailed: 'Не удалось удалить',
+      hideRankedConfirm: 'Скрыть {nickname} из рейтингового лидерборда?',
+      hideFailed: 'Не удалось скрыть',
       topRanked: 'Топ рейтинга',
       noRankedRunsYet: 'пока нет рейтинговых игр.',
       agentStats: 'Статистика игрока',
@@ -834,6 +857,8 @@ const DICTS = {
       admin: 'АДМІН',
       yes: 'ТАК',
       no: 'НІ',
+      all: 'ВСІ',
+      failed: 'Не вдалося.',
     },
     settings: {
       sound: 'ЗВУК',
@@ -1029,10 +1054,19 @@ const DICTS = {
       updating: 'ОНОВЛЕННЯ...',
       update: 'ОНОВИТИ',
       failed: 'Помилка.',
+      admin: {
+        resetAchievementsConfirm: 'Скинути досягнення для: {nickname}?',
+        resetAchievementsOk: 'Досягнення скинуто: {nickname}',
+        fixedNegativeRatings: 'Виправлено: {n}',
+        deleteAccountConfirm: 'Видалити акаунт: {nickname}?',
+        deleteAccountOk: 'Видалено: {nickname}',
+      },
     },
     stats: {
-      runs: 'ІГОР', wins: 'ПЕРЕМОГ', losses: 'ПОРАЗОК', winRate: 'ВІНРЕЙТ',
+      runs: 'ІГОРИ', wins: 'ПЕРЕМОГИ', losses: 'ПОРАЗКИ', winRate: 'ВІНРЕЙТ',
       campaign: 'КАМПАНІЯ', battles: 'БИТВИ', bestScore: 'НАЙКРАЩИЙ РАХУНОК', bestTime: 'НАЙКРАЩИЙ ЧАС',
+      rank: 'РАНГ',
+      lives: 'ЖИТТЯ',
     },
     admin: { title: 'ВЛАСНИК', promote: 'ПРИЗНАЧИТИ ВЛАСНИКОМ', grantBtn: 'НАДАТИ',
       promoteHelp: 'Введіть нік гравця, щоб надати права адміна.',
@@ -1054,7 +1088,7 @@ const DICTS = {
       equippedMsg: 'Надягнено · {id}',
       purchaseFailed: 'Покупка не вдалася.',
       defaultBomb: 'Бомба (за замовчуванням)',
-      defaultCell: 'Сітка циан (за замовчуванням)',
+      defaultCell: 'Сітка ціан (за замовчуванням)',
       defaultFx: 'Червоний спалах (за замовчуванням)',
       defaultFlag: 'Золотий прапорець (за замовчуванням)',
       defaultCursor: 'Курсор (за замовчуванням)',
@@ -1192,9 +1226,23 @@ const DICTS = {
       lvl: 'РІВ',
       score: 'БАЛИ',
       time: 'ЧАС',
+      rank: 'РАНГ',
+      lives: 'ЖИТТЯ',
       loading: 'завантаження...',
       noRecords: 'Записів ще немає.',
       deleteConfirm: 'Видалити запис?',
+      deleteFailed: 'Не вдалося видалити',
+      hideRankedConfirm: 'Приховати {nickname} з рейтингового лідерборду?',
+      hideFailed: 'Не вдалося приховати',
+    },
+    profile: {
+      admin: {
+        resetAchievementsConfirm: 'Скинути досягнення для: {nickname}?',
+        resetAchievementsOk: 'Досягнення скинуто: {nickname}',
+        fixedNegativeRatings: 'Виправлено: {n}',
+        deleteAccountConfirm: 'Видалити акаунт: {nickname}?',
+        deleteAccountOk: 'Видалено: {nickname}',
+      },
     },
     daily: {
       title: 'ДЕЙЛІКИ',
@@ -1231,6 +1279,8 @@ const DICTS = {
       admin: 'ADMIN',
       yes: 'ANO',
       no: 'NE',
+      all: 'VŠE',
+      failed: 'Chyba.',
     },
     settings: {
       sound: 'ZVUK',
@@ -1305,7 +1355,7 @@ const DICTS = {
         games_1: { title: 'PRVNÍ KROKY', cond: 'Zahraj 1 hru', desc: 'První krok je hotový.' },
         games_10: { title: 'ROZCVIČKA', cond: 'Zahraj 10 her', desc: 'Zahřáto. Teď vážně.' },
         games_50: { title: 'PRAVIDELNÝ', cond: 'Zahraj 50 her', desc: 'Už je to zvyk, co?' },
-        games_200: { title: 'VETERÁN', cond: 'Zahraj 200 her', desc: 'Viděl jsi všechno.' },
+        games_200: { title: 'VETERÁN', cond: 'Zahraj 200 her', desc: 'Viděl jsi všechnu.' },
         games_1000: { title: 'MARATON', cond: 'Zahraj 1000 her', desc: 'Ty tady bydlíš?' },
         wins_1: { title: 'PRVNÍ VÝHRA', cond: 'Vyhraj 1 hru', desc: 'První výhra je nejlepší.' },
         streak_3: { title: 'SÉRIE 3', cond: '3 výhry v řadě', desc: 'Série začíná.' },
@@ -1340,7 +1390,7 @@ const DICTS = {
         rating_10000: { title: 'ELITE', cond: 'Dosáhni rating 10000', desc: 'Elita.' },
         rating_15000: { title: 'LEGEND', cond: 'Dosáhni rating 15000', desc: 'Legenda.' },
         coins_balance_10000: { title: 'POSLEDNÍ PENÍZE', cond: 'Měj 10000 mincí na účtu', desc: 'Dlouho jsi šetřil?' },
-        coins_earned_total_10000: { title: 'BOHATÝ', cond: 'Získej 10000 mincí celkem', desc: 'Slušný zisk.' },
+        coins_earned_total_10000: { title: 'BOHATÝ', cond: 'Získej 10000 mincí celkem', desc: 'Nepogano.' },
         daily_claim_1: { title: 'DAILY CLAIMER', cond: 'Vyzvedni 1 daily', desc: 'Odměna je odměna.' },
         daily_streak_5: { title: 'DAILY SÉRIE', cond: 'Vyzvedni daily v 5 oknech po sobě', desc: 'Disciplína.' },
       },
@@ -1445,6 +1495,8 @@ const DICTS = {
     stats: {
       runs: 'HRY', wins: 'VÝHRY', losses: 'PROHRY', winRate: 'ÚSPĚŠNOST',
       campaign: 'KAMPAŇ', battles: 'SOUBOJE', bestScore: 'NEJ SCORE', bestTime: 'NEJ ČAS',
+      rank: 'RANK',
+      lives: 'ŽIVOTY',
     },
     admin: { title: 'VLASTNÍK', promote: 'POVÝŠIT', grantBtn: 'UDĚLIT',
       promoteHelp: 'Zadejte přezdívku hráče pro udělení práv.',
@@ -1542,9 +1594,23 @@ const DICTS = {
       lvl: 'LVL',
       score: 'SKÓRE',
       time: 'ČAS',
+      rank: 'RANK',
+      lives: 'ŽIVOTY',
       loading: 'načítání...',
       noRecords: 'Zatím žádné záznamy.',
       deleteConfirm: 'Smazat záznam?',
+      deleteFailed: 'Smazání selhalo',
+      hideRankedConfirm: 'Skrýt {nickname} z hodnoceného žebříčku?',
+      hideFailed: 'Skrytí selhalo',
+    },
+    profile: {
+      admin: {
+        resetAchievementsConfirm: 'Resetovat achievementy pro: {nickname}?',
+        resetAchievementsOk: 'Achievementy resetovány: {nickname}',
+        fixedNegativeRatings: 'Opraveno: {n}',
+        deleteAccountConfirm: 'Smazat účet: {nickname}?',
+        deleteAccountOk: 'Smazáno: {nickname}',
+      },
     },
     daily: {
       title: 'DENNÍ',
@@ -1559,7 +1625,7 @@ const DICTS = {
         play_1: 'Zahrát 1 hru',
         win_1: 'Vyhraj 1 hru',
         flags_10: 'Položit 10 vlajek',
-        safe_50: 'Odkrýt 50 bezpečných políček',
+        safe_50: 'Odkrýt 50 bezpečných',
       },
     },
   },
@@ -1581,6 +1647,8 @@ const DICTS = {
       admin: 'ADMIN',
       yes: 'SÍ',
       no: 'NO',
+      all: 'TODOS',
+      failed: 'Falló.',
     },
     settings: {
       sound: 'SONIDO',
@@ -1753,10 +1821,10 @@ const DICTS = {
       topRanked: 'Top ranked',
       noRankedRunsYet: 'aún no hay partidas rankeds.',
       agentStats: 'Estadísticas del agente',
-      callsignPlaceholder: 'indicativo...',
+      callsignPlaceholder: 'apodo...',
       scan: 'ESCANEAR',
       scanning: 'escaneando...',
-      enterCallsignHint: 'Introduce un indicativo para ver estadísticas.',
+      enterCallsignHint: 'Escribe un apodo para ver estadísticas.',
       recentActivity: 'Actividad reciente',
       noRunsYet: 'aún no hay partidas.',
     },
@@ -1881,6 +1949,20 @@ const DICTS = {
       loading: 'cargando...',
       noRecords: 'Sin récords aún.',
       deleteConfirm: '¿Borrar registro?',
+      rank: 'RANGO',
+      lives: 'VIDAS',
+      deleteFailed: 'No se pudo eliminar',
+      hideRankedConfirm: '¿Ocultar a {nickname} del ranking?',
+      hideFailed: 'No se pudo ocultar',
+    },
+    profile: {
+      admin: {
+        resetAchievementsConfirm: '¿Reiniciar logros para: {nickname}?',
+        resetAchievementsOk: 'Logros reiniciados: {nickname}',
+        fixedNegativeRatings: 'Arreglado: {n}',
+        deleteAccountConfirm: '¿Eliminar cuenta: {nickname}?',
+        deleteAccountOk: 'Eliminado: {nickname}',
+      },
     },
   },
 };
@@ -2879,7 +2961,9 @@ export const setLang = (code) => {
 export const subscribe = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
 
 // Dot-path accessor: t('tabs.campaign')
-export const t = (path, lang) => {
+export const t = (path, arg2, arg3) => {
+  const lang = (typeof arg2 === 'string') ? arg2 : (typeof arg3 === 'string' ? arg3 : null);
+  const params = (arg2 && typeof arg2 === 'object' && !Array.isArray(arg2)) ? arg2 : null;
   const l = lang || CURRENT;
   const parts = path.split('.');
   let node = DICTS[l] || DICTS.en;
@@ -2893,7 +2977,16 @@ export const t = (path, lang) => {
     for (const p of parts) node2 = node2?.[p];
     return typeof node2 === 'string' ? node2 : path;
   }
-  return node;
+  if (!params) return node;
+  try {
+    return node.replace(/\{(\w+)\}/g, (_, k) => {
+      if (!Object.prototype.hasOwnProperty.call(params, k)) return `{${k}}`;
+      const v = params[k];
+      return v == null ? '' : String(v);
+    });
+  } catch {
+    return node;
+  }
 };
 
 // React hook
