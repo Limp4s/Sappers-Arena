@@ -7,6 +7,7 @@ import { submitScore } from '../../lib/player';
 import { submitLobbyResult } from '../../lib/lobby';
 import { loadEquipped, MINE_ICONS, CELL_THEMES, FX_EFFECTS, FLAG_SKINS } from '../../lib/shop';
 import { recordDailyProgress } from '../../lib/dailies';
+import { sfx } from '../../lib/sounds';
 import AchievementBanner from '../ui/AchievementBanner';
 
 const makeEmptyBoard = (rows, cols) => Array.from({ length: rows }, () => Array.from({ length: cols }, () => ({
@@ -283,6 +284,26 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
         if (msg.type === 'player_update') {
           const who = msg.player;
           if (who === playerName) {
+            try {
+              const changes = Array.isArray(msg.changes) ? msg.changes : [];
+              const hasExplosion = changes.some((ch) => ch && ch.revealed && ch.mine && ch.exploded);
+              const hasLifeLost = typeof msg.lives === 'number' && msg.lives < lives;
+              const hasReveal = changes.some((ch) => ch && ch.revealed && !ch.mine);
+              const hasFlag = changes.some((ch) => ch && ch.flagged === true);
+              const hasUnflag = changes.some((ch) => ch && ch.flagged === false);
+              if (hasExplosion) {
+                try { sfx.explosion(); } catch {}
+                if (hasLifeLost) {
+                  try { sfx.lifeLost(); } catch {}
+                }
+              } else if (hasFlag) {
+                try { sfx.flag(); } catch {}
+              } else if (hasUnflag) {
+                try { sfx.unflag(); } catch {}
+              } else if (hasReveal) {
+                try { sfx.reveal(); } catch {}
+              }
+            } catch {}
             setMyBoard((b) => applyChanges(b, msg.changes));
             if (typeof msg.lives === 'number') setLives(msg.lives);
             if (typeof msg.safe === 'number') setSafe(msg.safe);
@@ -375,6 +396,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
     if (!ready) {
       return;
     }
+    try { sfx.click(); } catch {}
     wsRef.current?.send?.({ type: 'open', r, c });
   };
 
@@ -384,6 +406,7 @@ export default function OnlineDuelGame({ config, onCoinsEarned }) {
     if (!ready) {
       return;
     }
+    try { sfx.click(); } catch {}
     wsRef.current?.send?.({ type: 'flag', r, c });
   };
 
