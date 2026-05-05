@@ -165,6 +165,7 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
 
               {stats ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <Stat label={t('common.rating')} value={ratingText} color="gold" />
                   <Stat label={t('stats.runs')} value={stats.total_runs} color="cyan" />
                   <Stat label={t('stats.wins')} value={stats.wins} color="lime" />
                   <Stat label={t('stats.losses')} value={stats.losses} color="coral" />

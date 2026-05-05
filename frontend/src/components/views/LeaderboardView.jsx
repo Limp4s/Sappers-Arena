@@ -119,6 +119,10 @@ export default function LeaderboardView({ isAdmin = false }) {
 
   const handleDelete = async (id) => {
     if (!isAdmin) return;
+    if (!id) {
+      alert(t('leaderboard.deleteFailed'));
+      return;
+    }
     if (!window.confirm(t('leaderboard.deleteConfirm'))) return;
     try {
       await axios.delete(`${API}/leaderboard/${id}`, { headers: adminHeaders() });

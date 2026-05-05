@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2, Award, Crown } from 'lucide-react';
-import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminGrantCoins, adminResetAchievements, adminDeletePlayer, getToken, authHeaders, isOwnerNick } from '../../lib/player';
+import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminGrantCoins, adminResetPlayer, adminDeletePlayer, getToken, authHeaders, isOwnerNick } from '../../lib/player';
 import { promoteToAdmin } from '../../lib/lobby';
 import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
 import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
@@ -115,15 +115,17 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
     return null;
   }, [player?.nick, player?.player_num]);
 
-  const handleResetAchievements = async (nickname) => {
+  const handleResetPlayer = async (nickname) => {
     const targetNick = String(nickname || '').trim();
     if (!targetNick) return;
+    if (String(targetNick).toLowerCase() === String(player?.nick || '').toLowerCase()) return;
+    if (isOwnerNick?.(targetNick)) return;
     const ok = window.confirm(t('profile.admin.resetAchievementsConfirm', { nickname: targetNick }));
     if (!ok) return;
     setAdminBusy(true);
     setAdminMsg(null);
     try {
-      const res = await adminResetAchievements(targetNick);
+      const res = await adminResetPlayer(targetNick);
       setAdminMsg({ ok: true, text: t('profile.admin.resetAchievementsOk', { nickname: targetNick }) });
       if (String(targetNick).toLowerCase() === String(player?.nick || '').toLowerCase() && res?.player) {
         onPlayerUpdate?.(res.player);
@@ -360,8 +362,8 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                         <div className="font-mono text-[11px] text-slate-300">#{p?.player_num ?? '—'}</div>
                         <div className="font-mono text-[11px] text-white">{p?.nickname || '—'}</div>
                         <button
-                          onClick={() => handleResetAchievements(p?.nickname)}
-                          disabled={adminBusy || !p?.nickname}
+                          onClick={() => handleResetPlayer(p?.nickname)}
+                          disabled={adminBusy || !p?.nickname || String(p?.nickname || '').toLowerCase() === String(player?.nick || '').toLowerCase() || isOwnerNick?.(p?.nickname) || (!!p?.is_admin && !owner)}
                           className="neon-btn px-2 py-1 text-[10px]"
                           style={{ borderColor: '#FFD700', color: '#FFD700' }}
                         >

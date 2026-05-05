@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ReturnDocument
+from bson import ObjectId
 import os, logging, re, random, string, hashlib, secrets
 import certifi
 from pathlib import Path as PathlibPath
@@ -1409,14 +1410,28 @@ async def get_leaderboard(
     if difficulty: query["difficulty"] = difficulty
     if mode: query["mode"] = mode
     if level_id is not None: query["level_id"] = level_id
-    cursor = db.leaderboard.find(query, {"_id": 0}).sort("score", -1).limit(limit)
-    return await cursor.to_list(length=limit)
+    cursor = db.leaderboard.find(query).sort("score", -1).limit(limit)
+    rows = await cursor.to_list(length=limit)
+    for r in rows:
+        try:
+            r["id"] = str(r.get("_id"))
+        except Exception:
+            r["id"] = None
+        r.pop("_id", None)
+    return rows
 
 
 @api_router.get("/leaderboard/recent", response_model=List[Score])
 async def get_recent_runs(limit: int = Query(default=10, ge=1, le=50)):
-    cursor = db.leaderboard.find({}, {"_id": 0}).sort("created_at", -1).limit(limit)
-    return await cursor.to_list(length=limit)
+    cursor = db.leaderboard.find({}).sort("created_at", -1).limit(limit)
+    rows = await cursor.to_list(length=limit)
+    for r in rows:
+        try:
+            r["id"] = str(r.get("_id"))
+        except Exception:
+            r["id"] = None
+        r.pop("_id", None)
+    return rows
 
 
 @api_router.get("/leaderboard/ranked")
@@ -1458,7 +1473,13 @@ async def delete_leaderboard_entry(entry_id: str, nick: str = Depends(require_se
     player = await _get_player(nick)
     if not player or not player.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin privileges required.")
-    await db.leaderboard.delete_one({"_id": entry_id})
+    try:
+        oid = ObjectId(entry_id)
+        res = await db.leaderboard.delete_one({"_id": oid})
+    except Exception:
+        res = await db.leaderboard.delete_one({"_id": entry_id})
+    if not res or int(getattr(res, "deleted_count", 0) or 0) <= 0:
+        raise HTTPException(status_code=404, detail="Leaderboard entry not found.")
     return {"ok": True}
 
 
@@ -1482,6 +1503,40 @@ async def promote_to_admin(payload: AdminPromoteRequest, nick: str = Depends(req
         raise HTTPException(status_code=404, detail="Target player not found.")
     await db.players.update_one({"nickname_lower": target["nickname_lower"]}, {"$set": {"is_admin": True}})
     updated = await _get_player(payload.nickname)
+    return {"ok": True, "player": _sanitize_player(updated)}
+
+
+@api_router.post("/admin/player/reset")
+async def admin_reset_player(payload: AdminResetAchievementsRequest, nick: str = Depends(require_session)):
+    me_player = await _require_admin(nick)
+    target = await _get_player(payload.nickname)
+    if not target:
+        raise HTTPException(status_code=404, detail="Player not found.")
+
+    me_lower = (me_player.get("nickname_lower") or (nick or "").lower())
+    target_nick = target.get("nickname") or payload.nickname
+    target_lower = (target.get("nickname_lower") or (target_nick or "").lower())
+
+    if target_lower == me_lower:
+        raise HTTPException(status_code=403, detail="Cannot reset your own account.")
+    if _is_admin_nick(target.get("nickname")):
+        raise HTTPException(status_code=403, detail="Cannot reset the root admin.")
+    if target.get("is_admin") and not _is_root_admin(nick):
+        raise HTTPException(status_code=403, detail="Cannot reset an admin account.")
+
+    await db.players.update_one(
+        {"nickname_lower": target_lower},
+        {"$set": {
+            "rating": 500,
+            "hidden_ranked": False,
+            "hidden_ranked_rating": None,
+            "achievements_unlocked": {},
+            "achievements_stats": {},
+        }},
+    )
+    await db.leaderboard.delete_many({"player_name": target_nick})
+
+    updated = await _get_player(target_nick)
     return {"ok": True, "player": _sanitize_player(updated)}
 
 
