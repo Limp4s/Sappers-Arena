@@ -71,6 +71,26 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const tutorialContainerRef = useRef(null);
 
   useEffect(() => {
+    if (!tutorialEnabled) {
+      setTutorialStep(null);
+      return;
+    }
+    setTutorialStep(0);
+    setTutorialOneCell(null);
+    setTutorialOneRect(null);
+    setTutorialMineCell(null);
+    setTutorialMineRect(null);
+    setTutorialProofRects([]);
+    setTutorialHintCell(null);
+    setTutorialHintRect(null);
+    setTutorialHintNeighborRects([]);
+    setTutorialExplained({});
+    setTutorialExplainedNums({});
+    setTutorialHintsStarted(false);
+    setTutorialSkipConfirm(false);
+  }, [tutorialEnabled, levelId]);
+
+  useEffect(() => {
     if (tutorialStep !== 3 || !tutorialOneCell) return;
     const compute = () => {
       try {
@@ -313,9 +333,13 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     setTutorialHintRect(null);
     setTutorialHintNeighborRects([]);
     setTutorialExplained({});
+    setTutorialExplainedNums({});
+    setTutorialHintsStarted(false);
+    setTutorialSkipConfirm(false);
+    if (tutorialEnabled) setTutorialStep(0);
     if (tutorialTimerRef.current) clearTimeout(tutorialTimerRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
-  }, [rows, cols, livesTotal]);
+  }, [rows, cols, livesTotal, tutorialEnabled]);
 
   const endGame = useCallback((won, finalBoard, finalSafe, finalLives) => {
     setStatus(won ? 'won' : 'lost');
