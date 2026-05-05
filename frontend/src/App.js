@@ -19,15 +19,6 @@ import { t } from '@/lib/i18n';
 const TERMS_KEY = 'mg_terms_accepted_v1';
 const PRIVACY_KEY = 'mg_privacy_accepted_v1';
 const ONBOARDING_KEY = 'mg_onboarding_done_v1';
-const TERMS_TEXT = `The game is in early testing.
-By continuing, you agree to the Terms:
-- The game is provided "as is."
-- You are responsible for your own use.
-- The game does not intentionally collect any personal data in offline mode.
-- Once you accept the terms, you cannot opt out.
-- All rights to this game belong to the owners of the company.
-- If your name is Ivan, you will be an unpaid beta tester.`;
-
 const PRIVACY_TEXT = `Privacy Policy
 Last updated: ${new Date().toISOString().slice(0, 10)}
 
@@ -182,7 +173,7 @@ function Home() {
         <div className="glass-panel slide-up rounded-2xl p-8 max-w-md w-[92%] relative overflow-hidden">
           <div className="scanline" />
           <h2 className="font-display text-2xl font-black tracking-tight neon-cyan mb-3">USER AGREEMENT</h2>
-          <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed bg-black/20 border border-white/10 rounded-lg p-4 max-h-[55vh] overflow-auto">{`${TERMS_TEXT}\n\n${PRIVACY_TEXT}`}</pre>
+          <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed bg-black/20 border border-white/10 rounded-lg p-4 max-h-[55vh] overflow-auto">{PRIVACY_TEXT}</pre>
           <button
             className="neon-btn w-full py-3 mt-4"
             onClick={() => {

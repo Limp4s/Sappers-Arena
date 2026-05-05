@@ -65,6 +65,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const [tutorialExplainedNums, setTutorialExplainedNums] = useState(() => ({}));
   const [tutorialHintsStarted, setTutorialHintsStarted] = useState(false);
   const [tutorialSkipConfirm, setTutorialSkipConfirm] = useState(false);
+  const [tutorialCompleted, setTutorialCompleted] = useState(false);
   useLang();
   const timerRef = useRef(null);
   const tutorialTimerRef = useRef(null);
@@ -88,7 +89,14 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     setTutorialExplainedNums({});
     setTutorialHintsStarted(false);
     setTutorialSkipConfirm(false);
+    setTutorialCompleted(false);
   }, [tutorialEnabled, levelId]);
+
+  const onContinue = useCallback(() => {
+    setTutorialCompleted(false);
+    setModalOpen(false);
+    try { onExit?.(); } catch {}
+  }, [onExit]);
 
   useEffect(() => {
     if (tutorialStep !== 3 || !tutorialOneCell) return;
@@ -206,9 +214,9 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   }, [tutorialMode, mines]);
   const displayLabel = tutorialMode ? 'TUTORIAL' : (label || t('game.defaultLabel'));
 
-  const markTutorialDone = () => {
+  const markTutorialDone = useCallback(() => {
     try { localStorage.setItem(tutorialStorageKey, '1'); } catch {}
-  };
+  }, [tutorialStorageKey]);
 
   const recomputeAdjacent = (b) => {
     const rr = b.length;
@@ -336,6 +344,7 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     setTutorialExplainedNums({});
     setTutorialHintsStarted(false);
     setTutorialSkipConfirm(false);
+    setTutorialCompleted(false);
     if (tutorialEnabled) setTutorialStep(0);
     if (tutorialTimerRef.current) clearTimeout(tutorialTimerRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
@@ -381,8 +390,15 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     }
     const revealed = finalBoard.map((row) => row.map((c) => ({ ...c, revealed: c.mine ? true : c.revealed })));
     setBoard(revealed);
-    setTimeout(() => setModalOpen(true), 900);
-  }, [difficulty, timer, mode, levelId, livesTotal, flagsCount, tutorialMode]);
+    setTimeout(() => {
+      if (tutorialMode && won) {
+        try { markTutorialDone(); } catch {}
+        setTutorialCompleted(true);
+      } else {
+        setModalOpen(true);
+      }
+    }, 900);
+  }, [difficulty, timer, mode, levelId, livesTotal, flagsCount, tutorialMode, markTutorialDone]);
 
   const revealCell = (r, c) => {
     if (status === 'won' || status === 'lost') return;
