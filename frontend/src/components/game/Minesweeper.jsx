@@ -666,8 +666,6 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
 
           {tutorialStep != null && (
             <div className="absolute inset-0 z-30 pointer-events-none">
-              <div className="absolute inset-0 bg-black/55" />
-
               <div className="hidden md:block absolute top-4 right-4 pointer-events-auto">
                 <button
                   className="neon-btn px-4 py-2 text-[11px]"
