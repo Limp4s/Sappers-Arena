@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { Trophy, Clock, User, Search, Trash2, Crown, Shield, Sparkles } from 'lucide-react';
-import { getStoredNickname, adminHeaders, authHeaders, getToken } from '../../lib/player';
+import { getStoredNickname, adminHeaders, authHeaders, getToken, isAdminNick, isOwnerNick } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 import PlayerProfileModal from '../modals/PlayerProfileModal';
 
@@ -166,6 +166,14 @@ export default function LeaderboardView({ isAdmin = false }) {
 
   const getRankColor = (i) => i === 0 ? 'neon-gold' : i === 1 ? 'neon-cyan' : i === 2 ? 'neon-coral' : 'text-slate-500';
 
+  const renderAdminCrown = (nickname) => {
+    const n = String(nickname || '');
+    const owner = isOwnerNick?.(n);
+    const admin = owner || isAdminNick?.(n);
+    if (!admin) return null;
+    return <Crown size={10} className="neon-gold shrink-0" />;
+  };
+
   const showRankedPlayersTable = scope === 'battle_ranked';
   const showLevelCol = scope === 'campaign' && !showRankedPlayersTable;
   const showAdminCol = isAdmin;
@@ -199,7 +207,7 @@ export default function LeaderboardView({ isAdmin = false }) {
             {t('leaderboard.title')}
             {isAdmin && (
               <span className="flex items-center gap-1 text-[11px] neon-gold font-display tracking-[0.25em] bg-[#FFD700]/10 border border-[#FFD700]/50 px-2 py-0.5 rounded" data-testid="admin-badge">
-                <Crown size={11} /> ADMIN
+                <Crown size={11} className="neon-gold" /> ADMIN
               </span>
             )}
           </h2>
@@ -284,7 +292,7 @@ export default function LeaderboardView({ isAdmin = false }) {
                     >
                       {rankIconSrc(league) && <img src={rankIconSrc(league)} alt="rank" className={`${rankIconSizeClass} shrink-0`} />}
                       {name}
-                      {(name || '').toLowerCase() === 'limp4' && <Crown size={10} className="neon-gold shrink-0" />}
+                      {renderAdminCrown(name)}
                     </button>
                     {showLeagueCol && (
                       <div className={`text-right text-slate-300 font-display ${isNarrow ? 'text-[9px]' : 'text-[10px]'} tracking-[0.2em] uppercase`}>{String(league || '').replace('top500', 'top500')}</div>
@@ -321,7 +329,7 @@ export default function LeaderboardView({ isAdmin = false }) {
                     data-testid={`lb-open-profile-${i}`}
                   >
                     {e.player_name}
-                    {(e.player_name || '').toLowerCase() === 'limp4' && <Crown size={10} className="neon-gold shrink-0" />}
+                    {renderAdminCrown(e.player_name)}
                   </button>
                   {showLevelColEffective && <div className="neon-lime text-[11px] font-bold">{e.level_id != null ? String(e.level_id).padStart(2, '0') : '—'}</div>}
                   <div className="text-right neon-cyan">{scoreText}</div>
@@ -364,6 +372,7 @@ export default function LeaderboardView({ isAdmin = false }) {
                     {icon && <img src={icon} alt="rank" className="w-9 h-9 shrink-0" />}
                     <button type="button" onClick={() => setViewNick(p.nickname)} className="truncate text-slate-200 hover:text-white text-left">
                       {p.nickname}
+                      {renderAdminCrown(p.nickname)}
                     </button>
                   </div>
                   <span className="neon-gold font-mono font-bold">{p.rating || 500}</span>

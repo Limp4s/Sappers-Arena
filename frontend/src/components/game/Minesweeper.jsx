@@ -96,6 +96,17 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
     setTutorialCompleted(false);
     setModalOpen(false);
     try {
+      const lvlIdNum = Number(levelId);
+      if (Number.isFinite(lvlIdNum) && lvlIdNum > 0) {
+        (async () => {
+          try {
+            const { recordLevelResult } = await import('../../lib/levels');
+            recordLevelResult(lvlIdNum, { stars: 1, score: 0, time: 0, won: true });
+          } catch {}
+        })();
+      }
+    } catch {}
+    try {
       const nextId = Number(levelId) + 1;
       if (Number.isFinite(nextId) && nextId > 1) {
         localStorage.setItem('mg_campaign_autostart_next', String(nextId));

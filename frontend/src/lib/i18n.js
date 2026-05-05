@@ -3035,6 +3035,24 @@ _setPath(DICTS.zh, 'custom.skin.fx', '特效');
 _setPath(DICTS.zh, 'custom.skin.cursor', '光标');
 _setPath(DICTS.zh, 'custom.lockedTooltip', '已锁定 — 去商店购买');
 
+const _fillMissingWithEmpty = (src, dst) => {
+  if (!src || typeof src !== 'object') return;
+  if (!dst || typeof dst !== 'object') return;
+  Object.keys(src).forEach((k) => {
+    const v = src[k];
+    const cur = dst[k];
+    if (typeof v === 'string') {
+      if (typeof cur !== 'string') dst[k] = '';
+      return;
+    }
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return;
+    if (!cur || typeof cur !== 'object' || Array.isArray(cur)) dst[k] = {};
+    _fillMissingWithEmpty(v, dst[k]);
+  });
+};
+
+try { _fillMissingWithEmpty(DICTS.ru, DICTS.uk); } catch {}
+
 const KEY = 'mg_lang';
 
 const _detectSystemLang = () => {
