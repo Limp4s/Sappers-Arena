@@ -209,11 +209,25 @@ const DICTS = {
     profile: {
       inventory: 'OPEN INVENTORY',
       changePassword: 'CHANGE PASSWORD',
-      account: 'ACCOUNT',
-      lifetimeStats: 'LIFETIME STATS',
+      account: 'ACCOUNT SETTINGS',
+      lifetimeStats: 'PROFILE STATS',
       offline: 'offline',
       loading: 'loading...',
       playerId: 'ID',
+      viewPlayer: {
+        title: 'VIEW PLAYER',
+        placeholder: 'ID or nickname',
+        open: 'OPEN',
+      },
+      admin: {
+        allPlayers: 'ALL PLAYERS',
+        fixNegativeRatings: 'FIX NEGATIVE RATINGS',
+        coinsSelf: '+COINS (SELF)',
+        ratingSelf: '+RATING (SELF)',
+        searchNickname: 'SEARCH NICKNAME',
+        reset: 'RESET',
+        delete: 'DELETE',
+      },
       oldPassword: 'Old password',
       newPassword: 'New password · min 4',
       repeatNewPassword: 'Repeat new password',
@@ -628,11 +642,25 @@ const DICTS = {
     profile: {
       inventory: 'ИНВЕНТАРЬ',
       changePassword: 'СМЕНИТЬ ПАРОЛЬ',
-      account: 'АККАУНТ',
-      lifetimeStats: 'СТАТИСТИКА',
+      account: 'НАСТРОЙКИ АККАУНТА',
+      lifetimeStats: 'СТАТИСТИКА ПРОФИЛЯ',
       offline: 'офлайн',
       loading: 'загрузка...',
       playerId: 'ID',
+      viewPlayer: {
+        title: 'СМОТРЕТЬ ИГРОКА',
+        placeholder: 'ID или ник',
+        open: 'ОТКРЫТЬ',
+      },
+      admin: {
+        allPlayers: 'ВСЕ ИГРОКИ',
+        fixNegativeRatings: 'ИСПРАВИТЬ ОТРИЦАТЕЛЬНЫЙ РЕЙТИНГ',
+        coinsSelf: '+МОНЕТЫ (СЕБЕ)',
+        ratingSelf: '+РЕЙТИНГ (СЕБЕ)',
+        searchNickname: 'ПОИСК НИКА',
+        reset: 'СБРОС',
+        delete: 'УДАЛИТЬ',
+      },
       oldPassword: 'Старый пароль',
       newPassword: 'Новый пароль · минимум 4',
       repeatNewPassword: 'Повторите новый пароль',
@@ -1041,11 +1069,25 @@ const DICTS = {
     profile: {
       inventory: 'ІНВЕНТАР',
       changePassword: 'ЗМІНИТИ ПАРОЛЬ',
-      account: 'АКАУНТ',
-      lifetimeStats: 'СТАТИСТИКА',
+      account: 'НАЛАШТУВАННЯ АКАУНТА',
+      lifetimeStats: 'СТАТИСТИКА ПРОФІЛЮ',
       offline: 'офлайн',
       loading: 'завантаження...',
       playerId: 'ID',
+      viewPlayer: {
+        title: 'ПЕРЕГЛЯНУТИ ГРАВЦЯ',
+        placeholder: 'ID або нік',
+        open: 'ВІДКРИТИ',
+      },
+      admin: {
+        allPlayers: 'УСІ ГРАВЦІ',
+        fixNegativeRatings: 'ВИПРАВИТИ ВІД’ЄМНИЙ РЕЙТИНГ',
+        coinsSelf: '+МОНЕТИ (СОБІ)',
+        ratingSelf: '+РЕЙТИНГ (СОБІ)',
+        searchNickname: 'ПОШУК НІКА',
+        reset: 'СКИНУТИ',
+        delete: 'ВИДАЛИТИ',
+      },
       oldPassword: 'Старий пароль',
       newPassword: 'Новий пароль · мінімум 4',
       repeatNewPassword: 'Повторіть новий пароль',
@@ -1478,11 +1520,25 @@ const DICTS = {
     profile: {
       inventory: 'INVENTÁŘ',
       changePassword: 'ZMĚNIT HESLO',
-      account: 'ÚČET',
-      lifetimeStats: 'STATISTIKY',
+      account: 'NASTAVENÍ ÚČTU',
+      lifetimeStats: 'STATISTIKY PROFILU',
       offline: 'offline',
       loading: 'načítání...',
       playerId: 'ID',
+      viewPlayer: {
+        title: 'ZOBRAZIT HRÁČE',
+        placeholder: 'ID nebo přezdívka',
+        open: 'OTEVŘÍT',
+      },
+      admin: {
+        allPlayers: 'VŠICHNI HRÁČI',
+        fixNegativeRatings: 'OPRAVIT ZÁPORNÉ HODNOCENÍ',
+        coinsSelf: '+MINCE (JÁ)',
+        ratingSelf: '+RATING (JÁ)',
+        searchNickname: 'HLEDAT PŘEZDÍVKU',
+        reset: 'RESET',
+        delete: 'SMAZAT',
+      },
       oldPassword: 'Staré heslo',
       newPassword: 'Nové heslo · min 4',
       repeatNewPassword: 'Zopakujte nové heslo',
@@ -1831,11 +1887,25 @@ const DICTS = {
     profile: {
       inventory: 'INVENTARIO',
       changePassword: 'CAMBIAR CONTRASEÑA',
-      account: 'CUENTA',
-      lifetimeStats: 'ESTADÍSTICAS',
+      account: 'AJUSTES DE CUENTA',
+      lifetimeStats: 'ESTADÍSTICAS DEL PERFIL',
       offline: 'sin conexión',
       loading: 'cargando...',
       playerId: 'ID',
+      viewPlayer: {
+        title: 'VER JUGADOR',
+        placeholder: 'ID o apodo',
+        open: 'ABRIR',
+      },
+      admin: {
+        allPlayers: 'TODOS LOS JUGADORES',
+        fixNegativeRatings: 'ARREGLAR RATING NEGATIVO',
+        coinsSelf: '+MONEDAS (YO)',
+        ratingSelf: '+RATING (YO)',
+        searchNickname: 'BUSCAR APODO',
+        reset: 'REINICIAR',
+        delete: 'BORRAR',
+      },
       oldPassword: 'Contraseña antigua',
       newPassword: 'Nueva contraseña · mín 4',
       repeatNewPassword: 'Repite la nueva contraseña',
@@ -2191,11 +2261,21 @@ _setPath(DICTS.fr, 'game.youLost', 'TU AS PERDU');
 
 _setPath(DICTS.fr, 'profile.inventory', 'INVENTAIRE');
 _setPath(DICTS.fr, 'profile.changePassword', 'CHANGER LE MOT DE PASSE');
-_setPath(DICTS.fr, 'profile.account', 'COMPTE');
-_setPath(DICTS.fr, 'profile.lifetimeStats', 'STATS');
+_setPath(DICTS.fr, 'profile.account', 'PARAMÈTRES DU COMPTE');
+_setPath(DICTS.fr, 'profile.lifetimeStats', 'STATS DU PROFIL');
 _setPath(DICTS.fr, 'profile.offline', 'hors ligne');
 _setPath(DICTS.fr, 'profile.loading', 'chargement...');
 _setPath(DICTS.fr, 'profile.playerId', 'ID');
+_setPath(DICTS.fr, 'profile.viewPlayer.title', 'VOIR UN JOUEUR');
+_setPath(DICTS.fr, 'profile.viewPlayer.placeholder', 'ID ou pseudo');
+_setPath(DICTS.fr, 'profile.viewPlayer.open', 'OUVRIR');
+_setPath(DICTS.fr, 'profile.admin.allPlayers', 'TOUS LES JOUEURS');
+_setPath(DICTS.fr, 'profile.admin.fixNegativeRatings', 'CORRIGER LES RATINGS NÉGATIFS');
+_setPath(DICTS.fr, 'profile.admin.coinsSelf', '+PIÈCES (MOI)');
+_setPath(DICTS.fr, 'profile.admin.ratingSelf', '+RATING (MOI)');
+_setPath(DICTS.fr, 'profile.admin.searchNickname', 'RECHERCHER UN PSEUDO');
+_setPath(DICTS.fr, 'profile.admin.reset', 'RESET');
+_setPath(DICTS.fr, 'profile.admin.delete', 'SUPPRIMER');
 _setPath(DICTS.fr, 'profile.oldPassword', 'Ancien mot de passe');
 _setPath(DICTS.fr, 'profile.newPassword', 'Nouveau mot de passe · min 4');
 _setPath(DICTS.fr, 'profile.repeatNewPassword', 'Répéter le mot de passe');
@@ -2494,10 +2574,20 @@ _setPath(DICTS.de, 'game.youLost', 'DU HAST VERLOREN');
 
 _setPath(DICTS.de, 'profile.inventory', 'INVENTAR');
 _setPath(DICTS.de, 'profile.changePassword', 'PASSWORT ÄNDERN');
-_setPath(DICTS.de, 'profile.account', 'KONTO');
-_setPath(DICTS.de, 'profile.lifetimeStats', 'STATISTIK');
+_setPath(DICTS.de, 'profile.account', 'KONTO-EINSTELLUNGEN');
+_setPath(DICTS.de, 'profile.lifetimeStats', 'PROFILSTATISTIK');
 _setPath(DICTS.de, 'profile.offline', 'offline');
 _setPath(DICTS.de, 'profile.loading', 'lädt...');
+_setPath(DICTS.de, 'profile.viewPlayer.title', 'SPIELER ANSEHEN');
+_setPath(DICTS.de, 'profile.viewPlayer.placeholder', 'ID oder Name');
+_setPath(DICTS.de, 'profile.viewPlayer.open', 'ÖFFNEN');
+_setPath(DICTS.de, 'profile.admin.allPlayers', 'ALLE SPIELER');
+_setPath(DICTS.de, 'profile.admin.fixNegativeRatings', 'NEGATIVE RATINGS FIXEN');
+_setPath(DICTS.de, 'profile.admin.coinsSelf', '+MÜNZEN (ICH)');
+_setPath(DICTS.de, 'profile.admin.ratingSelf', '+RATING (ICH)');
+_setPath(DICTS.de, 'profile.admin.searchNickname', 'NAME SUCHEN');
+_setPath(DICTS.de, 'profile.admin.reset', 'RESET');
+_setPath(DICTS.de, 'profile.admin.delete', 'LÖSCHEN');
 _setPath(DICTS.de, 'profile.oldPassword', 'Altes Passwort');
 _setPath(DICTS.de, 'profile.newPassword', 'Neues Passwort · min 4');
 _setPath(DICTS.de, 'profile.repeatNewPassword', 'Passwort wiederholen');
@@ -2780,11 +2870,21 @@ _setPath(DICTS.zh, 'game.youLost', '你输了');
 
 _setPath(DICTS.zh, 'profile.inventory', '背包');
 _setPath(DICTS.zh, 'profile.changePassword', '修改密码');
-_setPath(DICTS.zh, 'profile.account', '账号');
-_setPath(DICTS.zh, 'profile.lifetimeStats', '生涯数据');
+_setPath(DICTS.zh, 'profile.account', '账号设置');
+_setPath(DICTS.zh, 'profile.lifetimeStats', '个人统计');
 _setPath(DICTS.zh, 'profile.offline', '离线');
 _setPath(DICTS.zh, 'profile.loading', '加载中...');
 _setPath(DICTS.zh, 'profile.playerId', 'ID');
+_setPath(DICTS.zh, 'profile.viewPlayer.title', '查看玩家');
+_setPath(DICTS.zh, 'profile.viewPlayer.placeholder', 'ID 或昵称');
+_setPath(DICTS.zh, 'profile.viewPlayer.open', '打开');
+_setPath(DICTS.zh, 'profile.admin.allPlayers', '所有玩家');
+_setPath(DICTS.zh, 'profile.admin.fixNegativeRatings', '修复负分');
+_setPath(DICTS.zh, 'profile.admin.coinsSelf', '+金币（自己）');
+_setPath(DICTS.zh, 'profile.admin.ratingSelf', '+积分（自己）');
+_setPath(DICTS.zh, 'profile.admin.searchNickname', '搜索昵称');
+_setPath(DICTS.zh, 'profile.admin.reset', '重置');
+_setPath(DICTS.zh, 'profile.admin.delete', '删除');
 _setPath(DICTS.zh, 'profile.oldPassword', '旧密码');
 _setPath(DICTS.zh, 'profile.newPassword', '新密码 · 至少 4 位');
 _setPath(DICTS.zh, 'profile.repeatNewPassword', '重复新密码');

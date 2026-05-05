@@ -697,18 +697,23 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
                   <div className="mt-4 flex gap-2 pointer-events-auto">
                     <button className="neon-btn px-4 py-2 text-[11px]" onClick={() => {
                       try {
-                        // Find a revealed "1" cell and point at it.
+                        // Find a revealed numbered cell (prefer "1", otherwise smallest > 0) and point at it.
                         const b = board;
-                        let one = null;
+                        let pick = null;
+                        let bestAdj = Infinity;
                         for (let rr = 0; rr < b.length; rr++) {
                           for (let cc = 0; cc < b[rr].length; cc++) {
                             const cl = b[rr][cc];
-                            if (cl?.revealed && !cl?.mine && Number(cl?.adjacent) === 1) { one = { r: rr, c: cc }; break; }
+                            if (!cl?.revealed || cl?.mine) continue;
+                            const adj = Number(cl?.adjacent || 0);
+                            if (adj <= 0) continue;
+                            if (adj === 1) { pick = { r: rr, c: cc }; bestAdj = 1; break; }
+                            if (adj < bestAdj) { bestAdj = adj; pick = { r: rr, c: cc }; }
                           }
-                          if (one) break;
+                          if (bestAdj === 1) break;
                         }
-                        if (one) {
-                          setTutorialOneCell(one);
+                        if (pick) {
+                          setTutorialOneCell(pick);
                           setTutorialStep(3);
                         }
                       } catch {}

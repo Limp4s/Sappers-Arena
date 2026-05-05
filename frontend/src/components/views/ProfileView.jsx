@@ -100,6 +100,19 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
     }
   };
 
+  const prettyPlayerId = useMemo(() => {
+    const n = player?.player_num ?? getPlayerId?.(player?.nick);
+    if (typeof n === 'number' && Number.isFinite(n)) {
+      const v = Math.max(0, Math.floor(n));
+      return String(v).padStart(8, '0');
+    }
+    if (typeof n === 'string' && n.trim()) {
+      const asNum = Number(n);
+      if (Number.isFinite(asNum)) return String(Math.max(0, Math.floor(asNum))).padStart(8, '0');
+    }
+    return null;
+  }, [player?.nick, player?.player_num]);
+
   const handleResetAchievements = async (nickname) => {
     const targetNick = String(nickname || '').trim();
     if (!targetNick) return;
@@ -234,6 +247,11 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               <Award size={18} className="neon-gold" />
             </button>
           </h2>
+          {prettyPlayerId && (
+            <div className="mt-1 text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display">
+              {t('profile.playerId')}: <span className="font-mono text-slate-300">{prettyPlayerId}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -266,7 +284,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
             <div className="glass-panel rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Shield size={14} className="neon-gold" />
-                <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">ALL PLAYERS</h3>
+                <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">{t('profile.admin.allPlayers')}</h3>
               </div>
               <div className="flex gap-2 mb-3">
                 <button
@@ -275,7 +293,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                   className="neon-btn flex-1 py-2"
                   style={{ borderColor: '#FFD700', color: '#FFD700' }}
                 >
-                  FIX NEGATIVE RATINGS
+                  {t('profile.admin.fixNegativeRatings')}
                 </button>
                 <button
                   onClick={async () => {
@@ -292,7 +310,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                   className="neon-btn flex-1 py-2"
                   style={{ borderColor: '#FFD700', color: '#FFD700' }}
                 >
-                  +COINS (SELF)
+                  {t('profile.admin.coinsSelf')}
                 </button>
                 <button
                   onClick={async () => {
@@ -309,7 +327,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                   className="neon-btn flex-1 py-2"
                   style={{ borderColor: '#00E5FF', color: '#00E5FF' }}
                 >
-                  +RATING (SELF)
+                  {t('profile.admin.ratingSelf')}
                 </button>
               </div>
               {adminMsg && (
@@ -319,7 +337,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               )}
               <input
                 className="neon-input mb-3"
-                placeholder="SEARCH NICKNAME"
+                placeholder={t('profile.admin.searchNickname')}
                 value={adminPlayersQuery}
                 onChange={(e) => setAdminPlayersQuery(e.target.value)}
               />
@@ -345,14 +363,14 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                           className="neon-btn px-2 py-1 text-[10px]"
                           style={{ borderColor: '#FFD700', color: '#FFD700' }}
                         >
-                          RESET
+                          {t('profile.admin.reset')}
                         </button>
                         <button
                           onClick={() => handleDeletePlayer(p?.nickname)}
                           disabled={adminBusy || !p?.nickname || String(p?.nickname || '').toLowerCase() === String(player?.nick || '').toLowerCase() || !!p?.is_admin}
                           className="neon-btn neon-btn-coral px-2 py-1 text-[10px]"
                         >
-                          DELETE
+                          {t('profile.admin.delete')}
                         </button>
                       </div>
                     ))}
@@ -454,11 +472,11 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                     </button>
 
                     <div className="glass-panel-light rounded-xl p-4">
-                      <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">VIEW PLAYER</div>
+                      <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('profile.viewPlayer.title')}</div>
                       <div className="flex gap-2">
                         <input
                           className="neon-input flex-1"
-                          placeholder="ID or nickname"
+                          placeholder={t('profile.viewPlayer.placeholder')}
                           value={viewQuery}
                           onChange={(e) => setViewQuery(e.target.value)}
                           onKeyDown={(e) => { if (e.key === 'Enter') openOtherProfile(); }}
@@ -470,7 +488,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                           className="neon-btn px-4"
                           data-testid="view-player-open-btn"
                         >
-                          OPEN
+                          {t('profile.viewPlayer.open')}
                         </button>
                       </div>
                     </div>

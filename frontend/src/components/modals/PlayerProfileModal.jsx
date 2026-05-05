@@ -111,9 +111,16 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
     <div className="modal-backdrop" data-testid="player-profile-modal">
       <div className="glass-panel slide-up rounded-2xl p-6 max-w-4xl w-[96%] max-h-[85vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-display text-xl font-black neon-cyan flex items-center gap-2">
-            <User size={18} /> {titleNick}
-          </h3>
+          <div>
+            <h3 className="font-display text-xl font-black neon-cyan flex items-center gap-2">
+              <User size={18} /> {titleNick}
+            </h3>
+            {prettyPlayerId !== '—' && (
+              <div className="mt-1 text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display">
+                {t('profile.playerId')}: <span className="font-mono text-slate-300">{prettyPlayerId}</span>
+              </div>
+            )}
+          </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white" data-testid="close-player-profile-btn"><X size={18} /></button>
         </div>
 
