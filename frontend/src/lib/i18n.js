@@ -662,6 +662,11 @@ const DICTS = {
         searchNickname: 'ПОИСК НИКА',
         reset: 'СБРОС',
         delete: 'УДАЛИТЬ',
+        resetAchievementsConfirm: 'Сбросить достижения для: {nickname}?',
+        resetAchievementsOk: 'Достижения сброшены: {nickname}',
+        fixedNegativeRatings: 'Исправлено: {n}',
+        deleteAccountConfirm: 'Удалить аккаунт: {nickname}?',
+        deleteAccountOk: 'Удалено: {nickname}',
       },
       oldPassword: 'Старый пароль',
       newPassword: 'Новый пароль · минимум 4',
@@ -933,6 +938,7 @@ const DICTS = {
       resetIn: 'СКИДАННЯ ЧЕРЕЗ',
       claimed: 'ЗАБРАНО',
       claim: 'ЗАБРАТИ',
+      inProgress: 'У ПРОЦЕСІ',
       quests: {
         play_1: 'Зіграти 1 гру',
         play_3: 'Зіграти 3 гри',
@@ -1091,6 +1097,11 @@ const DICTS = {
         searchNickname: 'ПОШУК НІКА',
         reset: 'СКИНУТИ',
         delete: 'ВИДАЛИТИ',
+        resetAchievementsConfirm: 'Скинути досягнення для: {nickname}?',
+        resetAchievementsOk: 'Досягнення скинуто: {nickname}',
+        fixedNegativeRatings: 'Виправлено: {n}',
+        deleteAccountConfirm: 'Видалити акаунт: {nickname}?',
+        deleteAccountOk: 'Видалено: {nickname}',
       },
       oldPassword: 'Старий пароль',
       newPassword: 'Новий пароль · мінімум 4',
@@ -1100,13 +1111,6 @@ const DICTS = {
       updating: 'ОНОВЛЕННЯ...',
       update: 'ОНОВИТИ',
       failed: 'Помилка.',
-      admin: {
-        resetAchievementsConfirm: 'Скинути досягнення для: {nickname}?',
-        resetAchievementsOk: 'Досягнення скинуто: {nickname}',
-        fixedNegativeRatings: 'Виправлено: {n}',
-        deleteAccountConfirm: 'Видалити акаунт: {nickname}?',
-        deleteAccountOk: 'Видалено: {nickname}',
-      },
     },
     stats: {
       runs: 'ІГОРИ', wins: 'ПЕРЕМОГИ', losses: 'ПОРАЗКИ', winRate: 'ВІНРЕЙТ',
@@ -1282,31 +1286,6 @@ const DICTS = {
       deleteFailed: 'Не вдалося видалити',
       hideRankedConfirm: 'Приховати {nickname} з рейтингового лідерборду?',
       hideFailed: 'Не вдалося приховати',
-    },
-    profile: {
-      admin: {
-        resetAchievementsConfirm: 'Скинути досягнення для: {nickname}?',
-        resetAchievementsOk: 'Досягнення скинуто: {nickname}',
-        fixedNegativeRatings: 'Виправлено: {n}',
-        deleteAccountConfirm: 'Видалити акаунт: {nickname}?',
-        deleteAccountOk: 'Видалено: {nickname}',
-      },
-    },
-    daily: {
-      title: 'ДЕЙЛІКИ',
-      subtitle: 'ЩОДЕННІ ЗАВДАННЯ',
-      coins: 'МОНЕТИ',
-      coinsShort: 'монет',
-      resetIn: 'ДО СКИДАННЯ',
-      claim: 'ЗАБРАТИ',
-      claimed: 'ЗАБРАНО',
-      inProgress: 'У ПРОЦЕСІ',
-      quests: {
-        play_1: 'Зіграти 1 гру',
-        win_1: 'Виграти 1 гру',
-        flags_10: 'Поставити 10 прапорців',
-        safe_50: 'Відкрити 50 безпечних клітинок',
-      },
     },
   },
   cs: {
@@ -3035,23 +3014,32 @@ _setPath(DICTS.zh, 'custom.skin.fx', '特效');
 _setPath(DICTS.zh, 'custom.skin.cursor', '光标');
 _setPath(DICTS.zh, 'custom.lockedTooltip', '已锁定 — 去商店购买');
 
-const _fillMissingWithEmpty = (src, dst) => {
+const _fillMissingFromSource = (src, dst) => {
   if (!src || typeof src !== 'object') return;
   if (!dst || typeof dst !== 'object') return;
   Object.keys(src).forEach((k) => {
     const v = src[k];
     const cur = dst[k];
     if (typeof v === 'string') {
-      if (typeof cur !== 'string') dst[k] = '';
+      if (typeof cur !== 'string') dst[k] = v;
       return;
     }
     if (!v || typeof v !== 'object' || Array.isArray(v)) return;
     if (!cur || typeof cur !== 'object' || Array.isArray(cur)) dst[k] = {};
-    _fillMissingWithEmpty(v, dst[k]);
+    _fillMissingFromSource(v, dst[k]);
   });
 };
 
-try { _fillMissingWithEmpty(DICTS.ru, DICTS.uk); } catch {}
+try {
+  // Ensure baseline completeness.
+  // 1) EN must have everything (fallback language) — copy missing keys from RU.
+  _fillMissingFromSource(DICTS.ru, DICTS.en);
+  // 2) Every other language gets missing keys from EN (so keys never render).
+  Object.keys(DICTS).forEach((code) => {
+    if (code === 'en') return;
+    _fillMissingFromSource(DICTS.en, DICTS[code]);
+  });
+} catch {}
 
 const KEY = 'mg_lang';
 
@@ -3124,7 +3112,10 @@ export const t = (path, arg2, arg3) => {
     // fallback to english
     let node2 = DICTS.en;
     for (const p of parts) node2 = node2?.[p];
-    return typeof node2 === 'string' ? node2 : path;
+    if (typeof node2 === 'string') return node2;
+    let node3 = DICTS.ru;
+    for (const p of parts) node3 = node3?.[p];
+    return typeof node3 === 'string' ? node3 : '';
   }
   if (!params) return node;
   try {
