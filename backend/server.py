@@ -136,7 +136,7 @@ SHOP_CATALOG = {
     "flag_violet":     {"price": 900, "category": "flag", "name": "Violet Flag"},
     "flag_silver":     {"price": 2000, "category": "flag", "name": "Silver Flag"},
     "flag_mono":       {"price": 1200, "category": "flag", "name": "Mono Flag"},
-    "flag_rainbow":    {"price": 1200, "category": "flag", "name": "Rainbow Flag"},
+    "flag_rainbow":    {"price": 2000, "category": "flag", "name": "Rainbow Flag"},
 }
 
 
@@ -1577,6 +1577,8 @@ async def admin_list_players(limit: int = Query(default=200, ge=1, le=2000), nic
 @api_router.post("/admin/demote")
 async def demote_admin(payload: AdminPromoteRequest, nick: str = Depends(require_session)):
     await _require_admin(nick)
+    if not _is_root_admin(nick):
+        raise HTTPException(status_code=403, detail="Only the root admin can demote admins.")
     if _is_admin_nick(payload.nickname):
         raise HTTPException(status_code=403, detail="Cannot demote the root admin.")
     target = await _get_player(payload.nickname)

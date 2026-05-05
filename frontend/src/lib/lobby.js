@@ -35,6 +35,7 @@ export const matchmakingFind = async (cfg) => (await authedPost(`${API}/matchmak
 
 export const reportProgress = async (code, progress) => (await authedPost(`${API}/lobbies/${normLobbyCode(code)}/progress`, progress)).data;
 export const promoteToAdmin = async (nickname) => (await axios.post(`${API}/admin/promote`, { nickname }, { headers: sessionHeaders() })).data;
+export const demoteAdmin = async (nickname) => (await axios.post(`${API}/admin/demote`, { nickname }, { headers: sessionHeaders() })).data;
 
 // Simple xorshift seeded RNG for deterministic board generation
 export function createSeededRandom(seed) {

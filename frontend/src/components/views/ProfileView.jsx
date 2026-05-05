@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2, Award, Crown } from 'lucide-react';
 import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminGrantCoins, adminResetPlayer, adminDeletePlayer, getToken, authHeaders, isOwnerNick } from '../../lib/player';
-import { promoteToAdmin } from '../../lib/lobby';
+import { demoteAdmin, promoteToAdmin } from '../../lib/lobby';
 import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
 import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
 import InventoryModal from '../modals/InventoryModal';
@@ -100,6 +100,26 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
     } catch {
       setAdminPlayers([]);
     }
+  };
+
+  const handleDemoteAdmin = async (nickname) => {
+    const targetNick = String(nickname || '').trim();
+    if (!targetNick) return;
+    if (!owner) return;
+    if (String(targetNick).toLowerCase() === String(player?.nick || '').toLowerCase()) return;
+    if (isOwnerNick?.(targetNick)) return;
+    const ok = window.confirm(t('admin.demoteConfirm', { nickname: targetNick }));
+    if (!ok) return;
+    setAdminBusy(true);
+    setAdminMsg(null);
+    try {
+      await demoteAdmin(targetNick);
+      setAdminMsg({ ok: true, text: t('admin.demoted', { nickname: targetNick }) });
+      await refreshAdminPlayers();
+    } catch (e2) {
+      setAdminMsg({ ok: false, text: e2?.response?.data?.detail || t('common.failed') });
+    }
+    setAdminBusy(false);
   };
 
   const prettyPlayerId = useMemo(() => {
@@ -361,6 +381,14 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                       <div key={String(p?.player_num || p?.nickname || Math.random())} className="flex items-center justify-between gap-3 py-2 border-b border-white/5 last:border-b-0">
                         <div className="font-mono text-[11px] text-slate-300">#{p?.player_num ?? '—'}</div>
                         <div className="font-mono text-[11px] text-white">{p?.nickname || '—'}</div>
+                        <button
+                          onClick={() => handleDemoteAdmin(p?.nickname)}
+                          disabled={adminBusy || !p?.nickname || !owner || !p?.is_admin || isOwnerNick?.(p?.nickname) || String(p?.nickname || '').toLowerCase() === String(player?.nick || '').toLowerCase()}
+                          className="neon-btn px-2 py-1 text-[10px]"
+                          style={{ borderColor: '#8B5CF6', color: '#C4B5FD' }}
+                        >
+                          {t('admin.demote')}
+                        </button>
                         <button
                           onClick={() => handleResetPlayer(p?.nickname)}
                           disabled={adminBusy || !p?.nickname || String(p?.nickname || '').toLowerCase() === String(player?.nick || '').toLowerCase() || isOwnerNick?.(p?.nickname) || (!!p?.is_admin && !owner)}
