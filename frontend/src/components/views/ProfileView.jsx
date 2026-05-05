@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2, Award } from 'lucide-react';
-import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminGrantCoins, adminResetAchievements, adminDeletePlayer, getToken, authHeaders } from '../../lib/player';
+import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2, Award, Crown } from 'lucide-react';
+import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminGrantCoins, adminResetAchievements, adminDeletePlayer, getToken, authHeaders, isOwnerNick } from '../../lib/player';
 import { promoteToAdmin } from '../../lib/lobby';
 import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
 import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
@@ -39,6 +39,8 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   const [newUnlocked, setNewUnlocked] = useState([]);
   const [achDefs, setAchDefs] = useState(null);
   const [achMine, setAchMine] = useState(null);
+
+  const owner = isOwnerNick?.(player?.nick);
 
   const achUnlocked = useMemo(() => (achMine?.unlocked && typeof achMine.unlocked === 'object') ? achMine.unlocked : {}, [achMine?.unlocked]);
   const achList = useMemo(() => {
@@ -230,7 +232,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
             )}
             {player?.isAdmin && (
               <span className="flex items-center gap-1 text-[11px] neon-gold font-display tracking-[0.25em] bg-[#FFD700]/10 border border-[#FFD700]/50 px-2 py-0.5 rounded">
-                <Shield size={11} /> {t('admin.title')}
+                <Crown size={11} className="neon-gold" /> {owner ? t('admin.ownerTitle') : t('admin.adminTitle')}
               </span>
             )}
 
@@ -249,7 +251,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
           </h2>
           {prettyPlayerId && (
             <div className="mt-1 text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display">
-              {t('profile.playerId')}: <span className="font-mono text-slate-300">{prettyPlayerId}</span>
+              {t('profile.playerId')}: <span className="font-mono text-white/90 drop-shadow-[0_0_6px_rgba(255,255,255,0.35)]">{prettyPlayerId}</span>
             </div>
           )}
         </div>
@@ -367,7 +369,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                         </button>
                         <button
                           onClick={() => handleDeletePlayer(p?.nickname)}
-                          disabled={adminBusy || !p?.nickname || String(p?.nickname || '').toLowerCase() === String(player?.nick || '').toLowerCase() || !!p?.is_admin}
+                          disabled={adminBusy || !p?.nickname || String(p?.nickname || '').toLowerCase() === String(player?.nick || '').toLowerCase() || (!!p?.is_admin && !owner)}
                           className="neon-btn neon-btn-coral px-2 py-1 text-[10px]"
                         >
                           {t('profile.admin.delete')}

@@ -49,6 +49,8 @@ const OFFLINE_ADMIN_NICK = 'limp4';
 const OFFLINE_ADMIN_PASSWORD = 'Limon626';
 
 export const ADMIN_NICKS = new Set(['limp4']);
+export const ROOT_ADMIN_NICK = 'limp4';
+export const isOwnerNick = (nick) => (String(nick || '').toLowerCase() === ROOT_ADMIN_NICK);
 export const isAdminNick = (nick) => ADMIN_NICKS.has((nick || '').toLowerCase());
 
 const _randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -131,6 +133,11 @@ export const isAdmin = () => {
   const token = getToken();
   if ((token || '').startsWith('offline-')) return isAdminNick(nick);
   return localStorage.getItem(KEY_ADMIN) === '1' || isAdminNick(nick);
+};
+
+export const isOwner = () => {
+  const nick = getStoredNickname();
+  return isOwnerNick(nick);
 };
 
 export const saveSession = (nick, token, admin) => {

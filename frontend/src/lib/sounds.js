@@ -32,7 +32,12 @@ const getCtx = () => {
       return null;
     }
   }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioCtx.state === 'suspended') {
+    try {
+      const p = audioCtx.resume();
+      if (p && typeof p.then === 'function') p.catch(() => {});
+    } catch {}
+  }
   return audioCtx;
 };
 

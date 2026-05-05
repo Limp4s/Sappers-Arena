@@ -95,8 +95,14 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
   const onContinue = useCallback(() => {
     setTutorialCompleted(false);
     setModalOpen(false);
+    try {
+      const nextId = Number(levelId) + 1;
+      if (Number.isFinite(nextId) && nextId > 1) {
+        localStorage.setItem('mg_campaign_autostart_next', String(nextId));
+      }
+    } catch {}
     try { onExit?.(); } catch {}
-  }, [onExit]);
+  }, [levelId, onExit]);
 
   useEffect(() => {
     if (tutorialStep !== 3 || !tutorialOneCell) return;

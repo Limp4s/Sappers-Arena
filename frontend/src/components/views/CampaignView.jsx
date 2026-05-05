@@ -236,8 +236,8 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
                     <div className="absolute left-full ml-4 hidden md:block w-[160px]">
                       {milestone && (
                         <>
-                          <div className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display">LVL {String(lvl.id).padStart(2, '0')}</div>
-                          <div className={`font-display text-sm font-bold ${unlocked ? 'text-slate-200' : 'text-slate-600'}`}>CHECKPOINT</div>
+                          <div className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display">{t('campaign.lvl')} {String(lvl.id).padStart(2, '0')}</div>
+                          <div className={`font-display text-sm font-bold ${unlocked ? 'text-slate-200' : 'text-slate-600'}`}>{t('campaign.checkpoint')}</div>
                         </>
                       )}
                     </div>
@@ -250,8 +250,8 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
                     <div className="absolute right-full mr-4 text-right hidden md:block w-[160px]">
                       {milestone && (
                         <>
-                          <div className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display">LVL {String(lvl.id).padStart(2, '0')}</div>
-                          <div className={`font-display text-sm font-bold ${unlocked ? 'text-slate-200' : 'text-slate-600'}`}>CHECKPOINT</div>
+                          <div className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display">{t('campaign.lvl')} {String(lvl.id).padStart(2, '0')}</div>
+                          <div className={`font-display text-sm font-bold ${unlocked ? 'text-slate-200' : 'text-slate-600'}`}>{t('campaign.checkpoint')}</div>
                         </>
                       )}
                     </div>
@@ -265,7 +265,7 @@ export default function CampaignView({ onStartLevel, isAdmin, infiniteLives, onT
               <div className="w-11 h-11 rounded-full glass-panel-light border-2 border-[#FFD700]/40 flex items-center justify-center">
                 <Trophy size={14} className="neon-gold" />
               </div>
-              <div className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display text-center mt-1">GOAL</div>
+              <div className="text-[9px] tracking-[0.3em] uppercase text-slate-500 font-display text-center mt-1">{t('campaign.goal')}</div>
             </div>
           </div>
         </div>

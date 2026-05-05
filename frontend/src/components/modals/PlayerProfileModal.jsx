@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { X, Trophy, User, Clock } from 'lucide-react';
-import { fetchPlayer } from '../../lib/player';
+import { X, Trophy, User, Clock, Crown } from 'lucide-react';
+import { fetchPlayer, isOwnerNick } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
@@ -104,6 +104,7 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
 
   const ratingText = String(player?.rating ?? '—');
   const leagueText = String(player?.league || '').toUpperCase();
+  const owner = isOwnerNick?.(player?.nickname);
   const achUnlocked = (ach?.unlocked && typeof ach.unlocked === 'object') ? ach.unlocked : {};
   const achList = Array.isArray(achDefs?.achievements) ? achDefs.achievements : [];
 
@@ -117,7 +118,14 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
             </h3>
             {prettyPlayerId !== '—' && (
               <div className="mt-1 text-[10px] tracking-[0.25em] uppercase text-slate-500 font-display">
-                {t('profile.playerId')}: <span className="font-mono text-slate-300">{prettyPlayerId}</span>
+                {t('profile.playerId')}: <span className="font-mono text-white/90 drop-shadow-[0_0_6px_rgba(255,255,255,0.35)]">{prettyPlayerId}</span>
+              </div>
+            )}
+            {!!player?.is_admin && (
+              <div className="mt-1">
+                <span className="inline-flex items-center gap-1 text-[11px] neon-gold font-display tracking-[0.25em] bg-[#FFD700]/10 border border-[#FFD700]/50 px-2 py-0.5 rounded">
+                  <Crown size={11} className="neon-gold" /> {owner ? t('admin.ownerTitle') : t('admin.adminTitle')}
+                </span>
               </div>
             )}
           </div>

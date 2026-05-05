@@ -220,6 +220,10 @@ def _is_admin_nick(nick: str) -> bool:
     return (nick or "").lower() in ADMIN_NICKS
 
 
+def _is_root_admin(nick: str) -> bool:
+    return (nick or "").lower() == ROOT_ADMIN_NICK_LOWER
+
+
 def _sanitize_player(doc: dict) -> dict:
     if not doc: return None
     doc = dict(doc)
@@ -1657,9 +1661,11 @@ async def admin_delete_player(nickname: str, nick: str = Depends(require_session
     target = await _get_player(nickname)
     if not target:
         raise HTTPException(status_code=404, detail="Player not found.")
+    if (target.get("nickname_lower") or (target.get("nickname") or "").lower()) == (nick or "").lower():
+        raise HTTPException(status_code=403, detail="Cannot delete your own account.")
     if _is_admin_nick(target.get("nickname")):
         raise HTTPException(status_code=403, detail="Cannot delete the root admin.")
-    if target.get("is_admin"):
+    if target.get("is_admin") and not _is_root_admin(nick):
         raise HTTPException(status_code=403, detail="Cannot delete an admin account.")
 
     target_nick = target.get("nickname")

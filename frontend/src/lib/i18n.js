@@ -241,7 +241,7 @@ const DICTS = {
       runs: 'RUNS', wins: 'WINS', losses: 'LOSSES', winRate: 'WIN RATE',
       campaign: 'CAMPAIGN', battles: 'BATTLES', bestScore: 'BEST SCORE', bestTime: 'BEST TIME',
     },
-    admin: { title: 'OWNER', promote: 'PROMOTE TO OWNER', grantBtn: 'GRANT',
+    admin: { title: 'OWNER', ownerTitle: 'FOUNDER', adminTitle: 'ADMIN', promote: 'PROMOTE TO ADMIN', grantBtn: 'GRANT',
       promoteHelp: 'Enter the callsign of the player to grant admin rights.',
       promoted: 'promoted.',
       processing: 'PROCESSING...',
@@ -397,6 +397,8 @@ const DICTS = {
       cleared: 'CLEARED',
       stars: 'STARS',
       start: 'START',
+      checkpoint: 'CHECKPOINT',
+      goal: 'GOAL',
     },
     leaderboard: {
       title: 'LEADERBOARD',
@@ -674,7 +676,7 @@ const DICTS = {
       runs: 'ИГР', wins: 'ПОБЕД', losses: 'ПОРАЖ', winRate: 'ВИНРЕЙТ',
       campaign: 'КАМПАНИЯ', battles: 'БИТВЫ', bestScore: 'ЛУЧШИЙ СЧЁТ', bestTime: 'ЛУЧШЕЕ ВРЕМЯ',
     },
-    admin: { title: 'ВЛАДЕЛЕЦ', promote: 'СДЕЛАТЬ ВЛАДЕЛЬЦЕМ', grantBtn: 'ВЫДАТЬ',
+    admin: { title: 'ВЛАДЕЛЕЦ', ownerTitle: 'ОСНОВАТЕЛЬ', adminTitle: 'АДМИН', promote: 'СДЕЛАТЬ АДМИНОМ', grantBtn: 'ВЫДАТЬ',
       promoteHelp: 'Введите позывной игрока, которому выдать права админа.',
       promoted: 'повышен.',
       processing: 'ОБРАБОТКА...',
@@ -824,6 +826,8 @@ const DICTS = {
       cleared: 'ПРОЙДЕНО',
       stars: 'ЗВЁЗДЫ',
       start: 'СТАРТ',
+      checkpoint: 'ЧЕКПОИНТ',
+      goal: 'ФИНИШ',
     },
     leaderboard: {
       title: 'ЛИДЕРБОРД',
@@ -1110,7 +1114,7 @@ const DICTS = {
       rank: 'РАНГ',
       lives: 'ЖИТТЯ',
     },
-    admin: { title: 'ВЛАСНИК', promote: 'ПРИЗНАЧИТИ ВЛАСНИКОМ', grantBtn: 'НАДАТИ',
+    admin: { title: 'ВЛАСНИК', ownerTitle: 'ЗАСНОВНИК', adminTitle: 'АДМІН', promote: 'ЗРОБИТИ АДМІНОМ', grantBtn: 'НАДАТИ',
       promoteHelp: 'Введіть нік гравця, щоб надати права адміна.',
       promoted: 'призначено.',
       processing: 'ОБРОБКА...',
@@ -1260,6 +1264,8 @@ const DICTS = {
       cleared: 'ПРОЙДЕНО',
       stars: 'ЗІРКИ',
       start: 'СТАРТ',
+      checkpoint: 'КОНТРОЛЬНА ТОЧКА',
+      goal: 'ФІНІШ',
     },
     leaderboard: {
       title: 'ЛІДЕРИ',
@@ -1554,7 +1560,7 @@ const DICTS = {
       rank: 'RANK',
       lives: 'ŽIVOTY',
     },
-    admin: { title: 'VLASTNÍK', promote: 'POVÝŠIT', grantBtn: 'UDĚLIT',
+    admin: { title: 'VLASTNÍK', ownerTitle: 'ZAKLADATEL', adminTitle: 'ADMIN', promote: 'POVÝŠIT NA ADMINA', grantBtn: 'UDĚLIT',
       promoteHelp: 'Zadejte přezdívku hráče pro udělení práv.',
       promoted: 'povýšen.',
       processing: 'ZPRACOVÁNÍ...',
@@ -1642,6 +1648,8 @@ const DICTS = {
       cleared: 'SPLNĚNO',
       stars: 'HVĚZDY',
       start: 'START',
+      checkpoint: 'KONTROLNÍ BOD',
+      goal: 'CÍL',
     },
     leaderboard: {
       title: 'ŽEBŘÍČEK',
@@ -1919,7 +1927,7 @@ const DICTS = {
       runs: 'PARTIDAS', wins: 'VICTORIAS', losses: 'DERROTAS', winRate: 'RATIO',
       campaign: 'CAMPAÑA', battles: 'BATALLAS', bestScore: 'MEJOR PUNT', bestTime: 'MEJOR TIEMPO',
     },
-    admin: { title: 'DUEÑO', promote: 'ASCENDER', grantBtn: 'DAR',
+    admin: { title: 'DUEÑO', ownerTitle: 'FUNDADOR', adminTitle: 'ADMIN', promote: 'ASCENDER A ADMIN', grantBtn: 'DAR',
       promoteHelp: 'Introduce el apodo para dar permisos de admin.',
       promoted: 'ascendido.',
       processing: 'PROCESANDO...',
@@ -2008,6 +2016,8 @@ const DICTS = {
       cleared: 'LIMPIADO',
       stars: 'ESTRELLAS',
       start: 'INICIO',
+      checkpoint: 'PUNTO DE CONTROL',
+      goal: 'META',
     },
     leaderboard: {
       title: 'LÍDERES',
@@ -2289,6 +2299,13 @@ _setPath(DICTS.fr, 'friends.title', 'AMIS');
 _setPath(DICTS.fr, 'friends.searchPlaceholder', 'Rechercher un indicatif...');
 _setPath(DICTS.fr, 'friends.noResult', 'Joueur introuvable.');
 _setPath(DICTS.fr, 'friends.blurb', 'Cherche d’autres joueurs et consulte leurs stats.');
+
+_setPath(DICTS.fr, 'admin.ownerTitle', 'FONDATEUR');
+_setPath(DICTS.fr, 'admin.adminTitle', 'ADMIN');
+_setPath(DICTS.fr, 'admin.promote', 'PROMOUVOIR ADMIN');
+
+_setPath(DICTS.fr, 'campaign.checkpoint', 'POINT DE CONTRÔLE');
+_setPath(DICTS.fr, 'campaign.goal', 'OBJECTIF');
 
 _setPath(DICTS.fr, 'pause.title', 'PAUSE');
 _setPath(DICTS.fr, 'pause.exitGame', 'QUITTER');
@@ -2602,6 +2619,13 @@ _setPath(DICTS.de, 'friends.searchPlaceholder', 'Rufzeichen suchen...');
 _setPath(DICTS.de, 'friends.noResult', 'Spieler nicht gefunden.');
 _setPath(DICTS.de, 'friends.blurb', 'Suche andere Spieler und sieh dir ihre Stats an.');
 
+_setPath(DICTS.de, 'admin.ownerTitle', 'GRÜNDER');
+_setPath(DICTS.de, 'admin.adminTitle', 'ADMIN');
+_setPath(DICTS.de, 'admin.promote', 'ZUM ADMIN MACHEN');
+
+_setPath(DICTS.de, 'campaign.checkpoint', 'CHECKPOINT');
+_setPath(DICTS.de, 'campaign.goal', 'ZIEL');
+
 _setPath(DICTS.de, 'pause.title', 'PAUSE');
 _setPath(DICTS.de, 'pause.exitGame', 'SPIEL BEENDEN');
 
@@ -2895,9 +2919,16 @@ _setPath(DICTS.zh, 'profile.update', '更新');
 _setPath(DICTS.zh, 'profile.failed', '失败。');
 
 _setPath(DICTS.zh, 'friends.title', '好友');
-_setPath(DICTS.zh, 'friends.searchPlaceholder', '搜索呼号...');
+_setPath(DICTS.zh, 'friends.searchPlaceholder', '搜索昵称...');
 _setPath(DICTS.zh, 'friends.noResult', '未找到玩家。');
-_setPath(DICTS.zh, 'friends.blurb', '搜索其他玩家并查看他们的生涯数据。');
+_setPath(DICTS.zh, 'friends.blurb', '搜索玩家并查看他们的统计数据。');
+
+_setPath(DICTS.zh, 'admin.ownerTitle', '创始人');
+_setPath(DICTS.zh, 'admin.adminTitle', '管理员');
+_setPath(DICTS.zh, 'admin.promote', '设为管理员');
+
+_setPath(DICTS.zh, 'campaign.checkpoint', '检查点');
+_setPath(DICTS.zh, 'campaign.goal', '目标');
 
 _setPath(DICTS.zh, 'pause.title', '暂停');
 _setPath(DICTS.zh, 'pause.exitGame', '退出游戏');
