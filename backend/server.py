@@ -58,27 +58,22 @@ async def _ensure_indexes():
         await db.players.create_index("nickname_lower", unique=True)
         await db.players.create_index([("rating", -1)])
         await db.players.create_index([("coins", -1)])
-        
+
         # Leaderboard collection
         await db.leaderboard.create_index([("mode", 1)])
         await db.leaderboard.create_index([("player_name", 1)])
         await db.leaderboard.create_index([("mode", 1), ("won", -1), ("score", -1)])
-        
+
         # Sessions collection
         await db.sessions.create_index("token", unique=True)
         await db.sessions.create_index("nickname")
-        
+
         # Counters collection
         await db.counters.create_index("_id", unique=True)
-        
+
         logger.info("MongoDB indexes ensured successfully")
     except Exception as e:
         logger.warning(f"Failed to ensure indexes: {e}")
-
-
-@app.on_event("startup")
-async def startup_event():
-    await _ensure_indexes()
 
 
 app = FastAPI()
@@ -92,6 +87,11 @@ app.add_middleware(
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 api_router = APIRouter(prefix="/api")
+
+
+@app.on_event("startup")
+async def startup_event():
+    await _ensure_indexes()
 
 ADMIN_NICKS = {"limp4"}
 ROOT_ADMIN_NICK_LOWER = "limp4"
