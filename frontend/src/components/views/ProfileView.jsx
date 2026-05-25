@@ -432,6 +432,226 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
           )}
 
           <div className="glass-panel rounded-xl p-6 space-y-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Users size={14} className="neon-cyan" />
+            <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">{t('friends.title')}</h3>
+          </div>
+
+          <div className="glass-panel-light rounded-xl p-4">
+            <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('profile.viewPlayer.title')}</div>
+            <div className="flex gap-2">
+              <input
+                className="neon-input flex-1"
+                placeholder={t('profile.viewPlayer.placeholder')}
+                value={viewQuery}
+                onChange={(e) => setViewQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') openOtherProfile(); }}
+                maxLength={20}
+                data-testid="view-player-input"
+              />
+              <button
+                onClick={openOtherProfile}
+                className="neon-btn px-4"
+                data-testid="view-player-open-btn"
+              >
+                {t('profile.viewPlayer.open')}
+              </button>
+            </div>
+          </div>
+
+          {pendingRequests.length > 0 && (
+            <div className="glass-panel-light rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <UserCheck size={14} className="neon-lime" />
+                <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('friends.friendRequests')}</h3>
+              </div>
+              <div className="space-y-2">
+                {pendingRequests.map((reqNick) => (
+                  <div key={reqNick} className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3">
+                    <div className="text-[11px] font-mono neon-cyan">{reqNick}</div>
+                    <div className="flex-1"></div>
+                    <button
+                      onClick={() => {
+                        acceptFriendRequest(reqNick)
+                          .then(() => {
+                            setPendingRequests(pendingRequests.filter(r => r !== reqNick));
+                            onPlayerUpdate?.();
+                          })
+                          .catch(() => {});
+                      }}
+                      className="text-green-400 hover:text-green-300"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        rejectFriendRequest(reqNick)
+                          .then(() => setPendingRequests(pendingRequests.filter(r => r !== reqNick)))
+                          .catch(() => {});
+                      }}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="glass-panel-light rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Users size={14} className="neon-cyan" />
+              <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('friends.friendsList')}</h3>
+            </div>
+            {friendsLoading ? (
+              <div className="text-slate-500 text-xs text-center py-4">{t('friends.loading')}</div>
+            ) : friends.length === 0 ? (
+              <div className="text-slate-500 text-xs text-center py-4">{t('friends.noFriends')}</div>
+            ) : (
+              <div className="space-y-2">
+                {friends.map((friend) => (
+                  <div key={friend.nickname} className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3">
+                    <div className="text-[11px] font-mono neon-cyan">{friend.nickname}</div>
+                    <div className="flex-1 text-[11px] text-slate-400">Rating: {friend.rating || 1000}</div>
+                    <button
+                      onClick={() => {
+                        removeFriend(friend.nickname)
+                          .then(() => setFriends(friends.filter(f => f.nickname !== friend.nickname)))
+                          .catch(() => {});
+                      }}
+                      className="text-slate-500 hover:text-red-400"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="glass-panel rounded-xl p-6 space-y-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Award size={14} className="neon-gold" />
+            <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">{t('daily.title')}</h3>
+          </div>
+
+          <div className="glass-panel-light rounded-xl p-4" data-testid="daily-quests">
+                  <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">
+                    {t('daily.subtitle')}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="text-[11px] font-mono text-slate-400">
+                      {t('daily.coins')}: <span className="neon-gold">{(
+                        dailyOnline && dailyOnlineState && !dailyOnlineState.offline
+                          ? (dailyOnlineState.claimed_coins || 0)
+                          : (dailyCoins || 0)
+                      ).toLocaleString()}</span>
+                    </div>
+                    <div className="text-[11px] font-mono text-slate-500">
+                      {t('daily.resetIn')}: {(() => {
+                        const s = dailyOnline && dailyOnlineState && !dailyOnlineState.offline
+                          ? (dailyOnlineState.seconds_until_reset || 0)
+                          : secondsUntilDailyReset();
+                        const hh = Math.floor(s / 3600);
+                        const mm = Math.floor((s % 3600) / 60);
+                        return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+                      })()}
+                    </div>
+                  </div>
+
+                  {dailyMsg && (
+                    <div className={`text-[11px] font-mono flex items-center gap-1.5 mb-3 ${dailyMsg.ok ? 'neon-lime' : 'neon-coral'}`}>
+                      {dailyMsg.ok ? <Check size={11} /> : <AlertCircle size={11} />}{dailyMsg.text}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {(() => {
+                      const activeIds = dailyOnline && dailyOnlineState && !dailyOnlineState.offline
+                        ? (dailyOnlineState.active || [])
+                        : (dailyState?.active || []);
+                      const setIds = new Set((activeIds || []).map(String));
+                      const list = DAILY_QUESTS.filter((qq) => setIds.has(String(qq.id)));
+                      return list;
+                    })().map((q) => {
+                      const baseState = dailyOnline && dailyOnlineState && !dailyOnlineState.offline
+                        ? { progress: dailyOnlineState.progress || {}, claimed: dailyOnlineState.claimed || {} }
+                        : dailyState;
+                      const qp = getQuestProgress(baseState, q);
+                      const labelKey = `daily.quests.${q.id}`;
+                      return (
+                        <div key={q.id} className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3">
+                          <div className={`text-[11px] font-mono ${qp.done ? 'neon-lime' : 'text-slate-300'}`}>
+                            {qp.cur}/{qp.target}
+                          </div>
+                          <div className="flex-1 text-[11px] text-slate-200">
+                            {t(labelKey)}
+                            <span className="ml-2 text-[10px] font-mono text-slate-500">+{q.rewardCoins || 0} {t('daily.coinsShort')}</span>
+                          </div>
+                          {qp.claimed ? (
+                            <div className="text-[11px] font-mono neon-gold">{t('daily.claimed')}</div>
+                          ) : qp.done ? (
+                            <button
+                              className="neon-btn px-3 py-1 text-[10px]"
+                              onClick={() => {
+                                const tok = getToken?.();
+                                const online = !!tok && !(tok || '').startsWith('offline-');
+                                if (online) {
+                                  setDailyMsg(null);
+                                  axios.post(`${API}/daily/claim`, { quest_id: q.id }, { headers: authHeaders() })
+                                    .then((r) => {
+                                      const data = r.data || {};
+                                      if (data.player) onPlayerUpdate?.(data.player);
+                                      if (data.daily) setDailyOnlineState((prev) => ({ ...(prev || {}), ...(data.daily || {}) }));
+                                      const awarded = data.coins_awarded || 0;
+                                      const nu = Array.isArray(data?.new_unlocked) ? data.new_unlocked : [];
+                                      if (nu.length) setNewUnlocked(nu);
+                                      const extra = nu.length ? ` · +${nu.length} ${t('achievements.title')}` : '';
+                                      setDailyMsg({ ok: true, text: `${t('daily.claimed')} +${awarded} ${t('daily.coinsShort')}${extra}` });
+                                    })
+                                    .catch((e) => {
+                                      const detail = e?.response?.data?.detail || t('profile.failed');
+                                      setDailyMsg({ ok: false, text: detail });
+
+                                      // If the server says it's already claimed (or any other 409), refresh state so UI matches.
+                                      axios.get(`${API}/daily/state`, { headers: authHeaders() })
+                                        .then((r2) => {
+                                          const data2 = r2?.data || {};
+                                          setDailyOnlineState({ ...(data2 || {}), offline: false });
+                                        })
+                                        .catch(() => {});
+                                    });
+                                  return;
+                                }
+
+                                const res = claimDailyQuest(q.id);
+                                setDailyState(res?.state || getDailyState());
+                                setDailyCoins(getDailyCoins());
+                                if (res?.ok) {
+                                  const awarded = res.coinsAwarded || 0;
+                                  setDailyMsg({ ok: true, text: `${t('daily.claimed')} +${awarded} ${t('daily.coinsShort')}` });
+                                  try { onPlayerUpdate?.({ coins: (player?.coins || 0) + awarded }); } catch {}
+                                }
+                              }}
+                              data-testid={`daily-claim-${q.id}`}
+                            >
+                              {t('daily.claim')}
+                            </button>
+                          ) : (
+                            <div className="text-[11px] font-mono text-slate-500">{t('daily.inProgress')}</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+          </div>
+        </div>
+
+        <div className="glass-panel rounded-xl p-6 space-y-3">
             <div className="flex items-center gap-2 mb-2">
               <KeyRound size={14} className="neon-cyan" />
               <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">{t('profile.account')}</h3>
@@ -483,28 +703,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
             <button onClick={() => setShowInventory(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-inventory-btn">
               <Package size={14} /> {t('profile.inventory')}
             </button>
-
-            <div className="glass-panel-light rounded-xl p-4">
-              <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('profile.viewPlayer.title')}</div>
-              <div className="flex gap-2">
-                <input
-                  className="neon-input flex-1"
-                  placeholder={t('profile.viewPlayer.placeholder')}
-                  value={viewQuery}
-                  onChange={(e) => setViewQuery(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') openOtherProfile(); }}
-                  maxLength={20}
-                  data-testid="view-player-input"
-                />
-                <button
-                  onClick={openOtherProfile}
-                  className="neon-btn px-4"
-                  data-testid="view-player-open-btn"
-                >
-                  {t('profile.viewPlayer.open')}
-                </button>
-              </div>
-            </div>
 
             {player?.isAdmin && (
               <button onClick={() => setShowPromote(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3"
@@ -639,107 +837,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                   </div>
                 </div>
           </div>
-        </div>
-
-        <div className="glass-panel rounded-xl p-6 space-y-3">
-          <div className="flex items-center gap-2 mb-2">
-            <Users size={14} className="neon-cyan" />
-            <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">{t('friends.title')}</h3>
-          </div>
-
-          <div className="glass-panel-light rounded-xl p-4">
-            <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('profile.viewPlayer.title')}</div>
-            <div className="flex gap-2">
-              <input
-                className="neon-input flex-1"
-                placeholder={t('profile.viewPlayer.placeholder')}
-                value={viewQuery}
-                onChange={(e) => setViewQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') openOtherProfile(); }}
-                maxLength={20}
-                data-testid="view-player-input"
-              />
-              <button
-                onClick={openOtherProfile}
-                className="neon-btn px-4"
-                data-testid="view-player-open-btn"
-              >
-                {t('profile.viewPlayer.open')}
-              </button>
-            </div>
-          </div>
-
-          {pendingRequests.length > 0 && (
-            <div className="glass-panel-light rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <UserCheck size={14} className="neon-lime" />
-                <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('friends.friendRequests')}</h3>
-              </div>
-              <div className="space-y-2">
-                {pendingRequests.map((reqNick) => (
-                  <div key={reqNick} className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3">
-                    <div className="text-[11px] font-mono neon-cyan">{reqNick}</div>
-                    <div className="flex-1"></div>
-                    <button
-                      onClick={() => {
-                        acceptFriendRequest(reqNick)
-                          .then(() => {
-                            setPendingRequests(pendingRequests.filter(r => r !== reqNick));
-                            onPlayerUpdate?.();
-                          })
-                          .catch(() => {});
-                      }}
-                      className="text-green-400 hover:text-green-300"
-                    >
-                      <Check size={14} />
-                    </button>
-                    <button
-                      onClick={() => {
-                        rejectFriendRequest(reqNick)
-                          .then(() => setPendingRequests(pendingRequests.filter(r => r !== reqNick)))
-                          .catch(() => {});
-                      }}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="glass-panel-light rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Users size={14} className="neon-cyan" />
-              <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('friends.friendsList')}</h3>
-            </div>
-            {friendsLoading ? (
-              <div className="text-slate-500 text-xs text-center py-4">{t('friends.loading')}</div>
-            ) : friends.length === 0 ? (
-              <div className="text-slate-500 text-xs text-center py-4">{t('friends.noFriends')}</div>
-            ) : (
-              <div className="space-y-2">
-                {friends.map((friend) => (
-                  <div key={friend.nickname} className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3">
-                    <div className="text-[11px] font-mono neon-cyan">{friend.nickname}</div>
-                    <div className="flex-1 text-[11px] text-slate-400">Rating: {friend.rating || 1000}</div>
-                    <button
-                      onClick={() => {
-                        removeFriend(friend.nickname)
-                          .then(() => setFriends(friends.filter(f => f.nickname !== friend.nickname)))
-                          .catch(() => {});
-                      }}
-                      className="text-slate-500 hover:text-red-400"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
         </div>
 
         <aside className="space-y-4">
