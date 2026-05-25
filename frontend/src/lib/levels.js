@@ -180,6 +180,11 @@ export const syncCampaignProgress = async () => {
             bestScore: Number(entry?.bestScore || 0),
             bestTime: entry?.bestTime == null ? null : Number(entry.bestTime),
             completed: !!entry?.completed,
+            won: !!entry?.completed,
+            time_seconds: entry?.bestTime == null ? 0 : Number(entry.bestTime),
+            lives_remaining: 0,
+            lives_total: 1,
+            flags: 0,
           }, { headers: sessionHeaders() }).catch(() => {});
         });
       }
@@ -196,7 +201,7 @@ export const computeStars = (livesRemaining, livesTotal) => {
   if (livesRemaining > 0) return 1;
   return 0;
 };
-export const recordLevelResult = (levelId, { stars, score, time, won }) => {
+export const recordLevelResult = (levelId, { stars, score, time, won, livesRemaining, livesTotal, flags }) => {
   const progress = loadProgress();
   const prev = progress[levelId] || { stars: 0, bestScore: 0, bestTime: null, completed: false };
   progress[levelId] = {
@@ -221,6 +226,11 @@ export const recordLevelResult = (levelId, { stars, score, time, won }) => {
         bestScore: entry?.bestScore || 0,
         bestTime: entry?.bestTime == null ? null : entry.bestTime,
         completed: !!entry?.completed,
+        won: !!won,
+        time_seconds: Number(time) || 0,
+        lives_remaining: Number(livesRemaining) || 0,
+        lives_total: Number(livesTotal) || 1,
+        flags: Number(flags) || 0,
       }, { headers: sessionHeaders() });
       const nu = Array.isArray(res?.data?.new_unlocked) ? res.data.new_unlocked : [];
       if (nu.length) {

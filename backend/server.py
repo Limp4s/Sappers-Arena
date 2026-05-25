@@ -419,7 +419,6 @@ ACHIEVEMENTS = [
     {"id": "flags_1", "title": "First Flag", "desc": "Первый флажок. Начинается паранойя."},
     {"id": "flags_100", "title": "Flag Master", "desc": "Ты ставишь метки как профессионал."},
     {"id": "flags_1000", "title": "Flag Legend", "desc": "Флагов больше, чем сомнений. Почти."},
-    {"id": "precise_all_mines", "title": "Precise", "desc": "Идеально по учебнику. Минёрам бы понравилось."},
     {"id": "no_flags_win", "title": "No Flags", "desc": "На чистой интуиции. Или на безумии."},
 
     {"id": "campaign_1", "title": "Campaign Start", "desc": "Глава 1: 'А что тут сложного?'"},
@@ -433,7 +432,6 @@ ACHIEVEMENTS = [
     {"id": "ranked_10", "title": "Ranked Ready", "desc": "Рейтинг — это боль, но ты привык."},
     {"id": "duel_wins_10", "title": "Rival", "desc": "Тебя уже запомнили. И боятся."},
     {"id": "duel_wins_50", "title": "Nemesis", "desc": "Если ты в лобби — кто-то уже нервничает."},
-    {"id": "comeback_1hp", "title": "Comeback", "desc": "На волоске. Но всё равно победа."},
     {"id": "duel_streak_5", "title": "Unstoppable", "desc": "Остановить тебя некому. Пока что."},
 
     {"id": "rating_600", "title": "Rising", "desc": "Пошёл рост. Дальше — выше."},
@@ -464,6 +462,7 @@ def _ach_blank_stats() -> dict:
         "flags_total": 0,
         "duels_played": 0,
         "duels_won": 0,
+        "duel_streak": 0,
         "ranked_played": 0,
         "campaign_wins": 0,
         "coins_earned_total": 0,
@@ -528,6 +527,7 @@ def _ach_should_unlock(player_after: dict, payload: Optional[Any] = None, coins_
     if dw >= 1: add("duel_wins_1")
     if dw >= 10: add("duel_wins_10")
     if dw >= 50: add("duel_wins_50")
+    if dstreak >= 5: add("duel_streak_5")
     if rp >= 10: add("ranked_10")
 
     if cw >= 1: add("campaign_1")
@@ -817,6 +817,11 @@ class CampaignLevelResultRequest(BaseModel):
     bestScore: int = Field(default=0, ge=0, le=1_000_000_000)
     bestTime: Optional[int] = Field(default=None, ge=0, le=1_000_000_000)
     completed: bool = False
+    won: bool = False
+    time_seconds: int = Field(default=0, ge=0, le=1_000_000_000)
+    lives_remaining: int = Field(default=0, ge=0, le=10)
+    lives_total: int = Field(default=1, ge=1, le=10)
+    flags: int = Field(default=0, ge=0, le=1_000_000_000)
 
 
 # ---------------- Routes ----------------
@@ -901,18 +906,21 @@ async def submit_campaign_level_result(payload: CampaignLevelResultRequest, nick
     if not updated0:
         return {"ok": True, "progress": progress, "new_unlocked": []}
     unlocked, st = _ach_get(updated0)
-    player_after = {**updated0, "achievements_unlocked": unlocked, "achievements_stats": st}
-    to_unlock = _ach_should_unlock(player_after, payload=None, coins_balance_after=int(updated0.get("coins") or 0))
+    next_st = dict(st)
+    if payload.completed and payload.won:
+        next_st["campaign_wins"] = int(next_st.get("campaign_wins") or 0) + 1
+    player_after = {**updated0, "achievements_unlocked": unlocked, "achievements_stats": next_st}
+    to_unlock = _ach_should_unlock(player_after, payload=payload, coins_balance_after=int(updated0.get("coins") or 0))
     new_unlocked = list(to_unlock or [])
+    set_doc: Dict[str, Any] = {"achievements_stats": next_st}
     if new_unlocked:
         ts = int(datetime.now(timezone.utc).timestamp() * 1000)
-        set_doc: Dict[str, Any] = {}
         for aid in new_unlocked:
             set_doc[f"achievements_unlocked.{aid}"] = ts
-        await db.players.update_one(
-            {"nickname_lower": (nick or "").lower()},
-            {"$set": set_doc},
-        )
+    await db.players.update_one(
+        {"nickname_lower": (nick or "").lower()},
+        {"$set": set_doc},
+    )
     return {"ok": True, "progress": progress, "new_unlocked": new_unlocked}
 
 
@@ -1222,6 +1230,7 @@ async def submit_score(payload: ScoreCreate, nick: str = Depends(require_session
         if is_duel:
             next_st["duels_played"] = int(next_st.get("duels_played") or 0) + 1
             next_st["duels_won"] = int(next_st.get("duels_won") or 0) + (1 if won else 0)
+            next_st["duel_streak"] = (int(next_st.get("duel_streak") or 0) + 1) if won else 0
         if mode == "battle_ranked":
             next_st["ranked_played"] = int(next_st.get("ranked_played") or 0) + 1
         if mode == "campaign" and won:

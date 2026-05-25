@@ -394,14 +394,14 @@ export default function MinesweeperGame({ config, onCoinsEarned }) {
       if (mode === 'campaign' && levelId != null) {
         if (!tutorialMode) {
           const stars = computeStars(finalLives, livesTotal);
-          recordLevelResult(levelId, { stars, score: finalScore, time: timer, won: true });
+          recordLevelResult(levelId, { stars, score: finalScore, time: timer, won: true, livesRemaining: finalLives, livesTotal, flags: flagsCount });
         }
       }
     } else {
       if (!tutorialMode) {
         sfx.gameOver();
         if (mode === 'campaign' && levelId != null) {
-          recordLevelResult(levelId, { stars: 0, score: 0, time: timer, won: false });
+          recordLevelResult(levelId, { stars: 0, score: 0, time: timer, won: false, livesRemaining: finalLives, livesTotal, flags: flagsCount });
         }
       }
     }
