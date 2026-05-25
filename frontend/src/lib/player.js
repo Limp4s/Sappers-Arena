@@ -53,6 +53,16 @@ export const ROOT_ADMIN_NICK = 'limp4';
 export const isOwnerNick = (nick) => (String(nick || '').toLowerCase() === ROOT_ADMIN_NICK);
 export const isAdminNick = (nick) => ADMIN_NICKS.has((nick || '').toLowerCase());
 
+export const isOfflineMode = () => {
+  try {
+    const token = getToken();
+    if (!token || token.startsWith('offline-')) return true;
+    return false;
+  } catch {
+    return false;
+  }
+};
+
 const _randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const _makeGuestNick = () => {
   const suffix = `${Date.now().toString(36)}${_randInt(100, 999)}`.slice(-8);
@@ -638,6 +648,26 @@ export async function adminResetAchievements(nickname) {
   const res = await axios.post(`${API}/admin/achievements/reset`, { nickname: nick }, { headers: authHeaders() });
   return res?.data;
 }
+
+export const getFriends = async () => {
+  try {
+    return (await axios.get(`${API}/friends`, { headers: authHeaders() })).data;
+  } catch {
+    return { friends: [] };
+  }
+};
+
+export const addFriend = async (nickname) => {
+  const nick = String(nickname || '').trim();
+  if (!nick) throw new Error('Missing nickname');
+  return (await axios.post(`${API}/friends/add`, { nickname: nick }, { headers: authHeaders() })).data;
+};
+
+export const removeFriend = async (nickname) => {
+  const nick = String(nickname || '').trim();
+  if (!nick) throw new Error('Missing nickname');
+  return (await axios.post(`${API}/friends/remove`, { nickname: nick }, { headers: authHeaders() })).data;
+};
 
 export async function adminResetPlayer(nickname) {
   const nick = String(nickname || '').trim();

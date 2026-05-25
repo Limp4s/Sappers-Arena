@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { X, Trophy, User, Clock, Crown } from 'lucide-react';
-import { fetchPlayer, isOwnerNick } from '../../lib/player';
+import { X, Trophy, User, Clock, Crown, Users, Plus, Check, ChevronDown } from 'lucide-react';
+import { fetchPlayer, isOwnerNick, getStoredNickname, addFriend, removeFriend } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
@@ -14,6 +14,11 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
   const [ach, setAch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
+  const [isFriend, setIsFriend] = useState(false);
+  const [addingFriend, setAddingFriend] = useState(false);
+  const [bestTimesExpanded, setBestTimesExpanded] = useState(false);
+  const [bestTimes, setBestTimes] = useState([]);
+  const myNick = getStoredNickname();
   useLang();
 
   const titleNick = useMemo(() => {
@@ -48,10 +53,12 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
     const run = async () => {
       setLoading(true);
       setErr(null);
+      setIsFriend(false);
       setPlayer(null);
       setStats(null);
       setAchDefs(null);
       setAch(null);
+      setBestTimes([]);
       try {
         let p;
         if (playerNum != null && playerNum !== '' && !Number.isNaN(Number(playerNum))) {
@@ -68,6 +75,18 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
             const st = await axios.get(`${API}/stats/player`, { params: { name: nm } });
             if (!alive) return;
             setStats(st.data);
+
+            // Load best times from leaderboard
+            try {
+              const lbRes = await axios.get(`${API}/leaderboard`, { params: { player_name: nm } });
+              if (!alive) return;
+              const runs = lbRes?.data || [];
+              const wonRuns = runs.filter(r => r.won && r.time_seconds > 0);
+              const sorted = wonRuns.sort((a, b) => a.time_seconds - b.time_seconds).slice(0, 10);
+              setBestTimes(sorted);
+            } catch {
+              setBestTimes([]);
+            }
           }
         } catch {
           if (!alive) return;
@@ -108,6 +127,26 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
   const achUnlocked = (ach?.unlocked && typeof ach.unlocked === 'object') ? ach.unlocked : {};
   const achList = Array.isArray(achDefs?.achievements) ? achDefs.achievements : [];
 
+  const canAddFriend = myNick && player?.nickname && myNick.toLowerCase() !== player.nickname.toLowerCase();
+
+  const handleToggleFriend = async () => {
+    if (!canAddFriend || addingFriend) return;
+    setAddingFriend(true);
+    try {
+      if (isFriend) {
+        await removeFriend(player.nickname);
+        setIsFriend(false);
+      } else {
+        await addFriend(player.nickname);
+        setIsFriend(true);
+      }
+    } catch {
+      // Silent fail for now
+    } finally {
+      setAddingFriend(false);
+    }
+  };
+
   return (
     <div className="modal-backdrop" data-testid="player-profile-modal">
       <div className="glass-panel slide-up rounded-2xl p-6 max-w-4xl w-[96%] max-h-[85vh] flex flex-col overflow-hidden">
@@ -129,7 +168,23 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
               </div>
             )}
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white" data-testid="close-player-profile-btn"><X size={18} /></button>
+          <div className="flex items-center gap-2">
+            {canAddFriend && (
+              <button
+                onClick={handleToggleFriend}
+                disabled={addingFriend}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-display tracking-[0.25em] transition-all ${
+                  isFriend
+                    ? 'bg-green-600/20 border border-green-500/50 text-green-400 hover:bg-green-600/30'
+                    : 'bg-cyan-600/20 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-600/30'
+                }`}
+              >
+                {isFriend ? <Check size={14} /> : <Users size={14} />}
+                {isFriend ? 'Friend' : <Plus size={14} />}
+              </button>
+            )}
+            <button onClick={onClose} className="text-slate-400 hover:text-white" data-testid="close-player-profile-btn"><X size={18} /></button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-auto pr-1">
@@ -173,7 +228,43 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
                   <Stat label={t('stats.campaign')} value={stats.campaign_wins} color="cyan" />
                   <Stat label={t('stats.battles')} value={stats.battle_wins} color="coral" />
                   <Stat label={t('stats.bestScore')} value={(typeof stats.best_score === 'number') ? stats.best_score.toLocaleString() : '—'} color="cyan" />
-                  <Stat label={t('stats.bestTime')} value={stats.best_time ? `${stats.best_time}s` : '—'} color="gold" />
+                  <div className="col-span-1">
+                    <div className="text-[10px] uppercase text-slate-400 font-display mb-1">{t('stats.bestTime')}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm font-bold neon-gold">
+                        {bestTimes.length > 0 ? `${bestTimes[0].time_seconds}s` : (stats.best_time ? `${stats.best_time}s` : '—')}
+                      </span>
+                      {bestTimes.length > 0 && (
+                        <>
+                          <span className="text-[10px] text-slate-500">
+                            {bestTimes[0].mode === 'campaign' ? `Lvl ${bestTimes[0].level_id || '—'}` : 
+                             bestTimes[0].mode?.startsWith('battle') ? 'Duel' : 
+                             bestTimes[0].mode || '—'}
+                          </span>
+                          <button
+                            onClick={() => setBestTimesExpanded(!bestTimesExpanded)}
+                            className="text-slate-600 hover:text-slate-400 transition-colors"
+                          >
+                            <ChevronDown size={14} className={bestTimesExpanded ? 'rotate-180' : ''} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    {bestTimesExpanded && bestTimes.length > 0 && (
+                      <div className="mt-2 space-y-1 max-h-32 overflow-auto">
+                        {bestTimes.map((run, idx) => (
+                          <div key={idx} className="text-[10px] text-slate-400 flex items-center gap-2">
+                            <span className="font-mono neon-gold">{run.time_seconds}s</span>
+                            <span className="text-slate-500">
+                              {run.mode === 'campaign' ? `Lvl ${run.level_id || '—'}` : 
+                               run.mode?.startsWith('battle') ? 'Duel' : 
+                               run.mode || '—'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="text-slate-500 text-xs text-center py-6">

@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, Suspense, lazy } from 'react';
 import "@/App.css";
 import { HashRouter, Routes, Route } from "react-router-dom";
-import { Heart, Flag, Swords, Sparkles } from 'lucide-react';
+import { Heart, Flag, Swords, Sparkles, WifiOff } from 'lucide-react';
 import TabsNav from "@/components/layout/TabsNav";
 import CampaignView from "@/components/views/CampaignView";
 import BattlesView from './components/views/BattlesView';
@@ -9,11 +9,11 @@ import CustomView from './components/views/CustomView';
 import ShopView from './components/views/ShopView';
 import LeaderboardView from './components/views/LeaderboardView';
 import ProfileView from './components/views/ProfileView';
-import MinesweeperGame from './components/game/Minesweeper';
-import OnlineDuelGame from './components/game/OnlineDuelGame';
+const MinesweeperGame = lazy(() => import('./components/game/Minesweeper'));
+const OnlineDuelGame = lazy(() => import('./components/game/OnlineDuelGame'));
 import AchievementBanner from './components/ui/AchievementBanner';
 import AuthGate from './components/auth/NicknameGate';
-import { getStoredNickname, isAuthed, isAdmin as getIsAdmin, isAdminNick, fetchMe, getPlayerId, setPlayerId } from "@/lib/player";
+import { getStoredNickname, isAuthed, isAdmin as getIsAdmin, isAdminNick, fetchMe, getPlayerId, setPlayerId, isOfflineMode } from "@/lib/player";
 import { t } from '@/lib/i18n';
 
 const TERMS_KEY = 'mg_terms_accepted_v1';
@@ -194,9 +194,17 @@ function Home() {
   if (gameConfig) {
     const isOnline = !!gameConfig?.lobbyCode && (String(gameConfig?.mode || '').startsWith('battle_') || String(gameConfig?.mode || '').startsWith('lobby'));
     if (isOnline) {
-      return <OnlineDuelGame config={{ ...gameConfig, player, onExit: exitGame }} onCoinsEarned={refreshPlayer} />;
+      return (
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-white">Loading...</div>}>
+          <OnlineDuelGame config={{ ...gameConfig, player, onExit: exitGame }} onCoinsEarned={refreshPlayer} />
+        </Suspense>
+      );
     }
-    return <MinesweeperGame config={{ ...gameConfig, player, onExit: exitGame }} onCoinsEarned={refreshPlayer} />;
+    return (
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-white">Loading...</div>}>
+        <MinesweeperGame config={{ ...gameConfig, player, onExit: exitGame }} onCoinsEarned={refreshPlayer} />
+      </Suspense>
+    );
   }
 
   return (
@@ -206,6 +214,12 @@ function Home() {
         onDone={() => setNewUnlocked([])}
         textForId={(id) => t(`achievements.items.${id}.title`)}
       />
+      {isOfflineMode() && (
+        <div className="fixed top-0 left-0 right-0 bg-yellow-600 text-white text-center py-1 text-sm z-[100] flex items-center justify-center gap-2">
+          <WifiOff size={14} />
+          <span>Offline Mode - Profile and coins saved locally. Achievements and purchases require internet.</span>
+        </div>
+      )}
       <div
         style={{ height: 25, WebkitAppRegion: 'drag', position: 'sticky', top: 0, zIndex: 50 }}
       />

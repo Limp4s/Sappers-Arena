@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Header, Depends, WebSocket, WebSocketDisconnect, Path as FPath
+from fastapi.middleware.gzip import GZipMiddleware
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -49,6 +50,37 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
 db = client[os.environ['DB_NAME']]
 
+
+async def _ensure_indexes():
+    """Create MongoDB indexes for better query performance."""
+    try:
+        # Players collection
+        await db.players.create_index("nickname_lower", unique=True)
+        await db.players.create_index([("rating", -1)])
+        await db.players.create_index([("coins", -1)])
+        
+        # Leaderboard collection
+        await db.leaderboard.create_index([("mode", 1)])
+        await db.leaderboard.create_index([("player_name", 1)])
+        await db.leaderboard.create_index([("mode", 1), ("won", -1), ("score", -1)])
+        
+        # Sessions collection
+        await db.sessions.create_index("token", unique=True)
+        await db.sessions.create_index("nickname")
+        
+        # Counters collection
+        await db.counters.create_index("_id", unique=True)
+        
+        logger.info("MongoDB indexes ensured successfully")
+    except Exception as e:
+        logger.warning(f"Failed to ensure indexes: {e}")
+
+
+@app.on_event("startup")
+async def startup_event():
+    await _ensure_indexes()
+
+
 app = FastAPI()
 cors_origins = _get_cors_origins()
 app.add_middleware(
@@ -58,6 +90,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 api_router = APIRouter(prefix="/api")
 
 ADMIN_NICKS = {"limp4"}
@@ -500,6 +533,7 @@ def _ach_should_unlock(player_after: dict, payload: Optional[Any] = None, coins_
     ft = int(st.get("flags_total") or 0)
     dw = int(st.get("duels_won") or 0)
     dp = int(st.get("duels_played") or 0)
+    dstreak = int(st.get("duel_streak") or 0)
     rp = int(st.get("ranked_played") or 0)
     cw = int(st.get("campaign_wins") or 0)
     ce = int(st.get("coins_earned_total") or 0)
@@ -1060,6 +1094,63 @@ async def get_player_by_num(player_num: int = FPath(..., ge=0, le=2000000)):
         raise HTTPException(status_code=404, detail="Player not found.")
     doc = await _ensure_player_ids(doc)
     return _sanitize_player(doc)
+
+
+# --- Friends ---
+
+@api_router.get("/friends")
+async def get_friends(nick: str = Depends(require_session)):
+    player = await _get_player(nick)
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found.")
+    friends = player.get("friends") or []
+    friend_players = []
+    for friend_nick in friends:
+        friend = await _get_player(friend_nick)
+        if friend:
+            friend_players.append(_sanitize_player(friend))
+    return {"friends": friend_players}
+
+
+@api_router.post("/friends/add")
+async def add_friend(payload: dict, nick: str = Depends(require_session)):
+    target_nick = (payload.get("nickname") or "").strip()
+    if not target_nick:
+        raise HTTPException(status_code=400, detail="Nickname required.")
+    if target_nick.lower() == nick.lower():
+        raise HTTPException(status_code=400, detail="Cannot add yourself as a friend.")
+    target = await _get_player(target_nick)
+    if not target:
+        raise HTTPException(status_code=404, detail="Player not found.")
+    player = await _get_player(nick)
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found.")
+    friends = player.get("friends") or []
+    if target_nick.lower() in [f.lower() for f in friends]:
+        return {"ok": True, "already_friend": True}
+    friends.append(target_nick)
+    await db.players.update_one(
+        {"nickname_lower": nick.lower()},
+        {"$set": {"friends": friends}}
+    )
+    return {"ok": True}
+
+
+@api_router.post("/friends/remove")
+async def remove_friend(payload: dict, nick: str = Depends(require_session)):
+    target_nick = (payload.get("nickname") or "").strip()
+    if not target_nick:
+        raise HTTPException(status_code=400, detail="Nickname required.")
+    player = await _get_player(nick)
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found.")
+    friends = player.get("friends") or []
+    friends = [f for f in friends if f.lower() != target_nick.lower()]
+    await db.players.update_one(
+        {"nickname_lower": nick.lower()},
+        {"$set": {"friends": friends}}
+    )
+    return {"ok": True}
 
 
 @api_router.get("/achievements/defs")

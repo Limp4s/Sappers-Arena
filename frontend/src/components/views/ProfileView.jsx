@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2, Award, Crown } from 'lucide-react';
-import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminGrantCoins, adminResetPlayer, adminDeletePlayer, getToken, authHeaders, isOwnerNick } from '../../lib/player';
+import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2, Award, Crown, Users, X } from 'lucide-react';
+import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminGrantCoins, adminResetPlayer, adminDeletePlayer, getToken, authHeaders, isOwnerNick, getFriends, removeFriend } from '../../lib/player';
 import { demoteAdmin, promoteToAdmin } from '../../lib/lobby';
 import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
 import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
@@ -39,6 +39,8 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   const [newUnlocked, setNewUnlocked] = useState([]);
   const [achDefs, setAchDefs] = useState(null);
   const [achMine, setAchMine] = useState(null);
+  const [friends, setFriends] = useState([]);
+  const [friendsLoading, setFriendsLoading] = useState(false);
 
   const owner = isOwnerNick?.(player?.nick);
 
@@ -91,6 +93,15 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
       .then((r) => setAdminPlayers(r?.players || []))
       .catch(() => setAdminPlayers([]));
   }, [player?.isAdmin]);
+
+  useEffect(() => {
+    if (!player?.nick) return;
+    setFriendsLoading(true);
+    getFriends()
+      .then((r) => setFriends(r?.friends || []))
+      .catch(() => setFriends([]))
+      .finally(() => setFriendsLoading(false));
+  }, [player?.nick]);
 
   const refreshAdminPlayers = async () => {
     if (!player?.isAdmin) return;
@@ -426,6 +437,13 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                 {t('daily.title')}
               </button>
               <button
+                onClick={() => setTab('friends')}
+                className={`pill ${tab === 'friends' ? 'pill-active' : ''}`}
+                data-testid="profile-tab-friends"
+              >
+                Friends
+              </button>
+              <button
                 onClick={() => { setTab('settings'); setSettingsTab('settings'); }}
                 className={`pill ${tab === 'settings' ? 'pill-active' : ''}`}
                 data-testid="profile-tab-settings"
@@ -654,6 +672,39 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                       );
                     })}
                   </div>
+                </div>
+              </>
+            ) : tab === 'friends' ? (
+              <>
+                <div className="glass-panel-light rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users size={14} className="neon-cyan" />
+                    <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">Friends</h3>
+                  </div>
+                  {friendsLoading ? (
+                    <div className="text-slate-500 text-xs text-center py-4">Loading...</div>
+                  ) : friends.length === 0 ? (
+                    <div className="text-slate-500 text-xs text-center py-4">No friends yet</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {friends.map((friend) => (
+                        <div key={friend.nickname} className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3">
+                          <div className="text-[11px] font-mono neon-cyan">{friend.nickname}</div>
+                          <div className="flex-1 text-[11px] text-slate-400">Rating: {friend.rating || 1000}</div>
+                          <button
+                            onClick={() => {
+                              removeFriend(friend.nickname)
+                                .then(() => setFriends(friends.filter(f => f.nickname !== friend.nickname)))
+                                .catch(() => {});
+                            }}
+                            className="text-slate-500 hover:text-red-400"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </>
             ) : null}

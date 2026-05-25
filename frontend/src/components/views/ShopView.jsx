@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Coins, Check, Lock, ShoppingBag, Bomb } from 'lucide-react';
+import { Coins, Check, Lock, ShoppingBag, Bomb, WifiOff } from 'lucide-react';
 import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, FLAG_SKINS, loadEquipped, saveEquipped, getItemCategory } from '../../lib/shop';
-import { purchaseItem } from '../../lib/player';
+import { purchaseItem, isOfflineMode } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
@@ -58,6 +58,10 @@ export default function ShopView({ player, onPlayerUpdate }) {
 
   const handleBuy = async (itemId, price) => {
     if (!player) return;
+    if (isOfflineMode()) {
+      setMsg({ type: 'err', text: 'Purchases require internet connection.' });
+      return;
+    }
     if ((player.coins || 0) < price) {
       setMsg({ type: 'err', text: t('shop.notEnoughCoins') });
       return;
