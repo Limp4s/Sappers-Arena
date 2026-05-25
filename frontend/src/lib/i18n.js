@@ -254,7 +254,7 @@ const DICTS = {
       panelTitle: 'Admin Panel',
       panelHint: 'Click the trash icon next to any leaderboard entry to delete it.',
     },
-    friends: { title: 'FRIENDS', searchPlaceholder: 'Search callsign...', noResult: 'Player not found.', blurb: 'Search other players, view their lifetime stats.' },
+    friends: { title: 'FRIENDS', searchPlaceholder: 'Search callsign...', noResult: 'Player not found.', blurb: 'Search other players, view their lifetime stats.', friendRequests: 'FRIEND REQUESTS', friendsList: 'FRIENDS LIST', loading: 'Loading...', noFriends: 'No friends yet' },
     pause: { title: 'PAUSED', exitGame: 'EXIT GAME' },
     shop: {
       title: 'SHOP',
@@ -686,7 +686,7 @@ const DICTS = {
       panelTitle: 'Панель админа',
       panelHint: 'Нажми на корзину рядом с записью в таблице, чтобы удалить её.',
     },
-    friends: { title: 'ДРУЗЬЯ', searchPlaceholder: 'Введите ник...', noResult: 'Игрок не найден.', blurb: 'Ищите игроков и смотрите их статистику.' },
+    friends: { title: 'ДРУЗЬЯ', searchPlaceholder: 'Введите ник...', noResult: 'Игрок не найден.', blurb: 'Ищите игроков и смотрите их статистику.', friendRequests: 'ЗАПРОСЫ ДРУЗЕЙ', friendsList: 'СПИСОК ДРУЗЕЙ', loading: 'Загрузка...', noFriends: 'Пока нет друзей' },
     pause: { title: 'ПАУЗА', exitGame: 'ВЫЙТИ ИЗ ИГРЫ' },
     shop: {
       title: 'МАГАЗИН',

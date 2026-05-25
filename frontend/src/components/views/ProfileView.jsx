@@ -437,141 +437,97 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">{t('profile.account')}</h3>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => setTab('daily')}
-                className={`pill ${tab === 'daily' ? 'pill-active' : ''}`}
-                data-testid="profile-tab-daily"
-              >
-                {t('daily.title')}
-              </button>
-              <button
-                onClick={() => setTab('friends')}
-                className={`pill ${tab === 'friends' ? 'pill-active' : ''}`}
-                data-testid="profile-tab-friends"
-              >
-                Friends
-              </button>
-              <button
-                onClick={() => { setTab('settings'); setSettingsTab('settings'); }}
-                className={`pill ${tab === 'settings' ? 'pill-active' : ''}`}
-                data-testid="profile-tab-settings"
-              >
-                {t('common.settings')}
-              </button>
+            <div className="glass-panel-light rounded-xl p-4">
+              <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('common.language')}</div>
+              <div className="flex gap-2 flex-wrap">
+                {LANGUAGES.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => setLang(l.code)}
+                    className={`pill ${lang === l.code ? 'pill-active' : ''}`}
+                    data-testid={`profile-lang-${l.code}`}
+                  >
+                    {l.name}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {tab === 'settings' ? (
-              <>
-                <div className="flex gap-2 mb-2">
-                  <button
-                    onClick={() => setSettingsTab('settings')}
-                    className={`pill ${settingsTab === 'settings' ? 'pill-active' : ''}`}
-                    data-testid="profile-settings-tab-settings"
-                  >
-                    {t('common.settings')}
-                  </button>
-                  <button
-                    onClick={() => setSettingsTab('account')}
-                    className={`pill ${settingsTab === 'account' ? 'pill-active' : ''}`}
-                    data-testid="profile-settings-tab-account"
-                  >
-                    {t('profile.account')}
-                  </button>
-                </div>
+            <div className="glass-panel-light rounded-xl p-4" data-testid="settings-sfx-volume">
+              <div className="flex items-center gap-2 mb-2">
+                <Volume2 size={14} className="neon-gold" />
+                <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">{t('settings.sound')}</div>
+                <div className="ml-auto text-[10px] font-mono text-slate-400">{Math.round((sfxVolume || 0) * 100)}%</div>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={sfxVolume}
+                onChange={(e) => {
+                  const v = setSfxVolume(e.target.value);
+                  setSfxVolumeState(v);
+                }}
+                onMouseUp={() => { try { sfx.click(); } catch {} }}
+                onTouchEnd={() => { try { sfx.click(); } catch {} }}
+                className="w-full"
+                data-testid="sfx-volume-slider"
+              />
+            </div>
 
-                {settingsTab === 'settings' ? (
-                  <>
-                    <div className="glass-panel-light rounded-xl p-4">
-                      <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('common.language')}</div>
-                      <div className="flex gap-2 flex-wrap">
-                        {LANGUAGES.map((l) => (
-                          <button
-                            key={l.code}
-                            onClick={() => setLang(l.code)}
-                            className={`pill ${lang === l.code ? 'pill-active' : ''}`}
-                            data-testid={`profile-lang-${l.code}`}
-                          >
-                            {l.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+            <button onClick={() => setShowChangePw(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-change-password-btn">
+              <KeyRound size={14} /> {t('profile.changePassword')}
+            </button>
 
-                    <div className="glass-panel-light rounded-xl p-4" data-testid="settings-sfx-volume">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Volume2 size={14} className="neon-gold" />
-                        <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display">{t('settings.sound')}</div>
-                        <div className="ml-auto text-[10px] font-mono text-slate-400">{Math.round((sfxVolume || 0) * 100)}%</div>
-                      </div>
-                      <input
-                        type="range"
-                        min={0}
-                        max={1}
-                        step={0.01}
-                        value={sfxVolume}
-                        onChange={(e) => {
-                          const v = setSfxVolume(e.target.value);
-                          setSfxVolumeState(v);
-                        }}
-                        onMouseUp={() => { try { sfx.click(); } catch {} }}
-                        onTouchEnd={() => { try { sfx.click(); } catch {} }}
-                        className="w-full"
-                        data-testid="sfx-volume-slider"
-                      />
-                    </div>
-                    <button onClick={() => setShowChangePw(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-change-password-btn">
-                      <KeyRound size={14} /> {t('profile.changePassword')}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => setShowInventory(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-inventory-btn">
-                      <Package size={14} /> {t('profile.inventory')}
-                    </button>
+            <button onClick={() => setShowInventory(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3" data-testid="open-inventory-btn">
+              <Package size={14} /> {t('profile.inventory')}
+            </button>
 
-                    <div className="glass-panel-light rounded-xl p-4">
-                      <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('profile.viewPlayer.title')}</div>
-                      <div className="flex gap-2">
-                        <input
-                          className="neon-input flex-1"
-                          placeholder={t('profile.viewPlayer.placeholder')}
-                          value={viewQuery}
-                          onChange={(e) => setViewQuery(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === 'Enter') openOtherProfile(); }}
-                          maxLength={20}
-                          data-testid="view-player-input"
-                        />
-                        <button
-                          onClick={openOtherProfile}
-                          className="neon-btn px-4"
-                          data-testid="view-player-open-btn"
-                        >
-                          {t('profile.viewPlayer.open')}
-                        </button>
-                      </div>
-                    </div>
+            <div className="glass-panel-light rounded-xl p-4">
+              <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('profile.viewPlayer.title')}</div>
+              <div className="flex gap-2">
+                <input
+                  className="neon-input flex-1"
+                  placeholder={t('profile.viewPlayer.placeholder')}
+                  value={viewQuery}
+                  onChange={(e) => setViewQuery(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') openOtherProfile(); }}
+                  maxLength={20}
+                  data-testid="view-player-input"
+                />
+                <button
+                  onClick={openOtherProfile}
+                  className="neon-btn px-4"
+                  data-testid="view-player-open-btn"
+                >
+                  {t('profile.viewPlayer.open')}
+                </button>
+              </div>
+            </div>
 
-                    {player?.isAdmin && (
-                      <button onClick={() => setShowPromote(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3"
-                        style={{ borderColor: '#FFD700', color: '#FFD700' }}
-                        data-testid="open-promote-btn">
-                        <UserPlus size={14} /> {t('admin.promote')}
-                      </button>
-                    )}
-                    <button onClick={handleLogout} className="neon-btn neon-btn-coral w-full flex items-center justify-center gap-2 py-3" data-testid="logout-btn">
-                      <LogOut size={14} /> {t('common.logout')}
-                    </button>
+            {player?.isAdmin && (
+              <button onClick={() => setShowPromote(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3"
+                style={{ borderColor: '#FFD700', color: '#FFD700' }}
+                data-testid="open-promote-btn">
+                <UserPlus size={14} /> {t('admin.promote')}
+              </button>
+            )}
+            <button onClick={handleLogout} className="neon-btn neon-btn-coral w-full flex items-center justify-center gap-2 py-3" data-testid="logout-btn">
+              <LogOut size={14} /> {t('common.logout')}
+            </button>
 
-                    <button onClick={handleExitGame} className="neon-btn neon-btn-coral w-full flex items-center justify-center gap-2 py-3" data-testid="exit-game-btn">
-                      <LogOut size={14} /> {t('common.exit')}
-                    </button>
-                  </>
-                )}
-              </>
-            ) : tab === 'daily' ? (
-              <>
-                <div className="glass-panel-light rounded-xl p-4" data-testid="daily-quests">
+            <button onClick={handleExitGame} className="neon-btn neon-btn-coral w-full flex items-center justify-center gap-2 py-3" data-testid="exit-game-btn">
+              <LogOut size={14} /> {t('common.exit')}
+            </button>
+
+          <div className="glass-panel rounded-xl p-6 space-y-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Award size={14} className="neon-gold" />
+            <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">{t('daily.title')}</h3>
+          </div>
+
+          <div className="glass-panel-light rounded-xl p-4" data-testid="daily-quests">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">
                     {t('daily.subtitle')}
                   </div>
@@ -682,82 +638,108 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
                     })}
                   </div>
                 </div>
-              </>
-            ) : tab === 'friends' ? (
-              <>
-                {pendingRequests.length > 0 && (
-                  <div className="glass-panel-light rounded-xl p-4 mb-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <UserCheck size={14} className="neon-lime" />
-                      <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">Friend Requests</h3>
-                    </div>
-                    <div className="space-y-2">
-                      {pendingRequests.map((reqNick) => (
-                        <div key={reqNick} className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3">
-                          <div className="text-[11px] font-mono neon-cyan">{reqNick}</div>
-                          <div className="flex-1"></div>
-                          <button
-                            onClick={() => {
-                              acceptFriendRequest(reqNick)
-                                .then(() => {
-                                  setPendingRequests(pendingRequests.filter(r => r !== reqNick));
-                                  onPlayerUpdate?.();
-                                })
-                                .catch(() => {});
-                            }}
-                            className="text-green-400 hover:text-green-300"
-                          >
-                            <Check size={14} />
-                          </button>
-                          <button
-                            onClick={() => {
-                              rejectFriendRequest(reqNick)
-                                .then(() => setPendingRequests(pendingRequests.filter(r => r !== reqNick)))
-                                .catch(() => {});
-                            }}
-                            className="text-red-400 hover:text-red-300"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="glass-panel-light rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Users size={14} className="neon-cyan" />
-                    <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">Friends</h3>
-                  </div>
-                  {friendsLoading ? (
-                    <div className="text-slate-500 text-xs text-center py-4">Loading...</div>
-                  ) : friends.length === 0 ? (
-                    <div className="text-slate-500 text-xs text-center py-4">No friends yet</div>
-                  ) : (
-                    <div className="space-y-2">
-                      {friends.map((friend) => (
-                        <div key={friend.nickname} className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3">
-                          <div className="text-[11px] font-mono neon-cyan">{friend.nickname}</div>
-                          <div className="flex-1 text-[11px] text-slate-400">Rating: {friend.rating || 1000}</div>
-                          <button
-                            onClick={() => {
-                              removeFriend(friend.nickname)
-                                .then(() => setFriends(friends.filter(f => f.nickname !== friend.nickname)))
-                                .catch(() => {});
-                            }}
-                            className="text-slate-500 hover:text-red-400"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : null}
           </div>
+        </div>
+
+        <div className="glass-panel rounded-xl p-6 space-y-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Users size={14} className="neon-cyan" />
+            <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">{t('friends.title')}</h3>
+          </div>
+
+          <div className="glass-panel-light rounded-xl p-4">
+            <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('profile.viewPlayer.title')}</div>
+            <div className="flex gap-2">
+              <input
+                className="neon-input flex-1"
+                placeholder={t('profile.viewPlayer.placeholder')}
+                value={viewQuery}
+                onChange={(e) => setViewQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') openOtherProfile(); }}
+                maxLength={20}
+                data-testid="view-player-input"
+              />
+              <button
+                onClick={openOtherProfile}
+                className="neon-btn px-4"
+                data-testid="view-player-open-btn"
+              >
+                {t('profile.viewPlayer.open')}
+              </button>
+            </div>
+          </div>
+
+          {pendingRequests.length > 0 && (
+            <div className="glass-panel-light rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <UserCheck size={14} className="neon-lime" />
+                <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('friends.friendRequests')}</h3>
+              </div>
+              <div className="space-y-2">
+                {pendingRequests.map((reqNick) => (
+                  <div key={reqNick} className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3">
+                    <div className="text-[11px] font-mono neon-cyan">{reqNick}</div>
+                    <div className="flex-1"></div>
+                    <button
+                      onClick={() => {
+                        acceptFriendRequest(reqNick)
+                          .then(() => {
+                            setPendingRequests(pendingRequests.filter(r => r !== reqNick));
+                            onPlayerUpdate?.();
+                          })
+                          .catch(() => {});
+                      }}
+                      className="text-green-400 hover:text-green-300"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        rejectFriendRequest(reqNick)
+                          .then(() => setPendingRequests(pendingRequests.filter(r => r !== reqNick)))
+                          .catch(() => {});
+                      }}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="glass-panel-light rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Users size={14} className="neon-cyan" />
+              <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('friends.friendsList')}</h3>
+            </div>
+            {friendsLoading ? (
+              <div className="text-slate-500 text-xs text-center py-4">{t('friends.loading')}</div>
+            ) : friends.length === 0 ? (
+              <div className="text-slate-500 text-xs text-center py-4">{t('friends.noFriends')}</div>
+            ) : (
+              <div className="space-y-2">
+                {friends.map((friend) => (
+                  <div key={friend.nickname} className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3">
+                    <div className="text-[11px] font-mono neon-cyan">{friend.nickname}</div>
+                    <div className="flex-1 text-[11px] text-slate-400">Rating: {friend.rating || 1000}</div>
+                    <button
+                      onClick={() => {
+                        removeFriend(friend.nickname)
+                          .then(() => setFriends(friends.filter(f => f.nickname !== friend.nickname)))
+                          .catch(() => {});
+                      }}
+                      className="text-slate-500 hover:text-red-400"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
         </div>
 
         <aside className="space-y-4">
