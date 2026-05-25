@@ -1114,7 +1114,7 @@ const DICTS = {
       panelTitle: 'Панель адміна',
       panelHint: 'Натисни на кошик рядом із записом, щоб видалити його.',
     },
-    friends: { title: 'ДРУЗІ', searchPlaceholder: 'Пошук ніку...', noResult: 'Гравця не знайдено.', blurb: 'Шукайте гравців та переглядайте статистику.' },
+    friends: { title: 'ДРУЗІ', searchPlaceholder: 'Пошук ніку...', noResult: 'Гравця не знайдено.', blurb: 'Шукайте гравців та переглядайте статистику.', friendRequests: 'ЗАПИТИ ДРУЗІВ', friendsList: 'СПИСОК ДРУЗІВ', loading: 'Завантаження...', noFriends: 'Поки немає друзів' },
     pause: { title: 'ПАУЗА', exitGame: 'ВИЙТИ З ГРИ' },
     shop: {
       title: 'МАГАЗИН',
@@ -1533,7 +1533,7 @@ const DICTS = {
       panelTitle: 'Admin panel',
       panelHint: 'Klikni na koš vedle záznamu v tabulce pro smazání.',
     },
-    friends: { title: 'PŘÁTELÉ', searchPlaceholder: 'Hledat přezdívku...', noResult: 'Hráč nenalezen.', blurb: 'Hledejte hráče a jejich statistiky.' },
+    friends: { title: 'PŘÁTELÉ', searchPlaceholder: 'Hledat přezdívku...', noResult: 'Hráč nenalezen.', blurb: 'Hledejte hráče a jejich statistiky.', friendRequests: 'ŽÁDOSTI O PŘÁTELSTVÍ', friendsList: 'SEZNAM PŘÁTEL', loading: 'Načítání...', noFriends: 'Zatím žádní přátelé' },
     pause: { title: 'POZASTAVENO', exitGame: 'UKONČIT HRU' },
     shop: {
       title: 'OBCHOD',
@@ -1874,7 +1874,7 @@ const DICTS = {
       panelTitle: 'Panel de admin',
       panelHint: 'Haz clic en la papelera junto a una entrada para borrarla.',
     },
-    friends: { title: 'AMIGOS', searchPlaceholder: 'Buscar apodo...', noResult: 'Jugador no encontrado.', blurb: 'Busca jugadores y mira sus estadísticas.' },
+    friends: { title: 'AMIGOS', searchPlaceholder: 'Buscar apodo...', noResult: 'Jugador no encontrado.', blurb: 'Busca jugadores y mira sus estadísticas.', friendRequests: 'SOLICITUDES DE AMISTAD', friendsList: 'LISTA DE AMIGOS', loading: 'Cargando...', noFriends: 'Aún no hay amigos' },
     pause: { title: 'PAUSA', exitGame: 'SALIR DEL JUEGO' },
     shop: {
       title: 'TIENDA',
