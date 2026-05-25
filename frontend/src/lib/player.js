@@ -657,10 +657,22 @@ export const getFriends = async () => {
   }
 };
 
-export const addFriend = async (nickname) => {
+export const sendFriendRequest = async (nickname) => {
   const nick = String(nickname || '').trim();
   if (!nick) throw new Error('Missing nickname');
-  return (await axios.post(`${API}/friends/add`, { nickname: nick }, { headers: authHeaders() })).data;
+  return (await axios.post(`${API}/friends/request`, { nickname: nick }, { headers: authHeaders() })).data;
+};
+
+export const acceptFriendRequest = async (nickname) => {
+  const nick = String(nickname || '').trim();
+  if (!nick) throw new Error('Missing nickname');
+  return (await axios.post(`${API}/friends/accept`, { nickname: nick }, { headers: authHeaders() })).data;
+};
+
+export const rejectFriendRequest = async (nickname) => {
+  const nick = String(nickname || '').trim();
+  if (!nick) throw new Error('Missing nickname');
+  return (await axios.post(`${API}/friends/reject`, { nickname: nick }, { headers: authHeaders() })).data;
 };
 
 export const removeFriend = async (nickname) => {

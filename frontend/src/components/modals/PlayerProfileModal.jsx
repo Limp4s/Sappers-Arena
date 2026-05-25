@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { X, Trophy, User, Clock, Crown, Users, Plus, Check, ChevronDown } from 'lucide-react';
-import { fetchPlayer, isOwnerNick, getStoredNickname, addFriend, removeFriend } from '../../lib/player';
+import { X, Trophy, User, Clock, Crown, Users, Plus, Check, ChevronDown, UserPlus } from 'lucide-react';
+import { fetchPlayer, isOwnerNick, getStoredNickname, sendFriendRequest, removeFriend } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
@@ -129,15 +129,16 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
 
   const canAddFriend = myNick && player?.nickname && myNick.toLowerCase() !== player.nickname.toLowerCase();
 
-  const handleToggleFriend = async () => {
+  const handleSendFriendRequest = async () => {
     if (!canAddFriend || addingFriend) return;
     setAddingFriend(true);
     try {
-      if (isFriend) {
-        await removeFriend(player.nickname);
-        setIsFriend(false);
-      } else {
-        await addFriend(player.nickname);
+      const result = await sendFriendRequest(player.nickname);
+      if (result.already_friend) {
+        setIsFriend(true);
+      } else if (result.already_requested) {
+        // Request already sent
+      } else if (result.auto_accepted) {
         setIsFriend(true);
       }
     } catch {
@@ -171,16 +172,15 @@ export default function PlayerProfileModal({ nickname, playerNum, onClose }) {
           <div className="flex items-center gap-2">
             {canAddFriend && (
               <button
-                onClick={handleToggleFriend}
+                onClick={handleSendFriendRequest}
                 disabled={addingFriend}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-display tracking-[0.25em] transition-all ${
+                className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all ${
                   isFriend
                     ? 'bg-green-600/20 border border-green-500/50 text-green-400 hover:bg-green-600/30'
                     : 'bg-cyan-600/20 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-600/30'
                 }`}
               >
-                {isFriend ? <Check size={14} /> : <Users size={14} />}
-                {isFriend ? 'Friend' : <Plus size={14} />}
+                {isFriend ? <Check size={20} /> : <UserPlus size={20} />}
               </button>
             )}
             <button onClick={onClose} className="text-slate-400 hover:text-white" data-testid="close-player-profile-btn"><X size={18} /></button>

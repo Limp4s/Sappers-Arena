@@ -1112,8 +1112,8 @@ async def get_friends(nick: str = Depends(require_session)):
     return {"friends": friend_players}
 
 
-@api_router.post("/friends/add")
-async def add_friend(payload: dict, nick: str = Depends(require_session)):
+@api_router.post("/friends/request")
+async def send_friend_request(payload: dict, nick: str = Depends(require_session)):
     target_nick = (payload.get("nickname") or "").strip()
     if not target_nick:
         raise HTTPException(status_code=400, detail="Nickname required.")
@@ -1125,13 +1125,83 @@ async def add_friend(payload: dict, nick: str = Depends(require_session)):
     player = await _get_player(nick)
     if not player:
         raise HTTPException(status_code=404, detail="Player not found.")
+
+    # Check if already friends
     friends = player.get("friends") or []
     if target_nick.lower() in [f.lower() for f in friends]:
         return {"ok": True, "already_friend": True}
-    friends.append(target_nick)
+
+    # Check if request already sent
+    sent_requests = player.get("friend_requests_sent") or []
+    if target_nick.lower() in [r.lower() for r in sent_requests]:
+        return {"ok": True, "already_requested": True}
+
+    # Check if already has pending request from target
+    pending_requests = player.get("friend_requests_pending") or []
+    if target_nick.lower() in [r.lower() for r in pending_requests]:
+        # Auto-accept if there's a pending request from target
+        await db.players.update_one(
+            {"nickname_lower": nick.lower()},
+            {"$pull": {"friend_requests_pending": target_nick}, "$addToSet": {"friends": target_nick}}
+        )
+        await db.players.update_one(
+            {"nickname_lower": target_nick.lower()},
+            {"$pull": {"friend_requests_sent": nick}, "$addToSet": {"friends": nick}}
+        )
+        return {"ok": True, "auto_accepted": True}
+
+    # Send request
     await db.players.update_one(
         {"nickname_lower": nick.lower()},
-        {"$set": {"friends": friends}}
+        {"$addToSet": {"friend_requests_sent": target_nick}}
+    )
+    await db.players.update_one(
+        {"nickname_lower": target_nick.lower()},
+        {"$addToSet": {"friend_requests_pending": nick}}
+    )
+    return {"ok": True}
+
+
+@api_router.post("/friends/accept")
+async def accept_friend_request(payload: dict, nick: str = Depends(require_session)):
+    target_nick = (payload.get("nickname") or "").strip()
+    if not target_nick:
+        raise HTTPException(status_code=400, detail="Nickname required.")
+    player = await _get_player(nick)
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found.")
+
+    # Remove from pending and add to friends
+    await db.players.update_one(
+        {"nickname_lower": nick.lower()},
+        {"$pull": {"friend_requests_pending": target_nick}, "$addToSet": {"friends": target_nick}}
+    )
+    # Add to target's friends and remove from sent
+    await db.players.update_one(
+        {"nickname_lower": target_nick.lower()},
+        {"$pull": {"friend_requests_sent": nick}, "$addToSet": {"friends": nick}}
+    )
+    return {"ok": True}
+
+
+@api_router.post("/friends/reject")
+async def reject_friend_request(payload: dict, nick: str = Depends(require_session)):
+    target_nick = (payload.get("nickname") or "").strip()
+    if not target_nick:
+        raise HTTPException(status_code=400, detail="Nickname required.")
+    player = await _get_player(nick)
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found.")
+
+    # Remove from pending
+    await db.players.update_one(
+        {"nickname_lower": nick.lower()},
+        {"$pull": {"friend_requests_pending": target_nick}}
+    )
+    # Remove from target's sent
+    await db.players.update_one(
+        {"nickname_lower": target_nick.lower()},
+        {"$pull": {"friend_requests_sent": nick}}
     )
     return {"ok": True}
 
@@ -1149,6 +1219,11 @@ async def remove_friend(payload: dict, nick: str = Depends(require_session)):
     await db.players.update_one(
         {"nickname_lower": nick.lower()},
         {"$set": {"friends": friends}}
+    )
+    # Also remove from target's friends
+    await db.players.update_one(
+        {"nickname_lower": target_nick.lower()},
+        {"$pull": {"friends": nick}}
     )
     return {"ok": True}
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2, Award, Crown, Users, X } from 'lucide-react';
-import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminGrantCoins, adminResetPlayer, adminDeletePlayer, getToken, authHeaders, isOwnerNick, getFriends, removeFriend } from '../../lib/player';
+import { User, LogOut, KeyRound, Package, Coins, Shield, Trophy, Check, AlertCircle, UserPlus, Volume2, Award, Crown, Users, X, UserCheck } from 'lucide-react';
+import { logout, changePassword, validatePassword, getPlayerId, adminListPlayers, adminFixNegativeRatings, adminGrantRatingWin, adminGrantCoins, adminResetPlayer, adminDeletePlayer, getToken, authHeaders, isOwnerNick, getFriends, removeFriend, acceptFriendRequest, rejectFriendRequest } from '../../lib/player';
 import { demoteAdmin, promoteToAdmin } from '../../lib/lobby';
 import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
 import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
@@ -41,6 +41,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   const [achMine, setAchMine] = useState(null);
   const [friends, setFriends] = useState([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState([]);
 
   const owner = isOwnerNick?.(player?.nick);
 
@@ -98,8 +99,16 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
     if (!player?.nick) return;
     setFriendsLoading(true);
     getFriends()
-      .then((r) => setFriends(r?.friends || []))
-      .catch(() => setFriends([]))
+      .then((r) => {
+        setFriends(r?.friends || []);
+        // Load pending requests from player data
+        const pending = player?.friend_requests_pending || [];
+        setPendingRequests(pending);
+      })
+      .catch(() => {
+        setFriends([]);
+        setPendingRequests([]);
+      })
       .finally(() => setFriendsLoading(false));
   }, [player?.nick]);
 
@@ -428,7 +437,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">{t('profile.account')}</h3>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2">
               <button
                 onClick={() => setTab('daily')}
                 className={`pill ${tab === 'daily' ? 'pill-active' : ''}`}
@@ -676,6 +685,46 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               </>
             ) : tab === 'friends' ? (
               <>
+                {pendingRequests.length > 0 && (
+                  <div className="glass-panel-light rounded-xl p-4 mb-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <UserCheck size={14} className="neon-lime" />
+                      <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">Friend Requests</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {pendingRequests.map((reqNick) => (
+                        <div key={reqNick} className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3">
+                          <div className="text-[11px] font-mono neon-cyan">{reqNick}</div>
+                          <div className="flex-1"></div>
+                          <button
+                            onClick={() => {
+                              acceptFriendRequest(reqNick)
+                                .then(() => {
+                                  setPendingRequests(pendingRequests.filter(r => r !== reqNick));
+                                  onPlayerUpdate?.();
+                                })
+                                .catch(() => {});
+                            }}
+                            className="text-green-400 hover:text-green-300"
+                          >
+                            <Check size={14} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              rejectFriendRequest(reqNick)
+                                .then(() => setPendingRequests(pendingRequests.filter(r => r !== reqNick)))
+                                .catch(() => {});
+                            }}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="glass-panel-light rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Users size={14} className="neon-cyan" />
