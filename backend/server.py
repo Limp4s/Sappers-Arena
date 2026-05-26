@@ -498,6 +498,7 @@ def _ach_blank_stats() -> dict:
         "duel_streak": 0,
         "ranked_played": 0,
         "campaign_wins": 0,
+        "campaign_highest_level": 0,
         "coins_earned_total": 0,
         "daily_claims": 0,
         "daily_claim_streak": 0,
@@ -536,6 +537,7 @@ def _ach_should_unlock(player_after: dict, payload: Optional[Any] = None, coins_
     dstreak = int(st.get("duel_streak") or 0)
     rp = int(st.get("ranked_played") or 0)
     cw = int(st.get("campaign_wins") or 0)
+    chl = int(st.get("campaign_highest_level") or 0)
     ce = int(st.get("coins_earned_total") or 0)
     rating = int((player_after or {}).get("rating", 500) or 500)
     if coins_balance_after is None:
@@ -564,10 +566,10 @@ def _ach_should_unlock(player_after: dict, payload: Optional[Any] = None, coins_
     if dstreak >= 5: add("duel_streak_5")
     if rp >= 10: add("ranked_10")
 
-    if cw >= 1: add("campaign_1")
-    if cw >= 10: add("campaign_10")
-    if cw >= 30: add("campaign_half")
-    if cw >= 60: add("campaign_complete")
+    if chl >= 1: add("campaign_1")
+    if chl >= 10: add("campaign_10")
+    if chl >= 50: add("campaign_half")
+    if chl >= 100: add("campaign_complete")
 
     if rating >= 600: add("rating_600")
     if rating >= 1000: add("rating_1000")
@@ -943,6 +945,11 @@ async def submit_campaign_level_result(payload: CampaignLevelResultRequest, nick
     next_st = dict(st)
     if payload.completed and payload.won:
         next_st["campaign_wins"] = int(next_st.get("campaign_wins") or 0) + 1
+        # Track highest campaign level reached
+        lvl = int(payload.level_id)
+        current_highest = int(next_st.get("campaign_highest_level") or 0)
+        if lvl > current_highest:
+            next_st["campaign_highest_level"] = lvl
     player_after = {**updated0, "achievements_unlocked": unlocked, "achievements_stats": next_st}
     to_unlock = _ach_should_unlock(player_after, payload=payload, coins_balance_after=int(updated0.get("coins") or 0))
     new_unlocked = list(to_unlock or [])
@@ -1401,6 +1408,11 @@ async def submit_score(payload: ScoreCreate, nick: str = Depends(require_session
             next_st["ranked_played"] = int(next_st.get("ranked_played") or 0) + 1
         if mode == "campaign" and won:
             next_st["campaign_wins"] = int(next_st.get("campaign_wins") or 0) + 1
+            # Track highest campaign level reached
+            lvl = int(entry.level_id or 0)
+            current_highest = int(next_st.get("campaign_highest_level") or 0)
+            if lvl > current_highest:
+                next_st["campaign_highest_level"] = lvl
         next_st["coins_earned_total"] = int(next_st.get("coins_earned_total") or 0) + max(0, int(entry.coins_awarded or 0))
 
         rating_after = max(0, int((player.get("rating") or 500)) + int(rating_delta or 0))

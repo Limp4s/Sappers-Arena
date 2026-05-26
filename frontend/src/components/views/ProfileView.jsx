@@ -158,9 +158,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
           <FriendsSection 
             player={player} 
             onPlayerUpdate={onPlayerUpdate} 
-            viewQuery={viewQuery} 
-            setViewQuery={setViewQuery} 
-            openOtherProfile={openOtherProfile} 
           />
 
           <DailySection 

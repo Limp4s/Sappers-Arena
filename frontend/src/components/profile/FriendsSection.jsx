@@ -3,7 +3,7 @@ import { Users, UserCheck, Check, X, UserPlus } from 'lucide-react';
 import { getFriends, removeFriend, acceptFriendRequest, rejectFriendRequest, sendFriendRequest } from '../../lib/player';
 import { t } from '../../lib/i18n';
 
-export default function FriendsSection({ player, onPlayerUpdate, viewQuery, setViewQuery, openOtherProfile }) {
+export default function FriendsSection({ player, onPlayerUpdate }) {
   const [friends, setFriends] = React.useState([]);
   const [friendsLoading, setFriendsLoading] = React.useState(false);
   const [pendingRequests, setPendingRequests] = React.useState([]);
@@ -47,28 +47,6 @@ export default function FriendsSection({ player, onPlayerUpdate, viewQuery, setV
       <div className="flex items-center gap-2 mb-2">
         <Users size={14} className="neon-cyan" />
         <h3 className="font-display text-sm font-bold tracking-[0.25em] uppercase">{t('friends.title')}</h3>
-      </div>
-
-      <div className="glass-panel-light rounded-xl p-4">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">{t('profile.viewPlayer.title')}</div>
-        <div className="flex gap-2">
-          <input
-            className="neon-input flex-1"
-            placeholder={t('profile.viewPlayer.placeholder')}
-            value={viewQuery}
-            onChange={(e) => setViewQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') openOtherProfile(); }}
-            maxLength={20}
-            data-testid="view-player-input"
-          />
-          <button
-            onClick={openOtherProfile}
-            className="neon-btn px-4"
-            data-testid="view-player-open-btn"
-          >
-            {t('profile.viewPlayer.open')}
-          </button>
-        </div>
       </div>
 
       <div className="glass-panel-light rounded-xl p-4">
