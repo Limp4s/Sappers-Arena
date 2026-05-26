@@ -710,11 +710,7 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
               </button>
             )}
             <button onClick={handleLogout} className="neon-btn neon-btn-coral w-full flex items-center justify-center gap-2 py-3" data-testid="logout-btn">
-              <LogOut size={14} /> {t('common.logout')}
-            </button>
-
-            <button onClick={handleExitGame} className="neon-btn neon-btn-coral w-full flex items-center justify-center gap-2 py-3" data-testid="exit-game-btn">
-              <LogOut size={14} /> {t('common.exit')}
+              <LogOut size={14} /> {t('common.changeAccount')}
             </button>
           </div>
         </div>

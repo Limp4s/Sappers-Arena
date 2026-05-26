@@ -5,7 +5,7 @@ const DICTS = {
     tagline: '',
     tabs: { campaign: 'CAMPAIGN', battles: 'BATTLES', custom: 'CUSTOM', shop: 'SHOP', leaderboard: 'LEADERS', profile: 'PROFILE', friends: 'FRIENDS' },
     common: {
-      login: 'ACCESS GRID', register: 'LOCK CALLSIGN', logout: 'LOG OUT · SWITCH ACCOUNT',
+      login: 'ACCESS GRID', register: 'LOCK CALLSIGN', logout: 'LOG OUT · SWITCH ACCOUNT', changeAccount: 'SWITCH ACCOUNT',
       coins: 'COINS', rating: 'ELO', play: 'PLAY', cancel: 'CANCEL', close: 'CLOSE',
       remaining: 'LIVES LEFT', findOpponent: 'FIND OPPONENT', createLobby: 'CREATE LOBBY',
       joinLobby: 'JOIN LOBBY', friends: 'FRIENDS', search: 'SEARCH',
@@ -437,7 +437,7 @@ const DICTS = {
     tagline: '',
     tabs: { campaign: 'КАМПАНИЯ', battles: 'БИТВЫ', custom: 'СВОЯ', shop: 'МАГАЗИН', leaderboard: 'ЛИДЕРЫ', profile: 'ПРОФИЛЬ', friends: 'ДРУЗЬЯ' },
     common: {
-      login: 'ВОЙТИ', register: 'РЕГИСТРАЦИЯ', logout: 'ВЫЙТИ · СМЕНИТЬ АККАУНТ',
+      login: 'ВОЙТИ', register: 'РЕГИСТРАЦИЯ', logout: 'ВЫЙТИ · СМЕНИТЬ АККАУНТ', changeAccount: 'СМЕНИТЬ АККАУНТ',
       coins: 'МОНЕТЫ', rating: 'РЕЙТИНГ', play: 'ИГРАТЬ', cancel: 'ОТМЕНА', close: 'ЗАКРЫТЬ',
       remaining: 'ЖИЗНЕЙ', findOpponent: 'НАЙТИ СОПЕРНИКА', createLobby: 'СОЗДАТЬ ЛОББИ',
       joinLobby: 'ВСТУПИТЬ', friends: 'ДРУЗЬЯ', search: 'ПОИСК',
@@ -863,7 +863,7 @@ const DICTS = {
     tagline: '',
     tabs: { campaign: 'КАМПАНІЯ', battles: 'БИТВИ', custom: 'СВІЙ РЕЖИМ', shop: 'МАГАЗИН', leaderboard: 'ЛІДЕРИ', profile: 'ПРОФІЛЬ', friends: 'ДРУЗІ' },
     common: {
-      login: 'УВІЙТИ', register: 'РЕЄСТРАЦІЯ', logout: 'ВИЙТИ · ЗМІНИТИ АКАУНТ',
+      login: 'УВІЙТИ', register: 'РЕЄСТРАЦІЯ', logout: 'ВИЙТИ · ЗМІНИТИ АКАУНТ', changeAccount: 'ЗМІНИТИ АКАУНТ',
       coins: 'МОНЕТИ', rating: 'РЕЙТИНГ', play: 'ГРАТИ', cancel: 'СКАСУВАТИ', close: 'ЗАКРИТИ',
       remaining: 'ЖИТТЯ', findOpponent: 'ЗНАЙТИ СУПЕРНИКА', createLobby: 'СТВОРИТИ ЛОБІ',
       joinLobby: 'ПРИЄДНАТИСЯ', friends: 'ДРУЗІ', search: 'ПОШУК',
@@ -1282,7 +1282,7 @@ const DICTS = {
     tagline: '',
     tabs: { campaign: 'KAMPAŇ', battles: 'SOUBOJE', custom: 'VLASTNÍ', shop: 'OBCHOD', leaderboard: 'ŽEBŘÍČEK', profile: 'PROFIL', friends: 'PŘÁTELÉ' },
     common: {
-      login: 'PŘIHLÁSIT', register: 'REGISTRACE', logout: 'ODHLÁSIT · ZMĚNIT ÚČET',
+      login: 'PŘIHLÁSIT', register: 'REGISTRACE', logout: 'ODHLÁSIT · ZMĚNIT ÚČET', changeAccount: 'ZMĚNIT ÚČET',
       coins: 'MINCE', rating: 'HODNOCENÍ', play: 'HRÁT', cancel: 'ZRUŠIT', close: 'ZAVŘÍT',
       remaining: 'ŽIVOTY', findOpponent: 'NAJÍT SOUPEŘE', createLobby: 'VYTVOŘIT LOBBY',
       joinLobby: 'PŘIPOJIT', friends: 'PŘÁTELÉ', search: 'HLEDAT',
@@ -1641,7 +1641,7 @@ const DICTS = {
     tagline: '',
     tabs: { campaign: 'CAMPAÑA', battles: 'BATALLAS', custom: 'PERSONALIZADO', shop: 'TIENDA', leaderboard: 'LÍDERES', profile: 'PERFIL', friends: 'AMIGOS' },
     common: {
-      login: 'ENTRAR', register: 'REGISTRAR', logout: 'SALIR · CAMBIAR CUENTA',
+      login: 'ENTRAR', register: 'REGISTRAR', logout: 'SALIR · CAMBIAR CUENTA', changeAccount: 'CAMBIAR CUENTA',
       coins: 'MONEDAS', rating: 'ELO', play: 'JUGAR', cancel: 'CANCELAR', close: 'CERRAR',
       remaining: 'VIDAS', findOpponent: 'BUSCAR RIVAL', createLobby: 'CREAR SALA',
       joinLobby: 'UNIRSE', friends: 'AMIGOS', search: 'BUSCAR',
@@ -2037,6 +2037,7 @@ _setPath(DICTS.fr, 'tabs.friends', 'AMIS');
 _setPath(DICTS.fr, 'common.login', 'ACCÉDER');
 _setPath(DICTS.fr, 'common.register', 'ENREGISTRER');
 _setPath(DICTS.fr, 'common.logout', 'DÉCONNEXION · CHANGER DE COMPTE');
+_setPath(DICTS.fr, 'common.changeAccount', 'CHANGER DE COMPTE');
 _setPath(DICTS.fr, 'common.coins', 'PIÈCES');
 _setPath(DICTS.fr, 'common.rating', 'ELO');
 _setPath(DICTS.fr, 'common.play', 'JOUER');
@@ -2370,6 +2371,7 @@ _setPath(DICTS.de, 'tabs.friends', 'FREUNDE');
 _setPath(DICTS.de, 'common.login', 'ANMELDEN');
 _setPath(DICTS.de, 'common.register', 'REGISTRIEREN');
 _setPath(DICTS.de, 'common.logout', 'ABMELDEN · KONTO WECHSELN');
+_setPath(DICTS.de, 'common.changeAccount', 'KONTO WECHSELN');
 _setPath(DICTS.de, 'common.coins', 'MÜNZEN');
 _setPath(DICTS.de, 'common.play', 'SPIELEN');
 _setPath(DICTS.de, 'common.cancel', 'ABBRECHEN');
@@ -2673,6 +2675,7 @@ _setPath(DICTS.zh, 'tabs.friends', '好友');
 _setPath(DICTS.zh, 'common.login', '进入');
 _setPath(DICTS.zh, 'common.register', '注册');
 _setPath(DICTS.zh, 'common.logout', '退出登录 · 切换账号');
+_setPath(DICTS.zh, 'common.changeAccount', '切换账号');
 _setPath(DICTS.zh, 'common.coins', '金币');
 _setPath(DICTS.zh, 'common.rating', 'ELO');
 _setPath(DICTS.zh, 'common.play', '开始');
