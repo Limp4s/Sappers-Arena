@@ -717,8 +717,8 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
             <button onClick={handleExitGame} className="neon-btn neon-btn-coral w-full flex items-center justify-center gap-2 py-3" data-testid="exit-game-btn">
               <LogOut size={14} /> {t('common.exit')}
             </button>
+          </div>
         </div>
-      </div>
 
       {showInventory && <InventoryModal player={player} onClose={() => setShowInventory(false)} />}
       {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}
