@@ -1,9 +1,10 @@
 import React from 'react';
 import { Users, UserCheck, Check, X, UserPlus } from 'lucide-react';
 import { getFriends, removeFriend, acceptFriendRequest, rejectFriendRequest, sendFriendRequest } from '../../lib/player';
-import { t } from '../../lib/i18n';
+import { t, useLang } from '../../lib/i18n';
 
 export default function FriendsSection({ player, onPlayerUpdate }) {
+  const [lang] = useLang();
   const [friends, setFriends] = React.useState([]);
   const [friendsLoading, setFriendsLoading] = React.useState(false);
   const [pendingRequests, setPendingRequests] = React.useState([]);

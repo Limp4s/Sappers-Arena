@@ -3,12 +3,13 @@ import axios from 'axios';
 import { Award, Check, AlertCircle, Flame } from 'lucide-react';
 import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
 import { getToken, authHeaders } from '../../lib/player';
-import { t } from '../../lib/i18n';
+import { t, useLang } from '../../lib/i18n';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
 const API = `${BACKEND_URL}/api`;
 
 export default function DailySection({ player, onPlayerUpdate, newUnlocked, setNewUnlocked }) {
+  const [lang] = useLang();
   const [dailyState, setDailyState] = React.useState(() => getDailyState());
   const [dailyCoins, setDailyCoins] = React.useState(() => getDailyCoins());
   const [dailyMsg, setDailyMsg] = React.useState(null);

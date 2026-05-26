@@ -2,9 +2,10 @@ import React from 'react';
 import { Shield, Check, AlertCircle } from 'lucide-react';
 import { adminListPlayers, adminFixNegativeRatings, adminGrantCoins, adminGrantRatingWin, adminResetPlayer, adminDeletePlayer, getToken, isOwnerNick } from '../../lib/player';
 import { demoteAdmin } from '../../lib/lobby';
-import { t } from '../../lib/i18n';
+import { t, useLang } from '../../lib/i18n';
 
 export default function AdminPanel({ player, onPlayerUpdate }) {
+  const [lang] = useLang();
   const [adminPlayers, setAdminPlayers] = React.useState(null);
   const [adminPlayersQuery, setAdminPlayersQuery] = React.useState('');
   const [adminBusy, setAdminBusy] = React.useState(false);
