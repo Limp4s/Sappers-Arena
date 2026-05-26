@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { User, LogOut, KeyRound, Trophy, Crown, Check, AlertCircle } from 'lucide-react';
+import { User, LogOut, KeyRound, Trophy, Crown, Check, AlertCircle, Award } from 'lucide-react';
 import { logout, changePassword, validatePassword, getPlayerId, getToken, isOwnerNick } from '../../lib/player';
 import { promoteToAdmin } from '../../lib/lobby';
 import InventoryModal from '../modals/InventoryModal';
