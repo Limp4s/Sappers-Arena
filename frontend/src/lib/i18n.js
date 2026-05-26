@@ -62,6 +62,7 @@ const DICTS = {
       resetIn: 'RESET IN',
       claimed: 'CLAIMED',
       claim: 'CLAIM',
+      streak: 'STREAK',
       quests: {
         play_1: 'Play 1 game',
         play_3: 'Play 3 games',
@@ -254,7 +255,7 @@ const DICTS = {
       panelTitle: 'Admin Panel',
       panelHint: 'Click the trash icon next to any leaderboard entry to delete it.',
     },
-    friends: { title: 'FRIENDS', searchPlaceholder: 'Search callsign...', noResult: 'Player not found.', blurb: 'Search other players, view their lifetime stats.', friendRequests: 'FRIEND REQUESTS', friendsList: 'FRIENDS LIST', loading: 'Loading...', noFriends: 'No friends yet' },
+    friends: { title: 'FRIENDS', searchPlaceholder: 'Search callsign...', noResult: 'Player not found.', blurb: 'Search other players, view their lifetime stats.', friendRequests: 'FRIEND REQUESTS', friendsList: 'FRIENDS LIST', loading: 'Loading...', noFriends: 'No friends yet', addFriend: 'ADD FRIEND', addFriendPlaceholder: 'Enter nickname...' },
     pause: { title: 'PAUSED', exitGame: 'EXIT GAME' },
     shop: {
       title: 'SHOP',
@@ -494,6 +495,7 @@ const DICTS = {
       resetIn: 'СБРОС ЧЕРЕЗ',
       claimed: 'ЗАБРАНО',
       claim: 'ЗАБРАТЬ',
+      streak: 'СЕРИЯ',
       quests: {
         play_1: 'Сыграть 1 игру',
         play_3: 'Сыграть 3 игры',
@@ -686,7 +688,7 @@ const DICTS = {
       panelTitle: 'Панель админа',
       panelHint: 'Нажми на корзину рядом с записью в таблице, чтобы удалить её.',
     },
-    friends: { title: 'ДРУЗЬЯ', searchPlaceholder: 'Введите ник...', noResult: 'Игрок не найден.', blurb: 'Ищите игроков и смотрите их статистику.', friendRequests: 'ЗАПРОСЫ ДРУЗЕЙ', friendsList: 'СПИСОК ДРУЗЕЙ', loading: 'Загрузка...', noFriends: 'Пока нет друзей' },
+    friends: { title: 'ДРУЗЬЯ', searchPlaceholder: 'Введите ник...', noResult: 'Игрок не найден.', blurb: 'Ищите игроков и смотрите их статистику.', friendRequests: 'ЗАПРОСЫ ДРУЗЕЙ', friendsList: 'СПИСОК ДРУЗЕЙ', loading: 'Загрузка...', noFriends: 'Пока нет друзей', addFriend: 'ДОБАВИТЬ ДРУГА', addFriendPlaceholder: 'Введите ник...' },
     pause: { title: 'ПАУЗА', exitGame: 'ВЫЙТИ ИЗ ИГРЫ' },
     shop: {
       title: 'МАГАЗИН',
@@ -920,6 +922,7 @@ const DICTS = {
       resetIn: 'СКИДАННЯ ЧЕРЕЗ',
       claimed: 'ЗАБРАНО',
       claim: 'ЗАБРАТИ',
+      streak: 'СЕРІЯ',
       inProgress: 'У ПРОЦЕСІ',
       quests: {
         play_1: 'Зіграти 1 гру',
@@ -1114,7 +1117,7 @@ const DICTS = {
       panelTitle: 'Панель адміна',
       panelHint: 'Натисни на кошик рядом із записом, щоб видалити його.',
     },
-    friends: { title: 'ДРУЗІ', searchPlaceholder: 'Пошук ніку...', noResult: 'Гравця не знайдено.', blurb: 'Шукайте гравців та переглядайте статистику.', friendRequests: 'ЗАПИТИ ДРУЗІВ', friendsList: 'СПИСОК ДРУЗІВ', loading: 'Завантаження...', noFriends: 'Поки немає друзів' },
+    friends: { title: 'ДРУЗІ', searchPlaceholder: 'Пошук ніку...', noResult: 'Гравця не знайдено.', blurb: 'Шукайте гравців та переглядайте статистику.', friendRequests: 'ЗАПИТИ ДРУЗІВ', friendsList: 'СПИСОК ДРУЗІВ', loading: 'Завантаження...', noFriends: 'Поки немає друзів', addFriend: 'ДОДАТИ ДРУГА', addFriendPlaceholder: 'Введіть нік...' },
     pause: { title: 'ПАУЗА', exitGame: 'ВИЙТИ З ГРИ' },
     shop: {
       title: 'МАГАЗИН',
@@ -1339,6 +1342,7 @@ const DICTS = {
       resetIn: 'RESET ZA',
       claimed: 'VYZVEDNUTO',
       claim: 'VYZVEDNOUT',
+      streak: 'SÉRIE',
       inProgress: 'PROBÍHÁ',
       quests: {
         play_1: 'Zahraj 1 hru',
@@ -1533,7 +1537,7 @@ const DICTS = {
       panelTitle: 'Admin panel',
       panelHint: 'Klikni na koš vedle záznamu v tabulce pro smazání.',
     },
-    friends: { title: 'PŘÁTELÉ', searchPlaceholder: 'Hledat přezdívku...', noResult: 'Hráč nenalezen.', blurb: 'Hledejte hráče a jejich statistiky.', friendRequests: 'ŽÁDOSTI O PŘÁTELSTVÍ', friendsList: 'SEZNAM PŘÁTEL', loading: 'Načítání...', noFriends: 'Zatím žádní přátelé' },
+    friends: { title: 'PŘÁTELÉ', searchPlaceholder: 'Hledat přezdívku...', noResult: 'Hráč nenalezen.', blurb: 'Hledejte hráče a jejich statistiky.', friendRequests: 'ŽÁDOSTI O PŘÁTELSTVÍ', friendsList: 'SEZNAM PŘÁTEL', loading: 'Načítání...', noFriends: 'Zatím žádní přátelé', addFriend: 'PŘIDAT PŘÍTELE', addFriendPlaceholder: 'Zadejte přezdívku...' },
     pause: { title: 'POZASTAVENO', exitGame: 'UKONČIT HRU' },
     shop: {
       title: 'OBCHOD',
@@ -1698,6 +1702,7 @@ const DICTS = {
       resetIn: 'REINICIA EN',
       claim: 'RECLAMAR',
       claimed: 'RECLAMADO',
+      streak: 'RACHA',
       inProgress: 'EN PROGRESO',
       quests: {
         play_1: 'Jugar 1 partida',
@@ -1874,7 +1879,7 @@ const DICTS = {
       panelTitle: 'Panel de admin',
       panelHint: 'Haz clic en la papelera junto a una entrada para borrarla.',
     },
-    friends: { title: 'AMIGOS', searchPlaceholder: 'Buscar apodo...', noResult: 'Jugador no encontrado.', blurb: 'Busca jugadores y mira sus estadísticas.', friendRequests: 'SOLICITUDES DE AMISTAD', friendsList: 'LISTA DE AMIGOS', loading: 'Cargando...', noFriends: 'Aún no hay amigos' },
+    friends: { title: 'AMIGOS', searchPlaceholder: 'Buscar apodo...', noResult: 'Jugador no encontrado.', blurb: 'Busca jugadores y mira sus estadísticas.', friendRequests: 'SOLICITUDES DE AMISTAD', friendsList: 'LISTA DE AMIGOS', loading: 'Cargando...', noFriends: 'Aún no hay amigos', addFriend: 'AÑADIR AMIGO', addFriendPlaceholder: 'Ingresa apodo...' },
     pause: { title: 'PAUSA', exitGame: 'SALIR DEL JUEGO' },
     shop: {
       title: 'TIENDA',
@@ -2083,6 +2088,7 @@ _setPath(DICTS.fr, 'daily.coinsShort', 'p');
 _setPath(DICTS.fr, 'daily.resetIn', 'RÉINITIALISATION DANS');
 _setPath(DICTS.fr, 'daily.claimed', 'RÉCLAMÉ');
 _setPath(DICTS.fr, 'daily.claim', 'RÉCLAMER');
+_setPath(DICTS.fr, 'daily.streak', 'SÉRIE');
 _setPath(DICTS.fr, 'daily.quests.play_1', 'Jouer 1 partie');
 _setPath(DICTS.fr, 'daily.quests.play_3', 'Jouer 3 parties');
 _setPath(DICTS.fr, 'daily.quests.win_1', 'Gagner 1 partie');
@@ -2411,6 +2417,7 @@ _setPath(DICTS.de, 'daily.coinsShort', 'm');
 _setPath(DICTS.de, 'daily.resetIn', 'RESET IN');
 _setPath(DICTS.de, 'daily.claimed', 'ABGEHOLT');
 _setPath(DICTS.de, 'daily.claim', 'ABHOLEN');
+_setPath(DICTS.de, 'daily.streak', 'STREAK');
 _setPath(DICTS.de, 'daily.quests.play_1', '1 Spiel spielen');
 _setPath(DICTS.de, 'daily.quests.play_3', '3 Spiele spielen');
 _setPath(DICTS.de, 'daily.quests.win_1', '1 Spiel gewinnen');
@@ -2717,6 +2724,7 @@ _setPath(DICTS.zh, 'daily.coinsShort', '币');
 _setPath(DICTS.zh, 'daily.resetIn', '重置倒计时');
 _setPath(DICTS.zh, 'daily.claimed', '已领取');
 _setPath(DICTS.zh, 'daily.claim', '领取');
+_setPath(DICTS.zh, 'daily.streak', '连胜');
 _setPath(DICTS.zh, 'daily.quests.play_1', '进行 1 局游戏');
 _setPath(DICTS.zh, 'daily.quests.play_3', '进行 3 局游戏');
 _setPath(DICTS.zh, 'daily.quests.win_1', '赢 1 局');

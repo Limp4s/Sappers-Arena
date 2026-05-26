@@ -66,11 +66,32 @@ export default function AchievementsModal({ open, onClose }) {
                     <div className={`w-10 h-10 rounded-lg border flex items-center justify-center ${isUnlocked ? 'border-[#FFD700]/50 bg-[#FFD700]/10' : 'border-white/10 bg-black/20'}`}>
                       <Trophy size={16} className={isUnlocked ? 'neon-gold' : 'text-slate-500'} />
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="text-[11px] font-display tracking-[0.2em] uppercase text-slate-200 truncate">{t(`achievements.items.${id}.title`)}</div>
                       <div className="text-[11px] font-mono text-slate-300 leading-snug mt-1">{t(`achievements.items.${id}.cond`)}</div>
                       <div className="text-[11px] font-mono text-slate-400 leading-snug mt-1 hidden group-hover:block">{t(`achievements.items.${id}.desc`)}</div>
-                      {isUnlocked && (
+                      
+                      {/* Progress bar for achievements with progress */}
+                      {a?.target && a?.target > 0 && (
+                        <div className="mt-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="text-[10px] font-mono text-slate-400">
+                              {isUnlocked ? a.target : (a?.progress || 0)}/{a.target}
+                            </div>
+                            <div className="text-[10px] font-mono text-slate-400">
+                              {Math.round((isUnlocked ? 100 : ((a?.progress || 0) / a.target) * 100))}%
+                            </div>
+                          </div>
+                          <div className="h-1.5 bg-black/30 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full ${isUnlocked ? 'bg-[#FFD700]' : 'bg-[#00E5FF]'} transition-all duration-300`}
+                              style={{ width: `${isUnlocked ? 100 : ((a?.progress || 0) / a.target) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {isUnlocked && !a?.target && (
                         <div className="text-[10px] font-mono text-slate-500 mt-2">{t('achievements.unlocked')}</div>
                       )}
                     </div>

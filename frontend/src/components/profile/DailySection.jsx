@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import { Award, Check, AlertCircle } from 'lucide-react';
+import { Award, Check, AlertCircle, Flame } from 'lucide-react';
 import { DAILY_QUESTS, claimDailyQuest, getDailyCoins, getDailyState, getQuestProgress, secondsUntilDailyReset } from '../../lib/dailies';
 import { getToken, authHeaders } from '../../lib/player';
 import { t } from '../../lib/i18n';
@@ -37,6 +37,24 @@ export default function DailySection({ player, onPlayerUpdate, newUnlocked, setN
   const state = isOnline ? dailyOnlineState : dailyState;
   const coins = isOnline ? (dailyOnlineState.claimed_coins || 0) : (dailyCoins || 0);
   const resetSeconds = isOnline ? (dailyOnlineState.seconds_until_reset || 0) : secondsUntilDailyReset();
+
+  // Calculate daily streak
+  const streak = React.useMemo(() => {
+    const lastCompleted = state?.last_completed_date;
+    if (!lastCompleted) return 0;
+    
+    const lastDate = new Date(lastCompleted);
+    const today = new Date();
+    const diffTime = Math.abs(today - lastDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    // If completed today or yesterday, streak is valid
+    if (diffDays <= 1) {
+      return state?.streak || 1;
+    }
+    // Streak broken
+    return 0;
+  }, [state]);
 
   const handleClaim = (q) => {
     const tok = getToken?.();
@@ -105,6 +123,15 @@ export default function DailySection({ player, onPlayerUpdate, newUnlocked, setN
             {t('daily.resetIn')}: {`${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`}
           </div>
         </div>
+
+        {streak > 0 && (
+          <div className="flex items-center gap-2 mb-3 glass-panel rounded-lg px-3 py-2">
+            <Flame size={14} className="neon-orange" />
+            <div className="text-[11px] font-mono text-slate-300">
+              {t('daily.streak')}: <span className="neon-orange font-bold">{streak}</span>
+            </div>
+          </div>
+        )}
 
         {dailyMsg && (
           <div className={`text-[11px] font-mono flex items-center gap-1.5 mb-3 ${dailyMsg.ok ? 'neon-lime' : 'neon-coral'}`}>
