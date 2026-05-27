@@ -568,8 +568,8 @@ def _ach_should_unlock(player_after: dict, payload: Optional[Any] = None, coins_
 
     if chl >= 1: add("campaign_1")
     if chl >= 10: add("campaign_10")
-    if chl >= 50: add("campaign_half")
-    if chl >= 100: add("campaign_complete")
+    if chl >= 100: add("campaign_half")
+    if chl >= 200: add("campaign_complete")
 
     if rating >= 600: add("rating_600")
     if rating >= 1000: add("rating_1000")
