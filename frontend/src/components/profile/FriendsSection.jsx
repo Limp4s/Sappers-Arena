@@ -38,6 +38,11 @@ export default function FriendsSection({ player, onPlayerUpdate }) {
       await sendFriendRequest(nick);
       setAddFriendMsg({ ok: true, text: `Friend request sent to ${nick}` });
       setAddFriendQuery('');
+      // Refresh friends list and player data (for pending requests)
+      getFriends()
+        .then((r) => setFriends(r?.friends || []))
+        .catch(() => setFriends([]));
+      onPlayerUpdate?.();
     } catch (e) {
       setAddFriendMsg({ ok: false, text: e?.response?.data?.detail || 'Failed to send friend request' });
     }
@@ -94,6 +99,10 @@ export default function FriendsSection({ player, onPlayerUpdate }) {
                       .then(() => {
                         setPendingRequests(pendingRequests.filter(r => r !== reqNick));
                         onPlayerUpdate?.();
+                        // Refresh friends list after accepting
+                        getFriends()
+                          .then((r) => setFriends(r?.friends || []))
+                          .catch(() => setFriends([]));
                       })
                       .catch(() => {});
                   }}
@@ -104,7 +113,10 @@ export default function FriendsSection({ player, onPlayerUpdate }) {
                 <button
                   onClick={() => {
                     rejectFriendRequest(reqNick)
-                      .then(() => setPendingRequests(pendingRequests.filter(r => r !== reqNick)))
+                      .then(() => {
+                        setPendingRequests(pendingRequests.filter(r => r !== reqNick));
+                        onPlayerUpdate?.();
+                      })
                       .catch(() => {});
                   }}
                   className="text-red-400 hover:text-red-300"
