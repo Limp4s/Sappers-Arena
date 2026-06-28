@@ -15,6 +15,25 @@ const SCOPES = [
   { key: 'custom', mode: 'custom' },
 ];
 
+// Cache with 5 minute TTL
+const CACHE_TTL = 5 * 60 * 1000;
+const getCache = (key) => {
+  try {
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+    const { data, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp > CACHE_TTL) return null;
+    return data;
+  } catch {
+    return null;
+  }
+};
+const setCache = (key, data) => {
+  try {
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+};
+
 export default function LeaderboardView({ isAdmin = false }) {
   const [scope, setScope] = useState('campaign');
   const [entries, setEntries] = useState([]);
@@ -62,16 +81,33 @@ export default function LeaderboardView({ isAdmin = false }) {
     const reqId = ++lbReqIdRef.current;
     setLoading(true);
     setEntries([]);
+    
+    // Try cache first
+    const cacheKey = `lb_${selectedScope}`;
+    const cached = getCache(cacheKey);
+    if (cached) {
+      if (reqId === lbReqIdRef.current) {
+        setEntries(cached);
+        setLoading(false);
+      }
+    }
+    
     try {
       const def = SCOPES.find((s) => s.key === selectedScope);
       if (def?.mode === 'battle_ranked') {
         const res = await axios.get(`${API}/leaderboard/ranked`, { params: { limit: 500 } });
-        if (reqId === lbReqIdRef.current) setEntries(res.data || []);
+        if (reqId === lbReqIdRef.current) {
+          setEntries(res.data || []);
+          setCache(cacheKey, res.data || []);
+        }
       } else {
         const params = { limit: 20 };
         if (def?.mode) params.mode = def.mode;
         const res = await axios.get(`${API}/leaderboard`, { params });
-        if (reqId === lbReqIdRef.current) setEntries(res.data || []);
+        if (reqId === lbReqIdRef.current) {
+          setEntries(res.data || []);
+          setCache(cacheKey, res.data || []);
+        }
       }
     } catch (e) {
       if (reqId === lbReqIdRef.current) setEntries([]);
@@ -81,25 +117,44 @@ export default function LeaderboardView({ isAdmin = false }) {
   }, []);
 
   const fetchRecent = useCallback(async () => {
+    const cacheKey = 'lb_recent';
+    const cached = getCache(cacheKey);
+    if (cached) setRecent(cached);
+    
     try {
       const res = await axios.get(`${API}/leaderboard/recent`, { params: { limit: 8 } });
       setRecent(res.data || []);
+      setCache(cacheKey, res.data || []);
     } catch {}
   }, []);
 
   const fetchRanked = useCallback(async () => {
+    const cacheKey = 'lb_ranked';
+    const cached = getCache(cacheKey);
+    if (cached) setRankedPlayers(cached);
+    
     try {
       const res = await axios.get(`${API}/leaderboard/ranked`, { params: { limit: 500 } });
       setRankedPlayers(res.data || []);
+      setCache(cacheKey, res.data || []);
     } catch {}
   }, []);
 
   const fetchStats = useCallback(async (name) => {
     if (!name || !name.trim()) { setStats(null); return; }
     setStatsLoading(true);
+    
+    const cacheKey = `lb_stats_${name.trim().toLowerCase()}`;
+    const cached = getCache(cacheKey);
+    if (cached) {
+      setStats(cached);
+      setStatsLoading(false);
+    }
+    
     try {
       const res = await axios.get(`${API}/stats/player`, { params: { name: name.trim() } });
       setStats(res.data);
+      setCache(cacheKey, res.data);
     } catch { setStats(null); } finally { setStatsLoading(false); }
   }, []);
 
