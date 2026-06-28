@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://sappers-arena.onrender.com/sitemap.xml
