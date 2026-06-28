@@ -1638,6 +1638,18 @@ async def get_ranked_leaderboard(limit: int = Query(default=20, ge=1, le=500)):
             p["rating"] = max(0, int(p.get("rating", 0) or 0))
         except Exception:
             p["rating"] = 0
+        
+        # Filter out players with initial rating (500) and no games played
+        games_played = 0
+        try:
+            stats = p.get("achievements_stats") or {}
+            games_played = int(stats.get("games_played") or 0)
+        except Exception:
+            pass
+        
+        if p["rating"] == 500 and games_played == 0:
+            continue
+        
         try:
             if p.get("hidden_ranked") and int(p.get("hidden_ranked_rating") or 0) == int(p.get("rating") or 0):
                 continue
