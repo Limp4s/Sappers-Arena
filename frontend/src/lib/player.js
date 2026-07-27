@@ -12,6 +12,9 @@ const BACKEND_URL = (() => {
 })();
 const API = `${BACKEND_URL}/api`;
 
+// Configure axios to include credentials (cookies)
+axios.defaults.withCredentials = true;
+
 const _isElectron = () => {
   try {
     // renderer process
@@ -134,8 +137,22 @@ const _ensurePlayerId = (nick) => {
 };
 
 export const getStoredNickname = () => localStorage.getItem(KEY_NICK) || '';
-export const getToken = () => localStorage.getItem(KEY_TOKEN) || '';
-export const isAuthed = () => !!(localStorage.getItem(KEY_NICK) && localStorage.getItem(KEY_TOKEN));
+export const getToken = () => {
+  // Try cookie first (HttpOnly), fallback to localStorage for backward compatibility
+  const getCookie = (name) => {
+    try {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    } catch {}
+    return null;
+  };
+  return getCookie('session_token') || localStorage.getItem(KEY_TOKEN) || '';
+};
+export const isAuthed = () => {
+  const token = getToken();
+  return !!(localStorage.getItem(KEY_NICK) && token);
+};
 
 const isOnlineToken = (t) => !!t && !(t || '').startsWith('offline-');
 export const isAdmin = () => {
@@ -220,6 +237,10 @@ const _offlinePlayerDoc = (u) => ({
 
 export const authHeaders = () => {
   const t = getToken();
+  // If token is from cookie (not localStorage), don't send header
+  // Cookie is sent automatically by axios withCredentials
+  const isFromCookie = !localStorage.getItem(KEY_TOKEN) && t;
+  if (isFromCookie) return {};
   return isOnlineToken(t) ? { 'X-Session-Token': t } : {};
 };
 
