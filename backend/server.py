@@ -1804,7 +1804,7 @@ async def game_click(payload: GameClickRequest, nick: str = Depends(require_sess
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     if game.get("nickname") != nick:
-        raise HTTPException(status_code=403, detail("Not your game"))
+        raise HTTPException(status_code=403, detail="Not your game")
     if game.get("done"):
         return {"ok": False, "reason": "finished"}
     
@@ -1832,7 +1832,7 @@ async def game_click(payload: GameClickRequest, nick: str = Depends(require_sess
     flags = set(game.get("flags", []))
     
     if not (0 <= payload.row < rows and 0 <= payload.col < cols):
-        raise HTTPException(status_code=400, detail("Invalid coordinates"))
+        raise HTTPException(status_code=400, detail="Invalid coordinates")
     
     if (payload.row, payload.col) in revealed or (payload.row, payload.col) in flags:
         return {"ok": False, "reason": "ignored"}
