@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, Query, HTTPException, Header, Depends, WebSocket, WebSocketDisconnect, Path as FPath
+from fastapi import FastAPI, APIRouter, Query, HTTPException, Header, Depends, WebSocket, WebSocketDisconnect, Path as FPath, Response
 from fastapi.middleware.gzip import GZipMiddleware
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -16,6 +16,9 @@ import asyncio
 import base64
 import json
 import math
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 
 logger = logging.getLogger(__name__)
@@ -76,7 +79,12 @@ async def _ensure_indexes():
         logger.warning(f"Failed to ensure indexes: {e}")
 
 
+# Rate limiter setup
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 cors_origins = _get_cors_origins()
 app.add_middleware(
     CORSMiddleware,
@@ -288,19 +296,33 @@ def _parse_iso_to_epoch_seconds(v: Optional[str]) -> Optional[int]:
         return None
 
 
-async def _create_session(nick: str) -> str:
+async def _create_session(nick: str, response: Response) -> str:
     token = secrets.token_urlsafe(24)
     await db.sessions.insert_one({
         "token": token, "nickname": nick,
         "created_at": datetime.now(timezone.utc).isoformat(),
     })
+    # Set HttpOnly Secure cookie
+    response.set_cookie(
+        key="session_token",
+        value=token,
+        httponly=True,
+        secure=True,  # Only sent over HTTPS
+        samesite="lax",  # CSRF protection
+        max_age=60 * 60 * 24 * 30,  # 30 days
+    )
     return token
 
 
-async def require_session(x_session_token: Optional[str] = Header(default=None, alias="X-Session-Token")) -> str:
-    if not x_session_token:
+async def require_session(
+    x_session_token: Optional[str] = Header(default=None, alias="X-Session-Token"),
+    session_token: Optional[str] = None  # Cookie
+) -> str:
+    # Check both header and cookie for backward compatibility
+    token = x_session_token or session_token
+    if not token:
         raise HTTPException(status_code=401, detail="Missing session token.")
-    s = await db.sessions.find_one({"token": x_session_token})
+    s = await db.sessions.find_one({"token": token})
     if not s:
         raise HTTPException(status_code=401, detail="Invalid or expired session.")
     return s["nickname"]
@@ -983,7 +1005,8 @@ async def check_nickname(nickname: str = Query(..., min_length=1, max_length=30)
 
 
 @api_router.post("/players/register")
-async def register_player(payload: RegisterRequest):
+@limiter.limit("5/minute")
+async def register_player(payload: RegisterRequest, response: Response):
     nick = _validate_nick(payload.nickname)
     _validate_password(payload.password)
     if _is_admin_nick(nick) or (nick or "").lower() == ROOT_ADMIN_NICK_LOWER:
@@ -1003,12 +1026,13 @@ async def register_player(payload: RegisterRequest):
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.players.insert_one(doc)
-    token = await _create_session(nick)
+    token = await _create_session(nick, response)
     return {"player": _sanitize_player(doc), "token": token}
 
 
 @api_router.post("/players/login")
-async def login_player(payload: LoginRequest):
+@limiter.limit("10/minute")
+async def login_player(payload: LoginRequest, response: Response):
     player = await _get_player(payload.nickname)
     if not player:
         raise HTTPException(status_code=401, detail="Invalid credentials.")
@@ -1030,14 +1054,21 @@ async def login_player(payload: LoginRequest):
             raise HTTPException(status_code=500, detail="Failed to initialize account password.")
     if not _verify_password(payload.password, stored):
         raise HTTPException(status_code=401, detail="Invalid credentials.")
-    token = await _create_session(player["nickname"])
+    token = await _create_session(player["nickname"], response)
     return {"player": _sanitize_player(player), "token": token}
 
 
 @api_router.post("/players/logout")
-async def logout_player(x_session_token: Optional[str] = Header(default=None, alias="X-Session-Token")):
-    if x_session_token:
-        await db.sessions.delete_one({"token": x_session_token})
+async def logout_player(
+    x_session_token: Optional[str] = Header(default=None, alias="X-Session-Token"),
+    session_token: Optional[str] = None,
+    response: Response = None
+):
+    token = x_session_token or session_token
+    if token:
+        await db.sessions.delete_one({"token": token})
+    if response:
+        response.delete_cookie(key="session_token")
     return {"ok": True}
 
 
@@ -1296,12 +1327,30 @@ async def purchase_item(payload: PurchaseRequest, nick: str = Depends(require_se
 # --- Leaderboard ---
 
 @api_router.post("/leaderboard")
+@limiter.limit("10/second")
 async def submit_score(payload: ScoreCreate, nick: str = Depends(require_session)):
     if payload.player_name.lower() != nick.lower():
         raise HTTPException(status_code=403, detail="Player mismatch with session.")
     player = await _get_player(nick)
     if not player:
         raise HTTPException(status_code=403, detail="Player not registered.")
+
+    # Anti-bot protection: minimum time required to complete a level
+    # Based on grid size - minimum reasonable time to click all cells
+    rows = int(payload.rows or 10)
+    cols = int(payload.cols or 10)
+    mines = int(payload.mines or 10)
+    total_cells = rows * cols
+    safe_cells = total_cells - mines
+    
+    # Minimum time: at least 0.1 seconds per safe cell (human reaction time)
+    min_time_seconds = max(1, safe_cells * 0.1)
+    
+    if payload.won and payload.time_seconds < min_time_seconds:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Completion time too fast. Minimum: {min_time_seconds:.1f}s for this grid size."
+        )
 
     player = await _ensure_daily_window(player)
     entry = Score(**payload.model_dump())
