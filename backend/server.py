@@ -74,6 +74,11 @@ async def _ensure_indexes():
         # Counters collection
         await db.counters.create_index("_id", unique=True)
 
+        # Active games collection (for server-side mine generation)
+        await db.active_games.create_index("game_id", unique=True)
+        await db.active_games.create_index("nickname")
+        await db.active_games.create_index("created_at", expireAfterSeconds=3600)  # 1 hour TTL
+
         logger.info("MongoDB indexes ensured successfully")
     except Exception as e:
         logger.warning(f"Failed to ensure indexes: {e}")
@@ -836,6 +841,22 @@ class Score(BaseModel):
 
 class DailyClaimRequest(BaseModel):
     quest_id: str = Field(..., min_length=1, max_length=40)
+
+
+class GameCreateRequest(BaseModel):
+    rows: int = Field(..., ge=3, le=40)
+    cols: int = Field(..., ge=3, le=40)
+    mines: int = Field(..., ge=1, le=500)
+    lives: int = Field(default=3, ge=1, le=99)
+    mode: str = Field(default="battle_ranked", min_length=1, max_length=32)
+    lobby_code: Optional[str] = Field(default=None, max_length=16)
+
+
+class GameClickRequest(BaseModel):
+    game_id: str = Field(..., min_length=1, max_length=100)
+    row: int = Field(..., ge=0, le=39)
+    col: int = Field(..., ge=0, le=39)
+    action: str = Field(default="open", pattern="^(open|flag)$")
 
 
 class RegisterRequest(BaseModel):
@@ -1729,6 +1750,156 @@ async def delete_leaderboard_entry(entry_id: str, nick: str = Depends(require_se
     if not res or int(getattr(res, "deleted_count", 0) or 0) <= 0:
         raise HTTPException(status_code=404, detail="Leaderboard entry not found.")
     return {"ok": True}
+
+
+# --- Server-side Game Generation (for online duels/ranked) ---
+
+@api_router.post("/game/create")
+@limiter.limit("10/minute")
+async def create_game(payload: GameCreateRequest, nick: str = Depends(require_session)):
+    """Create a new game with server-side mine generation for online modes."""
+    if payload.mode not in ["battle_ranked", "battle_simple"]:
+        raise HTTPException(status_code=400, detail="Server-side generation only for online modes")
+    
+    game_id = secrets.token_urlsafe(16)
+    seed = random.randint(0, 2**31 - 1)
+    
+    game_doc = {
+        "game_id": game_id,
+        "nickname": nick,
+        "rows": payload.rows,
+        "cols": payload.cols,
+        "mines": payload.mines,
+        "lives": payload.lives,
+        "mode": payload.mode,
+        "lobby_code": payload.lobby_code,
+        "seed": seed,
+        "mines": [],  # Will be generated on first click
+        "adj": [],  # Will be generated on first click
+        "revealed": [],
+        "flags": [],
+        "started": False,
+        "done": False,
+        "won": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    
+    await db.active_games.insert_one(game_doc)
+    
+    return {
+        "game_id": game_id,
+        "rows": payload.rows,
+        "cols": payload.cols,
+        "mines": payload.mines,
+        "lives": payload.lives,
+        "seed": seed,
+    }
+
+
+@api_router.post("/game/click")
+@limiter.limit("20/second")
+async def game_click(payload: GameClickRequest, nick: str = Depends(require_session)):
+    """Process a game click with server-side validation."""
+    game = await db.active_games.find_one({"game_id": payload.game_id})
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    if game.get("nickname") != nick:
+        raise HTTPException(status_code=403, detail("Not your game"))
+    if game.get("done"):
+        return {"ok": False, "reason": "finished"}
+    
+    rows = game["rows"]
+    cols = game["cols"]
+    mines_count = game["mines"]
+    seed = game["seed"]
+    
+    # Initialize board on first click
+    if not game.get("started"):
+        mines = _place_mines(rows, cols, mines_count, payload.row, payload.col, seed)
+        adj = _adj_counts(rows, cols, mines)
+        await db.active_games.update_one(
+            {"game_id": payload.game_id},
+            {"$set": {"mines": list(mines), "adj": adj, "started": True}}
+        )
+        game["mines"] = mines
+        game["adj"] = adj
+        game["started"] = True
+    else:
+        mines = set(game.get("mines", []))
+        adj = game.get("adj", [])
+    
+    revealed = set(game.get("revealed", []))
+    flags = set(game.get("flags", []))
+    
+    if not (0 <= payload.row < rows and 0 <= payload.col < cols):
+        raise HTTPException(status_code=400, detail("Invalid coordinates"))
+    
+    if (payload.row, payload.col) in revealed or (payload.row, payload.col) in flags:
+        return {"ok": False, "reason": "ignored"}
+    
+    if payload.action == "flag":
+        if (payload.row, payload.col) in flags:
+            flags.remove((payload.row, payload.col))
+        else:
+            flags.add((payload.row, payload.col))
+        await db.active_games.update_one(
+            {"game_id": payload.game_id},
+            {"$set": {"flags": list(flags)}}
+        )
+        return {
+            "ok": True,
+            "action": "flag",
+            "row": payload.row,
+            "col": payload.col,
+            "flagged": (payload.row, payload.col) in flags,
+            "flags_count": len(flags),
+        }
+    
+    # Open cell
+    if (payload.row, payload.col) in mines:
+        revealed.add((payload.row, payload.col))
+        lives = game.get("lives", 3) - 1
+        await db.active_games.update_one(
+            {"game_id": payload.game_id},
+            {"$set": {"revealed": list(revealed), "lives": lives}}
+        )
+        if lives <= 0:
+            await db.active_games.update_one(
+                {"game_id": payload.game_id},
+                {"$set": {"done": True, "won": False}}
+            )
+        return {
+            "ok": True,
+            "action": "open",
+            "row": payload.row,
+            "col": payload.col,
+            "is_mine": True,
+            "lives": lives,
+            "done": lives <= 0,
+            "won": False,
+        }
+    
+    # Safe cell - flood fill
+    changed = _flood_reveal(rows, cols, mines, adj, revealed, (payload.row, payload.col))
+    total_safe = rows * cols - mines_count
+    done = len(revealed) >= total_safe
+    
+    await db.active_games.update_one(
+        {"game_id": payload.game_id},
+        {"$set": {"revealed": list(revealed), "done": done, "won": done}}
+    )
+    
+    return {
+        "ok": True,
+        "action": "open",
+        "changes": [
+            {"row": r, "col": c, "adj": adj[r][c] if adj else 0}
+            for (r, c) in changed
+        ],
+        "safe_revealed": len(revealed),
+        "done": done,
+        "won": done,
+    }
 
 
 class AdminPromoteRequest(BaseModel):

@@ -48,6 +48,22 @@ class DailyClaimRequest(BaseModel):
     quest_id: str = Field(..., min_length=1, max_length=40)
 
 
+class GameCreateRequest(BaseModel):
+    rows: int = Field(..., ge=3, le=40)
+    cols: int = Field(..., ge=3, le=40)
+    mines: int = Field(..., ge=1, le=500)
+    lives: int = Field(default=3, ge=1, le=99)
+    mode: str = Field(default="battle_ranked", min_length=1, max_length=32)
+    lobby_code: Optional[str] = Field(default=None, max_length=16)
+
+
+class GameClickRequest(BaseModel):
+    game_id: str = Field(..., min_length=1, max_length=100)
+    row: int = Field(..., ge=0, le=39)
+    col: int = Field(..., ge=0, le=39)
+    action: str = Field(default="open", pattern="^(open|flag)$")
+
+
 class RegisterRequest(BaseModel):
     nickname: str = Field(..., min_length=3, max_length=20)
     password: str = Field(..., min_length=4, max_length=100)
