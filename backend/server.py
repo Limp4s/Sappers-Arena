@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, Query, HTTPException, Header, Depends, WebSocket, WebSocketDisconnect, Path as FPath, Response
+from fastapi import FastAPI, APIRouter, Query, HTTPException, Header, Depends, WebSocket, WebSocketDisconnect, Path as FPath, Response, Request
 from fastapi.middleware.gzip import GZipMiddleware
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -1027,7 +1027,7 @@ async def check_nickname(nickname: str = Query(..., min_length=1, max_length=30)
 
 @api_router.post("/players/register")
 @limiter.limit("5/minute")
-async def register_player(payload: RegisterRequest, response: Response):
+async def register_player(request: Request, payload: RegisterRequest, response: Response):
     nick = _validate_nick(payload.nickname)
     _validate_password(payload.password)
     if _is_admin_nick(nick) or (nick or "").lower() == ROOT_ADMIN_NICK_LOWER:
@@ -1053,7 +1053,7 @@ async def register_player(payload: RegisterRequest, response: Response):
 
 @api_router.post("/players/login")
 @limiter.limit("10/minute")
-async def login_player(payload: LoginRequest, response: Response):
+async def login_player(request: Request, payload: LoginRequest, response: Response):
     player = await _get_player(payload.nickname)
     if not player:
         raise HTTPException(status_code=401, detail="Invalid credentials.")
@@ -1349,7 +1349,7 @@ async def purchase_item(payload: PurchaseRequest, nick: str = Depends(require_se
 
 @api_router.post("/leaderboard")
 @limiter.limit("10/second")
-async def submit_score(payload: ScoreCreate, nick: str = Depends(require_session)):
+async def submit_score(request: Request, payload: ScoreCreate, nick: str = Depends(require_session)):
     if payload.player_name.lower() != nick.lower():
         raise HTTPException(status_code=403, detail="Player mismatch with session.")
     player = await _get_player(nick)
@@ -1756,7 +1756,7 @@ async def delete_leaderboard_entry(entry_id: str, nick: str = Depends(require_se
 
 @api_router.post("/game/create")
 @limiter.limit("10/minute")
-async def create_game(payload: GameCreateRequest, nick: str = Depends(require_session)):
+async def create_game(request: Request, payload: GameCreateRequest, nick: str = Depends(require_session)):
     """Create a new game with server-side mine generation for online modes."""
     if payload.mode not in ["battle_ranked", "battle_simple"]:
         raise HTTPException(status_code=400, detail="Server-side generation only for online modes")
@@ -1798,7 +1798,7 @@ async def create_game(payload: GameCreateRequest, nick: str = Depends(require_se
 
 @api_router.post("/game/click")
 @limiter.limit("20/second")
-async def game_click(payload: GameClickRequest, nick: str = Depends(require_session)):
+async def game_click(request: Request, payload: GameClickRequest, nick: str = Depends(require_session)):
     """Process a game click with server-side validation."""
     game = await db.active_games.find_one({"game_id": payload.game_id})
     if not game:
