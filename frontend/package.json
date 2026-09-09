@@ -1,7 +1,7 @@
 {
   "name": "sappers-arena",
-  "version": "0.2.0",
-  "description": "Sappers Arena desktop and web client",
+  "version": "0.2.1",
+  "description": "Sappers Arena web client",
   "author": "Sappers Arena Team",
   "repository": {
     "type": "git",
@@ -43,7 +43,6 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
-    "electron-updater": "^6.6.2",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.507.0",
@@ -63,11 +62,7 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test",
-    "desktop:dev": "concurrently \"npm run start\" \"wait-on http://localhost:3000 && cross-env ELECTRON_START_URL=http://localhost:3000 electron electron/main.js\"",
-    "desktop:run": "npm run build && electron .",
-    "desktop:build": "npm run build && electron-builder --win",
-    "desktop:publish": "npm run build && electron-builder --win --publish always"
+    "test": "craco test"
   },
   "browserslist": {
     "production": [
@@ -86,11 +81,7 @@
     "@craco/craco": "^7.1.0",
     "@eslint/js": "9.23.0",
     "autoprefixer": "^10.4.20",
-    "concurrently": "^9.2.1",
-    "cross-env": "^10.0.0",
     "depcheck": "^1.4.7",
-    "electron": "^37.2.6",
-    "electron-builder": "^26.0.12",
     "eslint": "9.23.0",
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
@@ -99,47 +90,7 @@
     "globals": "15.15.0",
     "postcss": "^8.4.49",
     "source-map-explorer": "^2.5.3",
-    "tailwindcss": "^3.4.17",
-    "wait-on": "^8.0.5"
-  },
-  "main": "electron/main.js",
-  "build": {
-    "appId": "com.sappers.arena",
-    "productName": "Sappers Arena",
-    "compression": "maximum",
-    "electronLanguages": [
-      "en-US",
-      "ru"
-    ],
-    "extraMetadata": {
-      "main": "electron/main.js"
-    },
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "build/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "win": {
-      "executableName": "Sappers Arena",
-      "target": [
-        "nsis"
-      ]
-    },
-    "artifactName": "${productName} Setup ${version}.${ext}",
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    },
-    "publish": [
-      {
-        "provider": "github"
-      }
-    ]
+    "tailwindcss": "^3.4.17"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
