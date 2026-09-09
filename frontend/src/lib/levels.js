@@ -67,7 +67,7 @@ const BACKEND_URL = (() => {
     const host = (window?.location?.hostname || '').toLowerCase();
     if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:8000';
   } catch {}
-  return 'https://sappers-arena.onrender.com';
+  return 'https://Sappers-Arena-backend.onrender.com';
 })();
 const API = `${BACKEND_URL}/api`;
 

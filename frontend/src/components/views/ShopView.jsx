@@ -5,7 +5,7 @@ import { MINE_ICONS, CELL_THEMES, FX_EFFECTS, FLAG_SKINS, loadEquipped, saveEqui
 import { purchaseItem, isOfflineMode } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://Sappers-Arena-backend.onrender.com';
 const API = `${BACKEND_URL}/api`;
 
 export default function ShopView({ player, onPlayerUpdate }) {

@@ -18,7 +18,7 @@ services:
         sync: false
 
   - type: web
-    name: sappers-arena-frontend
+    name: sappers-arena
     env: static
     plan: free
     rootDir: frontend
@@ -28,4 +28,4 @@ services:
       - key: NODE_VERSION
         value: 20
       - key: REACT_APP_BACKEND_URL
-        sync: false
+        value: https://Sappers-Arena-backend.onrender.com

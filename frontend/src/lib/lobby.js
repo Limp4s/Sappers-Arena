@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { sessionHeaders, getToken } from './player';
 
-const DEFAULT_RENDER_BACKEND = 'https://sappers-arena.onrender.com';
+const DEFAULT_RENDER_BACKEND = 'https://Sappers-Arena-backend.onrender.com';
 const BACKEND_URL = (() => {
   const fromEnv = process.env.REACT_APP_BACKEND_URL;
   if (fromEnv) return fromEnv;

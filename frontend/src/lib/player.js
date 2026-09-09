@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const DEFAULT_RENDER_BACKEND = 'https://sappers-arena.onrender.com';
+const DEFAULT_RENDER_BACKEND = 'https://Sappers-Arena-backend.onrender.com';
 const BACKEND_URL = (() => {
   const fromEnv = process.env.REACT_APP_BACKEND_URL;
   if (fromEnv) return fromEnv;
@@ -14,18 +14,6 @@ const API = `${BACKEND_URL}/api`;
 
 // Configure axios to include credentials (cookies)
 axios.defaults.withCredentials = true;
-
-const _isElectron = () => {
-  try {
-    // renderer process
-    if (typeof window !== 'undefined' && window?.process?.type === 'renderer') return true;
-    // main process
-    if (typeof process !== 'undefined' && !!process?.versions?.electron) return true;
-    // user agent
-    if (typeof navigator !== 'undefined' && /Electron\//i.test(navigator.userAgent || '')) return true;
-  } catch {}
-  return false;
-};
 
 const _isBackendReachable = async () => {
   try {
@@ -293,15 +281,6 @@ export const registerNick = async (nick, password) => {
   try {
     return (await axios.post(`${API}/players/register`, { nickname: nick, password })).data;
   } catch (error) {
-    // Web build: do not silently go offline. If the backend is reachable but requests fail
-    // (CORS/HTTPS/misconfig), surface the error so the user can fix connectivity.
-    if (!_isElectron()) {
-      if (error?.response) throw error;
-      const reachable = await _isBackendReachable();
-      if (reachable) throw error;
-      throw error;
-    }
-
     // If the server responded with a validation/auth error, do not create an offline account.
     if (error?.response) throw error;
 
@@ -351,88 +330,7 @@ export const loginNick = async (nick, password) => {
   try {
     return (await axios.post(`${API}/players/login`, { nickname: nick, password })).data;
   } catch (error) {
-    // Web build: never auto-switch to offline.
-    if (!_isElectron()) {
-      throw error;
-    }
-
-    // If the server responded (4xx/5xx), do not silently fall back to offline.
-    // Offline fallback is reserved for network/unreachable scenarios.
-    if (error?.response) throw error;
-
-    // If the backend is reachable but the request failed, do NOT fall back to offline.
-    // This usually means CORS / HTTPS / proxy misconfiguration and should be surfaced.
-    const reachable = await _isBackendReachable();
-    if (reachable) throw error;
-
-    const key = _userKey(nick);
-    const users = _loadUsers();
-    const u = users[key];
-
-    // Special-case owner account to always be able to enter offline.
-    const isOwnerLogin = key === OFFLINE_ADMIN_NICK && password === OFFLINE_ADMIN_PASSWORD;
-    if (isOwnerLogin && !u) {
-      const id = 0;
-      _ensurePlayerId(nick);
-      const pwHash = await _hashPassword(OFFLINE_ADMIN_PASSWORD, 'owner');
-      const userDoc = {
-        id,
-        nickname: nick,
-        salt: 'owner',
-        password_hash: pwHash,
-        is_admin: true,
-        coins: 1000,
-        owned_items: [],
-        rating: 1600,
-        created_at: Date.now(),
-      };
-      users[key] = userDoc;
-      _saveUsers(users);
-      return { player: _offlinePlayerDoc(userDoc), token: _makeOfflineToken(nick) };
-    }
-
-    if (!u) {
-      const e = new Error('Invalid credentials.');
-      e.response = { data: { detail: 'Invalid credentials.' } };
-      throw e;
-    }
-
-    // Ensure user has a stable local ID.
-    if (u.id == null) {
-      u.id = key === OFFLINE_ADMIN_NICK ? 0 : _ensurePlayerId(u.nickname);
-      users[key] = u;
-      _saveUsers(users);
-    }
-
-    if (key === OFFLINE_ADMIN_NICK && password === OFFLINE_ADMIN_PASSWORD) {
-      // Ensure owner stays owner in offline storage.
-      if (!u.is_admin) {
-        u.is_admin = true;
-        users[key] = u;
-        _saveUsers(users);
-      }
-      return { player: _offlinePlayerDoc({ ...u, is_admin: true }), token: _makeOfflineToken(nick) };
-    }
-
-    try {
-      const test = await _hashPassword(password, u.salt);
-      if (test !== u.password_hash) {
-        const e = new Error('Invalid credentials.');
-        e.response = { data: { detail: 'Invalid credentials.' } };
-        throw e;
-      }
-    } catch (e) {
-      if (e?.response) throw e;
-      const e2 = new Error('Invalid credentials.');
-      e2.response = { data: { detail: 'Invalid credentials.' } };
-      throw e2;
-    }
-
-    // Never grant admin offline except for the owner callsign.
-    return {
-      player: _offlinePlayerDoc({ ...u, is_admin: isAdminNick(u.nickname) }),
-      token: _makeOfflineToken(nick),
-    };
+    throw error;
   }
 };
 
@@ -558,30 +456,7 @@ export const purchaseItem = async (itemId) => {
   try {
     return (await axios.post(`${API}/shop/purchase`, { item_id: itemId }, { headers: authHeaders() })).data;
   } catch (error) {
-    if (!_isElectron()) throw error;
-    const reachable = await _isBackendReachable();
-    if (reachable) throw error;
-    // Offline: do not block gameplay; keep a minimal local inventory/coins system.
-    const nick = getStoredNickname();
-    const key = _userKey(nick);
-    const users = _loadUsers();
-    let u = users[key];
-    if (!u) {
-      if (!nick || !nick.trim()) {
-        const e = new Error('Not logged in.');
-        e.response = { data: { detail: 'Not logged in.' } };
-        throw e;
-      }
-      u = { nickname: nick.trim(), coins: 0, owned_items: [], rating: 1000 };
-      users[key] = u;
-      _saveUsers(users);
-    }
-    if ((u.owned_items || []).includes(itemId)) return { player: _offlinePlayerDoc(u) };
-    // No catalog/prices offline: just grant it for now.
-    const next = { ...u, owned_items: [...(u.owned_items || []), itemId] };
-    users[key] = next;
-    _saveUsers(users);
-    return { player: _offlinePlayerDoc(next) };
+    throw error;
   }
 };
 
@@ -592,52 +467,7 @@ export const submitScore = async (body) => {
     const payload = (nick && nick.trim()) ? { ...body, player_name: nick.trim() } : body;
     return (await axios.post(`${API}/leaderboard`, payload, { headers: authHeaders() })).data;
   } catch (error) {
-    if (!_isElectron()) throw error;
-    if (error?.response) throw error;
-    const reachable = await _isBackendReachable();
-    if (reachable) throw error;
-    // Offline: keep a minimal local coins system.
-    const _computeCampaignCoins = ({ level_id, lives_remaining, time_seconds, flags, won }) => {
-      if (level_id == null) return 0;
-      const lvl = Number(level_id) || 0;
-      const lvl_win = Math.floor(lvl * 0.6);
-      const lvl_lose = Math.floor(lvl * 0.2);
-      const base_win = won ? (8 + lvl_win + (Number(lives_remaining) || 0) * 3) : 0;
-      const base_lose = !won ? (2 + lvl_lose) : 0;
-      let time_bonus = 0;
-      const ts = Number(time_seconds) || 0;
-      if (won && ts > 0) {
-        const target = Math.max(45, lvl * 6);
-        time_bonus = Math.max(0, Math.floor((target - ts) / 12));
-      }
-      const flag_bonus = Math.min(10, Number(flags) || 0);
-      return Math.min(50, base_win + base_lose + time_bonus + flag_bonus);
-    };
-
-    const _computeCoins = (payload) => {
-      const mode = payload?.mode;
-      if (mode === 'campaign') return _computeCampaignCoins(payload);
-      if (mode === 'battle_ranked') return payload?.won ? 40 + (Number(payload?.lives_remaining) || 0) * 8 : 3;
-      if (mode === 'battle_simple') return payload?.won ? 25 + (Number(payload?.lives_remaining) || 0) * 5 : 2;
-      if (mode === 'lobby') return payload?.won ? 15 + (Number(payload?.lives_remaining) || 0) * 5 : 2;
-      return 0;
-    };
-
-    const coins_awarded = _computeCoins(body);
-
-    try {
-      const nick = getStoredNickname();
-      const key = _userKey(nick);
-      const users = _loadUsers();
-      const u = users[key];
-      if (u) {
-        const next = { ...u, coins: (u.coins ?? 0) + coins_awarded };
-        users[key] = next;
-        _saveUsers(users);
-      }
-    } catch {}
-
-    return { ok: true, coins_awarded, rating_delta: 0 };
+    throw error;
   }
 };
 

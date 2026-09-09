@@ -13,7 +13,7 @@ import DailySection from '../profile/DailySection';
 import SettingsSection from '../profile/SettingsSection';
 import AdminPanel from '../profile/AdminPanel';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://Sappers-Arena-backend.onrender.com';
 const API = `${BACKEND_URL}/api`;
 
 export default function ProfileView({ player, onPlayerUpdate, onLogout }) {

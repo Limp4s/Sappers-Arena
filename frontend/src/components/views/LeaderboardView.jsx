@@ -5,7 +5,7 @@ import { getStoredNickname, adminHeaders, authHeaders, getToken, isAdminNick, is
 import { t, useLang } from '../../lib/i18n';
 import PlayerProfileModal from '../modals/PlayerProfileModal';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://sappers-arena.onrender.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://Sappers-Arena-backend.onrender.com';
 const API = `${BACKEND_URL}/api`;
 
 const SCOPES = [
