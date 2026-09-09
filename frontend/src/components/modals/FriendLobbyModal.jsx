@@ -67,7 +67,13 @@ export default function FriendLobbyModal({ config, onClose, onStartWithLobby, pl
     try {
       const l = await startLobby(lobby.code);
       setLobby(l);
-    } catch (e) { setError(e?.response?.data?.detail || t('lobbyFriend.startFailed')); setBusy(false); }
+      // Start game for host immediately after successful lobby start
+      if (l.status === 'playing') {
+        onStartWithLobby({ ...config, mode: 'lobby', difficulty: 'lobby', label: `LOBBY · ${l.code}`, lobbyCode: l.code, seed: l.seed });
+        onClose();
+      }
+    } catch (e) { setError(e?.response?.data?.detail || t('lobbyFriend.startFailed')); }
+    finally { setBusy(false); }
   };
 
   const copyCode = async () => {
