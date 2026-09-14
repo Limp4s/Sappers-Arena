@@ -2165,6 +2165,109 @@ async def admin_delete_player(nickname: str, nick: str = Depends(require_session
     return {"ok": True, "deleted": target_nick}
 
 
+class AdminResetPasswordRequest(BaseModel):
+    nickname: str = Field(..., min_length=3, max_length=20)
+
+
+def _generate_random_password(length: int = 10) -> str:
+    """Generate a random password with letters and digits."""
+    chars = string.ascii_letters + string.digits
+    return ''.join(random.choices(chars, k=length))
+
+
+def _hash_password_with_salt(password: str, salt: str) -> str:
+    """Hash password with salt using SHA-256."""
+    data = f"{salt}:{password}".encode('utf-8')
+    return hashlib.sha256(data).hexdigest()
+
+
+@api_router.post("/admin/player/reset-password")
+async def admin_reset_password(payload: AdminResetPasswordRequest, nick: str = Depends(require_session)):
+    """Reset player password with random password generation (for admin panel)."""
+    await _require_admin(nick)
+    target = await _get_player(payload.nickname)
+    if not target:
+        raise HTTPException(status_code=404, detail="Player not found.")
+    
+    # Generate random password
+    new_password = _generate_random_password(random.randint(8, 12))
+    
+    # Generate new salt and hash
+    new_salt = secrets.token_hex(16)
+    new_hash = _hash_password_with_salt(new_password, new_salt)
+    
+    # Update in database
+    await db.players.update_one(
+        {"nickname_lower": target["nickname_lower"]},
+        {"$set": {"password_hash": new_hash, "salt": new_salt}}
+    )
+    
+    return {"ok": True, "new_password": new_password}
+
+
+@api_router.get("/admin/stats")
+async def admin_get_stats(nick: str = Depends(require_session)):
+    """Get server statistics for admin panel."""
+    await _require_admin(nick)
+    
+    # Count total players
+    total_players = await db.players.count_documents({})
+    
+    # Count active sessions (approximate online players)
+    active_sessions = await db.sessions.count_documents({
+        "created_at": {"$gte": datetime.now(timezone.utc) - timedelta(minutes=30)}
+    })
+    
+    # Count active lobbies
+    active_lobbies = await db.lobbies.count_documents({"status": "waiting"})
+    
+    return {
+        "online_players": active_sessions,
+        "total_players": total_players,
+        "active_lobbies": active_lobbies
+    }
+
+
+@api_router.get("/admin/lobbies")
+async def admin_get_lobbies(nick: str = Depends(require_session)):
+    """Get all active lobbies for admin panel."""
+    await _require_admin(nick)
+    
+    cursor = db.lobbies.find({"status": "waiting"}, {"_id": 0}).sort("created_at", -1)
+    lobbies = await cursor.to_list(length=100)
+    
+    return {"lobbies": lobbies}
+
+
+@api_router.get("/admin/db-check")
+async def admin_db_check(nick: str = Depends(require_session)):
+    """Check database status for admin panel."""
+    await _require_admin(nick)
+    
+    # Get database stats
+    db_stats = await db.command("dbstats")
+    
+    # Get collection stats
+    players_count = await db.players.count_documents({})
+    sessions_count = await db.sessions.count_documents({})
+    lobbies_count = await db.lobbies.count_documents({})
+    leaderboard_count = await db.leaderboard.count_documents({})
+    
+    # Get database size
+    db_size = db_stats.get("dataSize", "unknown")
+    
+    return {
+        "status": "healthy",
+        "db_size": str(db_size),
+        "collection_stats": {
+            "players": players_count,
+            "sessions": sessions_count,
+            "lobbies": lobbies_count,
+            "leaderboard": leaderboard_count
+        }
+    }
+
+
 @api_router.get("/stats/player")
 async def get_player_stats(name: str = Query(..., min_length=1, max_length=20)):
     cursor = db.leaderboard.find({"player_name": name}, {"_id": 0})

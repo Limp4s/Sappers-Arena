@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Target, Trophy, Crown, ShoppingBag, Swords, Coins, User } from 'lucide-react';
+import { Route, Target, Trophy, Crown, ShoppingBag, Swords, Coins, User, Shield } from 'lucide-react';
 import { t, useLang } from '../../lib/i18n';
 
 const TABS = [
@@ -9,10 +9,15 @@ const TABS = [
   { key: 'shop',        labelKey: 'tabs.shop',        icon: ShoppingBag },
   { key: 'leaderboard', labelKey: 'tabs.leaderboard', icon: Trophy },
   { key: 'profile',     labelKey: 'tabs.profile',     icon: User },
+  { key: 'admin',       labelKey: 'tabs.admin',       icon: Shield, adminOnly: true },
 ];
 
 export default function TabsNav({ current, onChange, player }) {
   useLang();
+  
+  // Filter tabs based on admin rights
+  const visibleTabs = TABS.filter(tab => !tab.adminOnly || player?.isAdmin);
+  
   return (
     <nav className="relative z-10 max-w-[1600px] mx-auto w-full px-4 md:px-6 pt-[calc(env(safe-area-inset-top)+12px)] md:pt-5" data-testid="tabs-nav">
       <div className="md:hidden flex flex-col gap-3 mb-3">
@@ -55,7 +60,7 @@ export default function TabsNav({ current, onChange, player }) {
         </div>
 
         <div className="glass-panel rounded-full p-1 flex gap-1 flex-nowrap overflow-x-auto hide-scrollbar justify-center">
-          {TABS.map((tab) => {
+          {visibleTabs.map((tab) => {
             const Icon = tab.icon;
             const active = current === tab.key;
             return (
@@ -109,7 +114,7 @@ export default function TabsNav({ current, onChange, player }) {
           )}
 
           <div className="glass-panel rounded-full p-1 flex gap-1 flex-nowrap overflow-x-auto hide-scrollbar justify-center md:justify-start md:flex-wrap md:overflow-visible">
-            {TABS.map((tab) => {
+            {visibleTabs.map((tab) => {
               const Icon = tab.icon;
               const active = current === tab.key;
               return (

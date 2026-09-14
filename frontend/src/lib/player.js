@@ -539,6 +539,13 @@ export async function adminResetPlayer(nickname) {
   return res?.data;
 }
 
+export const adminResetPassword = async (nickname) => {
+  const nick = String(nickname || '').trim();
+  if (!nick) throw new Error('Missing nickname');
+  const res = await axios.post(`${API}/admin/player/reset-password`, { nickname: nick }, { headers: authHeaders() });
+  return res?.data;
+}
+
 export const adminDeletePlayer = async (nickname) => {
   const nick = String(nickname || '').trim();
   if (!nick) throw new Error('Missing nickname');

@@ -37,6 +37,14 @@ export const reportProgress = async (code, progress) => (await authedPost(`${API
 export const promoteToAdmin = async (nickname) => (await axios.post(`${API}/admin/promote`, { nickname }, { headers: sessionHeaders() })).data;
 export const demoteAdmin = async (nickname) => (await axios.post(`${API}/admin/demote`, { nickname }, { headers: sessionHeaders() })).data;
 
+// Admin panel functions (all for admin tab)
+export const adminPromotePlayer = async (nickname) => (await axios.post(`${API}/admin/promote`, { nickname }, { headers: sessionHeaders() })).data;
+export const adminDemotePlayer = async (nickname) => (await axios.post(`${API}/admin/demote`, { nickname }, { headers: sessionHeaders() })).data;
+export const adminGetStats = async () => (await axios.get(`${API}/admin/stats`, { headers: sessionHeaders() })).data;
+export const adminGetLobbies = async () => (await axios.get(`${API}/admin/lobbies`, { headers: sessionHeaders() })).data;
+export const adminDbCheck = async () => (await axios.get(`${API}/admin/db-check`, { headers: sessionHeaders() })).data;
+export const adminListPlayers = async ({ limit = 100 } = {}) => (await axios.get(`${API}/admin/players`, { params: { limit }, headers: sessionHeaders() })).data;
+
 // Simple xorshift seeded RNG for deterministic board generation
 export function createSeededRandom(seed) {
   let x = seed >>> 0;

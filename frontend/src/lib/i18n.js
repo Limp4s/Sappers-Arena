@@ -3,7 +3,7 @@ const DICTS = {
   en: {
     appName: 'Sappers Arena',
     tagline: '',
-    tabs: { campaign: 'CAMPAIGN', battles: 'BATTLES', custom: 'CUSTOM', shop: 'SHOP', leaderboard: 'LEADERS', profile: 'PROFILE', friends: 'FRIENDS' },
+    tabs: { campaign: 'CAMPAIGN', battles: 'BATTLES', custom: 'CUSTOM', shop: 'SHOP', leaderboard: 'LEADERS', profile: 'PROFILE', friends: 'FRIENDS', admin: 'ADMIN' },
     common: {
       login: 'ACCESS GRID', register: 'LOCK CALLSIGN', logout: 'LOG OUT · SWITCH ACCOUNT', changeAccount: 'SWITCH ACCOUNT',
       coins: 'COINS', rating: 'ELO', play: 'PLAY', cancel: 'CANCEL', close: 'CLOSE',
@@ -436,7 +436,7 @@ const DICTS = {
   ru: {
     appName: 'Sappers Arena',
     tagline: '',
-    tabs: { campaign: 'КАМПАНИЯ', battles: 'БИТВЫ', custom: 'СВОЯ', shop: 'МАГАЗИН', leaderboard: 'ЛИДЕРЫ', profile: 'ПРОФИЛЬ', friends: 'ДРУЗЬЯ' },
+    tabs: { campaign: 'КАМПАНИЯ', battles: 'БИТВЫ', custom: 'СВОЯ', shop: 'МАГАЗИН', leaderboard: 'ЛИДЕРЫ', profile: 'ПРОФИЛЬ', friends: 'ДРУЗЬЯ', admin: 'АДМИНКА' },
     common: {
       login: 'ВОЙТИ', register: 'РЕГИСТРАЦИЯ', logout: 'ВЫЙТИ · СМЕНИТЬ АККАУНТ', changeAccount: 'СМЕНИТЬ АККАУНТ',
       coins: 'МОНЕТЫ', rating: 'РЕЙТИНГ', play: 'ИГРАТЬ', cancel: 'ОТМЕНА', close: 'ЗАКРЫТЬ',

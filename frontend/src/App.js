@@ -9,6 +9,7 @@ import CustomView from './components/views/CustomView';
 import ShopView from './components/views/ShopView';
 import LeaderboardView from './components/views/LeaderboardView';
 import ProfileView from './components/views/ProfileView';
+import AdminDashboard from './components/views/AdminDashboard';
 const MinesweeperGame = lazy(() => import('./components/game/Minesweeper'));
 const OnlineDuelGame = lazy(() => import('./components/game/OnlineDuelGame'));
 import AchievementBanner from './components/ui/AchievementBanner';
@@ -248,6 +249,7 @@ function Home() {
       {tab === 'shop' && <ShopView player={player} onPlayerUpdate={handlePlayerUpdate} />}
       {tab === 'leaderboard' && <LeaderboardView isAdmin={player.isAdmin} />}
       {tab === 'profile' && <ProfileView player={player} onPlayerUpdate={handlePlayerUpdate} onLogout={handleLogout} />}
+      {tab === 'admin' && player.isAdmin && <AdminDashboard />}
     </div>
   );
 }
