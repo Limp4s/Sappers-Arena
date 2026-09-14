@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { User, LogOut, KeyRound, Trophy, Crown, Check, AlertCircle, Award } from 'lucide-react';
+import { User, LogOut, KeyRound, Trophy, Crown, Check, AlertCircle, Award, Eye, EyeOff } from 'lucide-react';
 import { logout, changePassword, validatePassword, getPlayerId, getToken, isOwnerNick } from '../../lib/player';
 import InventoryModal from '../modals/InventoryModal';
 import PlayerProfileModal from '../modals/PlayerProfileModal';
@@ -201,6 +201,9 @@ function ChangePasswordModal({ onClose }) {
   const [repeatPw, setRepeatPw] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [showOldPw, setShowOldPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showRepeatPw, setShowRepeatPw] = useState(false);
 
   const err = validatePassword(newPw) || (newPw !== repeatPw ? t('profile.passwordsDoNotMatch') : null);
 
@@ -226,15 +229,64 @@ function ChangePasswordModal({ onClose }) {
         <form onSubmit={submit} className="space-y-3">
           <div>
             <label className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display block mb-1.5">{t('profile.oldPassword')}</label>
-            <input type="password" value={oldPw} onChange={(e) => setOldPw(e.target.value)} className="neon-input" maxLength={100} autoFocus data-testid="old-password-input" />
+            <div className="relative">
+              <input 
+                type={showOldPw ? "text" : "password"} 
+                value={oldPw} 
+                onChange={(e) => setOldPw(e.target.value)} 
+                className="neon-input pr-10" 
+                maxLength={100} 
+                autoFocus 
+                data-testid="old-password-input" 
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowOldPw(!showOldPw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+              >
+                {showOldPw ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display block mb-1.5">{t('profile.newPassword')}</label>
-            <input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} className="neon-input" maxLength={100} data-testid="new-password-input" />
+            <div className="relative">
+              <input 
+                type={showNewPw ? "text" : "password"} 
+                value={newPw} 
+                onChange={(e) => setNewPw(e.target.value)} 
+                className="neon-input pr-10" 
+                maxLength={100} 
+                data-testid="new-password-input" 
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowNewPw(!showNewPw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+              >
+                {showNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display block mb-1.5">{t('profile.repeatNewPassword')}</label>
-            <input type="password" value={repeatPw} onChange={(e) => setRepeatPw(e.target.value)} className="neon-input" maxLength={100} data-testid="repeat-password-input" />
+            <div className="relative">
+              <input 
+                type={showRepeatPw ? "text" : "password"} 
+                value={repeatPw} 
+                onChange={(e) => setRepeatPw(e.target.value)} 
+                className="neon-input pr-10" 
+                maxLength={100} 
+                data-testid="repeat-password-input" 
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowRepeatPw(!showRepeatPw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+              >
+                {showRepeatPw ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
           <div className="min-h-[20px] text-[11px] font-mono">
             {newPw && err && <div className="neon-coral flex items-center gap-1.5"><AlertCircle size={11} />{err}</div>}

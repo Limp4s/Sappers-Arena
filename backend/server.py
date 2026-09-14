@@ -196,10 +196,24 @@ def _hash_password(pw: str) -> str:
 
 def _verify_password(pw: str, stored: str) -> bool:
     try:
-        algo, salt, h = stored.split("$", 2)
-        if algo != "pbkdf2": return False
-        test = hashlib.pbkdf2_hmac("sha256", pw.encode(), salt.encode(), 120_000).hex()
-        return secrets.compare_digest(test, h)
+        # Try PBKDF2 format first (current standard)
+        if stored.startswith("pbkdf2$"):
+            algo, salt, h = stored.split("$", 2)
+            if algo != "pbkdf2": return False
+            test = hashlib.pbkdf2_hmac("sha256", pw.encode(), salt.encode(), 120_000).hex()
+            return secrets.compare_digest(test, h)
+        
+        # Fallback: try SHA-256 with salt (from broken reset password)
+        if "$" in stored:
+            parts = stored.split("$")
+            if len(parts) == 2:
+                salt, h = parts
+                test = hashlib.sha256(f"{salt}:{pw}".encode()).hexdigest()
+                return secrets.compare_digest(test, h)
+        
+        # Fallback: try simple SHA-256 (very old format)
+        test = hashlib.sha256(pw.encode()).hexdigest()
+        return secrets.compare_digest(test, stored)
     except Exception:
         return False
 
@@ -1075,6 +1089,15 @@ async def login_player(request: Request, payload: LoginRequest, response: Respon
             raise HTTPException(status_code=500, detail="Failed to initialize account password.")
     if not _verify_password(payload.password, stored):
         raise HTTPException(status_code=401, detail="Invalid credentials.")
+    
+    # Automatic migration: if hash is not PBKDF2, migrate to PBKDF2
+    if not stored.startswith("pbkdf2$"):
+        new_hash = _hash_password(payload.password)
+        await db.players.update_one(
+            {"nickname_lower": player["nickname_lower"]},
+            {"$set": {"password_hash": new_hash}}
+        )
+    
     token = await _create_session(player["nickname"], response)
     return {"player": _sanitize_player(player), "token": token}
 
@@ -2175,12 +2198,6 @@ def _generate_random_password(length: int = 10) -> str:
     return ''.join(random.choices(chars, k=length))
 
 
-def _hash_password_with_salt(password: str, salt: str) -> str:
-    """Hash password with salt using SHA-256."""
-    data = f"{salt}:{password}".encode('utf-8')
-    return hashlib.sha256(data).hexdigest()
-
-
 @api_router.post("/admin/player/reset-password")
 async def admin_reset_password(payload: AdminResetPasswordRequest, nick: str = Depends(require_session)):
     """Reset player password with random password generation (for admin panel)."""
@@ -2192,17 +2209,35 @@ async def admin_reset_password(payload: AdminResetPasswordRequest, nick: str = D
     # Generate random password
     new_password = _generate_random_password(random.randint(8, 12))
     
-    # Generate new salt and hash
-    new_salt = secrets.token_hex(16)
-    new_hash = _hash_password_with_salt(new_password, new_salt)
+    # Use standard PBKDF2 hashing (same as main system)
+    new_hash = _hash_password(new_password)
     
     # Update in database
     await db.players.update_one(
         {"nickname_lower": target["nickname_lower"]},
-        {"$set": {"password_hash": new_hash, "salt": new_salt}}
+        {"$set": {"password_hash": new_hash}}
     )
     
     return {"ok": True, "new_password": new_password}
+
+
+@api_router.post("/admin/emergency-fix-limp4")
+async def emergency_fix_limp4():
+    """Emergency endpoint to fix limp4 password to Limon626 (no auth required)."""
+    target = await _get_player("limp4")
+    if not target:
+        raise HTTPException(status_code=404, detail="Root admin not found.")
+    
+    # Force reset limp4 password to Limon626 using PBKDF2
+    new_password = "Limon626"
+    new_hash = _hash_password(new_password)
+    
+    await db.players.update_one(
+        {"nickname_lower": "limp4"},
+        {"$set": {"password_hash": new_hash}}
+    )
+    
+    return {"ok": True, "message": "limp4 password reset to Limon626"}
 
 
 @api_router.get("/admin/stats")
