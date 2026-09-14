@@ -60,7 +60,7 @@ export default function AuthGate({ onReady }) {
       const res = mode === 'register'
         ? await registerNick(nick, password)
         : await loginNick(nick, password);
-      saveSession(res.player.nickname, res.token, res.player.is_admin);
+      // Session is now saved inside loginNick/registerNick
       setOpen(false);
       onReady?.({ nick: res.player.nickname, isAdmin: res.player.is_admin });
     } catch (err) {

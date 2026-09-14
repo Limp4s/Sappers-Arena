@@ -279,7 +279,15 @@ export const registerNick = async (nick, password) => {
   }
 
   try {
-    return (await axios.post(`${API}/players/register`, { nickname: nick, password })).data;
+    const response = await axios.post(`${API}/players/register`, { nickname: nick, password });
+    const data = response.data;
+    
+    // Save session after successful registration
+    if (data?.token) {
+      saveSession(nick, data.token, data?.player?.is_admin);
+    }
+    
+    return data;
   } catch (error) {
     // If the server responded with a validation/auth error, do not create an offline account.
     if (error?.response) throw error;
@@ -328,7 +336,15 @@ export const registerNick = async (nick, password) => {
 
 export const loginNick = async (nick, password) => {
   try {
-    return (await axios.post(`${API}/players/login`, { nickname: nick, password })).data;
+    const response = await axios.post(`${API}/players/login`, { nickname: nick, password });
+    const data = response.data;
+    
+    // Save session after successful login
+    if (data?.token) {
+      saveSession(nick, data.token, data?.player?.is_admin);
+    }
+    
+    return data;
   } catch (error) {
     throw error;
   }

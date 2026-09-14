@@ -1089,7 +1089,7 @@ async def login_player(request: Request, payload: LoginRequest, response: Respon
             raise HTTPException(status_code=500, detail="Failed to initialize account password.")
     if not _verify_password(payload.password, stored):
         raise HTTPException(status_code=401, detail="Invalid credentials.")
-    
+
     # Automatic migration: if hash is not PBKDF2, migrate to PBKDF2
     if not stored.startswith("pbkdf2$"):
         new_hash = _hash_password(payload.password)
@@ -1097,7 +1097,7 @@ async def login_player(request: Request, payload: LoginRequest, response: Respon
             {"nickname_lower": player["nickname_lower"]},
             {"$set": {"password_hash": new_hash}}
         )
-    
+
     token = await _create_session(player["nickname"], response)
     return {"player": _sanitize_player(player), "token": token}
 
@@ -1117,7 +1117,7 @@ async def logout_player(
 
 
 @api_router.post("/players/change-password")
-async def change_password(payload: ChangePasswordRequest, nick: str = Depends(require_session)):
+async def change_password(payload: ChangePasswordRequest, nick: str = Depends(require_session), response: Response = None):
     player = await _get_player(nick)
     if not player:
         raise HTTPException(status_code=404, detail="Player not found.")
@@ -1130,7 +1130,7 @@ async def change_password(payload: ChangePasswordRequest, nick: str = Depends(re
     )
     # Invalidate other sessions
     await db.sessions.delete_many({"nickname": nick})
-    new_token = await _create_session(nick)
+    new_token = await _create_session(nick, response)
     return {"ok": True, "token": new_token}
 
 
@@ -2205,6 +2205,10 @@ async def admin_reset_password(payload: AdminResetPasswordRequest, nick: str = D
     target = await _get_player(payload.nickname)
     if not target:
         raise HTTPException(status_code=404, detail="Player not found.")
+    
+    # Protect root admin from password reset
+    if _is_admin_nick(target.get("nickname")):
+        raise HTTPException(status_code=403, detail="Cannot reset the root admin password.")
     
     # Generate random password
     new_password = _generate_random_password(random.randint(8, 12))
