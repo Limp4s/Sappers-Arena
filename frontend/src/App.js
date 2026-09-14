@@ -181,7 +181,6 @@ function Home() {
     return (
       <div className="modal-backdrop" data-testid="terms-modal">
         <div className="glass-panel slide-up rounded-2xl p-8 max-w-md w-[92%] relative overflow-hidden">
-          <div className="scanline" />
           <h2 className="font-display text-2xl font-black tracking-tight neon-cyan mb-3">USER AGREEMENT</h2>
           <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed bg-black/20 border border-white/10 rounded-lg p-4 max-h-[55vh] overflow-auto">{PRIVACY_TEXT}</pre>
           <button
@@ -298,7 +297,6 @@ function OnboardingModal({ step, onBack, onNext, onSkip, onDone }) {
   return (
     <div className="modal-backdrop" data-testid="onboarding-modal">
       <div className="glass-panel slide-up rounded-2xl p-7 max-w-md w-[92%] relative overflow-hidden">
-        <div className="scanline" />
         <div className="text-[10px] tracking-[0.3em] uppercase text-slate-400 font-display mb-2">// {t('onboarding.label')}</div>
         <h2 className="font-display text-xl md:text-2xl font-black tracking-tight neon-cyan mb-3 flex items-center gap-2">
           {s.icon} {s.title}

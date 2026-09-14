@@ -75,7 +75,6 @@ export default function AuthGate({ onReady }) {
   return (
     <div className="modal-backdrop" data-testid="auth-gate">
       <div className="glass-panel slide-up rounded-2xl p-8 max-w-md w-[92%] relative overflow-hidden">
-        <div className="scanline" />
         <div className="flex items-center gap-3 mb-2">
           <ShieldCheck size={26} className="neon-cyan" />
           <h2 className="font-display text-2xl font-black tracking-tight neon-cyan">
