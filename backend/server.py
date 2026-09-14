@@ -296,6 +296,7 @@ def _sanitize_player(doc: dict) -> dict:
     doc.setdefault("coins", STARTER_COINS)
     doc.setdefault("owned_items", [])
     doc.setdefault("rating", 500)
+    doc.setdefault("onboarding_done", False)
     try:
         doc["rating"] = max(0, int(doc.get("rating", 500) or 500))
     except Exception:
@@ -1059,6 +1060,7 @@ async def register_player(request: Request, payload: RegisterRequest, response: 
         "owned_items": [],
         "rating": 500,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "onboarding_done": False,
     }
     await db.players.insert_one(doc)
     token = await _create_session(nick, response)
@@ -1113,6 +1115,16 @@ async def logout_player(
         await db.sessions.delete_one({"token": token})
     if response:
         response.delete_cookie(key="session_token")
+    return {"ok": True}
+
+
+@api_router.post("/players/onboarding-done")
+async def mark_onboarding_done(nick: str = Depends(require_session)):
+    """Mark onboarding as done for the current player."""
+    await db.players.update_one(
+        {"nickname_lower": nick.lower()},
+        {"$set": {"onboarding_done": True}}
+    )
     return {"ok": True}
 
 

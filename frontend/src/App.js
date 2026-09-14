@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, Suspense, lazy } from 'react';
+import axios from 'axios';
 import "@/App.css";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { Heart, Flag, Swords, Sparkles, WifiOff } from 'lucide-react';
@@ -14,12 +15,23 @@ const MinesweeperGame = lazy(() => import('./components/game/Minesweeper'));
 const OnlineDuelGame = lazy(() => import('./components/game/OnlineDuelGame'));
 import AchievementBanner from './components/ui/AchievementBanner';
 import AuthGate from './components/auth/NicknameGate';
-import { getStoredNickname, isAuthed, isAdmin as getIsAdmin, isAdminNick, fetchMe, getPlayerId, setPlayerId, isOfflineMode } from "@/lib/player";
+import { getStoredNickname, isAuthed, isAdmin as getIsAdmin, isAdminNick, fetchMe, getPlayerId, setPlayerId, isOfflineMode, authHeaders } from "@/lib/player";
 import { t } from '@/lib/i18n';
+
+const DEFAULT_RENDER_BACKEND = 'https://Sappers-Arena-backend.onrender.com';
+const BACKEND_URL = (() => {
+  const fromEnv = process.env.REACT_APP_BACKEND_URL;
+  if (fromEnv) return fromEnv;
+  try {
+    const host = (window?.location?.hostname || '').toLowerCase();
+    if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:8000';
+  } catch {}
+  return DEFAULT_RENDER_BACKEND;
+})();
+const API = `${BACKEND_URL}/api`;
 
 const TERMS_KEY = 'mg_terms_accepted_v1';
 const PRIVACY_KEY = 'mg_privacy_accepted_v1';
-const ONBOARDING_KEY = 'mg_onboarding_done_v1';
 const PRIVACY_TEXT = `Privacy Policy
 Last updated: ${new Date().toISOString().slice(0, 10)}
 
@@ -63,23 +75,13 @@ The game is not intended for children under 13. If you believe a child has provi
 Support: limp976@gmail.com`;
 
 function Home() {
-  const accountKey = useCallback((base) => {
-    try {
-      const nick = (getStoredNickname?.() || '').trim().toLowerCase();
-      if (nick) return `${base}:${nick}`;
-    } catch {}
-    return base;
-  }, []);
-
   const [privacyAccepted, setPrivacyAccepted] = useState(() => {
-    try { return localStorage.getItem(accountKey(PRIVACY_KEY)) === '1'; } catch { return false; }
+    try { return localStorage.getItem(PRIVACY_KEY) === '1'; } catch { return false; }
   });
   const [termsAccepted, setTermsAccepted] = useState(() => {
-    try { return localStorage.getItem(accountKey(TERMS_KEY)) === '1'; } catch { return false; }
+    try { return localStorage.getItem(TERMS_KEY) === '1'; } catch { return false; }
   });
-  const [onboardingDone, setOnboardingDone] = useState(() => {
-    try { return localStorage.getItem(accountKey(ONBOARDING_KEY)) === '1'; } catch { return false; }
-  });
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [tab, setTab] = useState('campaign');
   const [gameConfig, setGameConfig] = useState(null);
@@ -108,6 +110,10 @@ function Home() {
         try { setPlayerId(data.nickname, data.player_num); } catch {}
       }
       setPlayer((p) => ({ ...p, ...data, nick: data.nickname, isAdmin: data.is_admin }));
+      // Update onboarding status from server
+      if (data?.onboarding_done !== undefined) {
+        setOnboardingDone(data.onboarding_done);
+      }
     } catch {}
   }, [player?.nick]);
 
@@ -155,18 +161,21 @@ function Home() {
   }, []);
 
   const showOnboarding = !!player && !gameConfig && !onboardingDone;
-  const finishOnboarding = useCallback(() => {
-    try { localStorage.setItem(accountKey(ONBOARDING_KEY), '1'); } catch {}
+  const finishOnboarding = useCallback(async () => {
+    try {
+      await axios.post(`${API}/players/onboarding-done`, null, { headers: authHeaders() });
+    } catch (e) {
+      console.error('Failed to mark onboarding done:', e);
+    }
     setOnboardingDone(true);
     setOnboardingStep(0);
-  }, [accountKey]);
+  }, []);
 
   useEffect(() => {
-    try { setPrivacyAccepted(localStorage.getItem(accountKey(PRIVACY_KEY)) === '1'); } catch { setPrivacyAccepted(false); }
-    try { setTermsAccepted(localStorage.getItem(accountKey(TERMS_KEY)) === '1'); } catch { setTermsAccepted(false); }
-    try { setOnboardingDone(localStorage.getItem(accountKey(ONBOARDING_KEY)) === '1'); } catch { setOnboardingDone(false); }
+    try { setPrivacyAccepted(localStorage.getItem(PRIVACY_KEY) === '1'); } catch { setPrivacyAccepted(false); }
+    try { setTermsAccepted(localStorage.getItem(TERMS_KEY) === '1'); } catch { setTermsAccepted(false); }
     setOnboardingStep(0);
-  }, [player?.nick, accountKey]);
+  }, [player?.nick]);
 
   if (!termsAccepted) {
     return (
@@ -178,8 +187,8 @@ function Home() {
           <button
             className="neon-btn w-full py-3 mt-4"
             onClick={() => {
-              localStorage.setItem(accountKey(TERMS_KEY), '1');
-              localStorage.setItem(accountKey(PRIVACY_KEY), '1');
+              localStorage.setItem(TERMS_KEY, '1');
+              localStorage.setItem(PRIVACY_KEY, '1');
               setTermsAccepted(true);
               setPrivacyAccepted(true);
             }}
