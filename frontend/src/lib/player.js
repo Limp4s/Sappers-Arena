@@ -341,48 +341,17 @@ export const logout = async () => {
 
 export const changePassword = async (oldPw, newPw) => {
   try {
-    return (await axios.post(`${API}/players/change-password`, { old_password: oldPw, new_password: newPw }, { headers: authHeaders() })).data;
-  } catch {
-    const nick = getStoredNickname();
-    const key = _userKey(nick);
-    const users = _loadUsers();
-    const u = users[key];
-    if (!u) {
-      const e = new Error('Not logged in.');
-      e.response = { data: { detail: 'Not logged in.' } };
-      throw e;
+    const response = await axios.post(`${API}/players/change-password`, { old_password: oldPw, new_password: newPw }, { headers: authHeaders() });
+    
+    // If backend returns a new token, save it
+    if (response.data?.token) {
+      saveSession(getStoredNickname(), response.data.token);
     }
-    const errPw = validatePassword(newPw);
-    if (errPw) {
-      const e = new Error(errPw);
-      e.response = { data: { detail: errPw } };
-      throw e;
-    }
-
-    // Owner account: allow changing only if the old password matches the offline owner password.
-    if (key === OFFLINE_ADMIN_NICK) {
-      if (oldPw !== OFFLINE_ADMIN_PASSWORD) {
-        const e = new Error('Invalid old password.');
-        e.response = { data: { detail: 'Invalid old password.' } };
-        throw e;
-      }
-      const e = new Error('Owner password is fixed in offline mode.');
-      e.response = { data: { detail: 'Owner password is fixed in offline mode.' } };
-      throw e;
-    }
-
-    const test = await _hashPassword(oldPw, u.salt);
-    if (test !== u.password_hash) {
-      const e = new Error('Invalid old password.');
-      e.response = { data: { detail: 'Invalid old password.' } };
-      throw e;
-    }
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    const saltHex = _toHex(salt);
-    const pwHash = await _hashPassword(newPw, saltHex);
-    users[key] = { ...u, salt: saltHex, password_hash: pwHash };
-    _saveUsers(users);
-    return { ok: true };
+    
+    return response.data;
+  } catch (error) {
+    // Re-throw the API error so the UI can show the real message
+    throw error;
   }
 };
 

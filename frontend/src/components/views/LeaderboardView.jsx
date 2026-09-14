@@ -49,6 +49,10 @@ export default function LeaderboardView() {
   const [isNarrow, setIsNarrow] = useState(() => {
     try { return (window?.innerWidth || 9999) < 640; } catch { return false; }
   });
+  const [isAdmin, setIsAdmin] = useState(() => {
+    const nick = getStoredNickname();
+    return isAdminNick?.(nick) || isOwnerNick?.(nick) || false;
+  });
   useLang();
 
   useEffect(() => {
@@ -231,11 +235,6 @@ export default function LeaderboardView() {
           <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight neon-cyan mt-1 flex items-center gap-3">
             <Trophy size={26} className="neon-gold" />
             {t('leaderboard.title')}
-            {isAdmin && (
-              <span className="flex items-center gap-1 text-[11px] neon-gold font-display tracking-[0.25em] bg-[#FFD700]/10 border border-[#FFD700]/50 px-2 py-0.5 rounded" data-testid="admin-badge">
-                <Crown size={11} className="neon-gold" /> ADMIN
-              </span>
-            )}
           </h2>
         </div>
 
