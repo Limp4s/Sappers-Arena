@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyRound, Package, Volume2, UserPlus, LogOut } from 'lucide-react';
+import { KeyRound, Package, Volume2, LogOut } from 'lucide-react';
 import { getSfxVolume, setSfxVolume, sfx } from '../../lib/sounds';
 import { LANGUAGES, setLang, t, useLang } from '../../lib/i18n';
 
@@ -9,8 +9,6 @@ export default function SettingsSection({
   setShowInventory, 
   showChangePw, 
   setShowChangePw, 
-  showPromote, 
-  setShowPromote, 
   handleLogout 
 }) {
   const [lang] = useLang();
@@ -70,13 +68,6 @@ export default function SettingsSection({
         <KeyRound size={14} /> {t('profile.changePassword')}
       </button>
 
-      {player?.isAdmin && (
-        <button onClick={() => setShowPromote(true)} className="neon-btn w-full flex items-center justify-center gap-2 py-3"
-          style={{ borderColor: '#FFD700', color: '#FFD700' }}
-          data-testid="open-promote-btn">
-          <UserPlus size={14} /> {t('admin.promote')}
-        </button>
-      )}
       <button onClick={handleLogout} className="neon-btn neon-btn-coral w-full flex items-center justify-center gap-2 py-3" data-testid="logout-btn">
         <LogOut size={14} /> {t('common.changeAccount')}
       </button>

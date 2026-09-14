@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { Trophy, Clock, User, Search, Trash2, Crown, Shield, Sparkles } from 'lucide-react';
-import { getStoredNickname, adminHeaders, authHeaders, getToken, isAdminNick, isOwnerNick } from '../../lib/player';
+import { getStoredNickname, authHeaders, getToken, isAdminNick, isOwnerNick } from '../../lib/player';
 import { t, useLang } from '../../lib/i18n';
 import PlayerProfileModal from '../modals/PlayerProfileModal';
 
@@ -34,7 +34,7 @@ const setCache = (key, data) => {
   } catch {}
 };
 
-export default function LeaderboardView({ isAdmin = false }) {
+export default function LeaderboardView() {
   const [scope, setScope] = useState('campaign');
   const [entries, setEntries] = useState([]);
   const [recent, setRecent] = useState([]);
@@ -172,33 +172,6 @@ export default function LeaderboardView({ isAdmin = false }) {
     });
   }, [ensureServer, fetchLeaderboard, fetchRecent, fetchRanked, scope]);
 
-  const handleDelete = async (id) => {
-    if (!isAdmin) return;
-    if (!id) {
-      alert(t('leaderboard.deleteFailed'));
-      return;
-    }
-    if (!window.confirm(t('leaderboard.deleteConfirm'))) return;
-    try {
-      await axios.delete(`${API}/leaderboard/${id}`, { headers: adminHeaders() });
-      await fetchLeaderboard(scope);
-      await fetchRecent();
-    } catch (e) { alert(`${t('leaderboard.deleteFailed')}: ` + (e?.response?.data?.detail || e.message)); }
-  };
-
-  const hideRankedPlayer = async (nickname) => {
-    if (!isAdmin) return;
-    if (!nickname) return;
-    if (!window.confirm(t('leaderboard.hideRankedConfirm', { nickname }))) return;
-    try {
-      await axios.post(`${API}/admin/ranked/hide`, { nickname }, { headers: adminHeaders() });
-      await fetchLeaderboard(scope);
-      await fetchRanked();
-    } catch (e) {
-      alert(`${t('leaderboard.hideFailed')}: ` + (e?.response?.data?.detail || e.message));
-    }
-  };
-
   const leagueForRating = (rating) => {
     const r = Number(rating || 0);
     if (r < 1000) return 'wood';
@@ -235,10 +208,10 @@ export default function LeaderboardView({ isAdmin = false }) {
 
   const showRankedPlayersTable = scope === 'battle_ranked';
   const showLevelCol = scope === 'campaign' && !showRankedPlayersTable;
-  const showAdminCol = isAdmin;
   const showLeagueCol = showRankedPlayersTable;
   const showLevelColEffective = showLevelCol;
   const showLivesCol = showLevelCol;
+  const showAdminCol = false;
 
   const rowPad = isNarrow ? 'px-2 py-1.5' : 'px-3 py-2';
   const rowText = isNarrow ? 'text-[10px]' : 'text-[12px]';
@@ -246,16 +219,10 @@ export default function LeaderboardView({ isAdmin = false }) {
   const rankIconSizeClass = isNarrow ? 'w-7 h-7' : 'w-10 h-10';
 
   const cols = showRankedPlayersTable
-    ? (isNarrow
-      ? (showAdminCol ? '20px 1fr 44px 56px 20px' : '20px 1fr 44px 56px')
-      : (showAdminCol ? '28px 1fr 72px 80px 26px' : '28px 1fr 72px 80px'))
+    ? (isNarrow ? '20px 1fr 44px 56px' : '28px 1fr 72px 80px')
     : (isNarrow
-      ? (showAdminCol
-        ? (showLevelColEffective ? '20px 1fr 34px 50px 40px 44px 20px' : '20px 1fr 50px 44px 20px')
-        : (showLevelColEffective ? '20px 1fr 34px 50px 40px 44px' : '20px 1fr 50px 44px'))
-      : (showAdminCol
-        ? (showLevelColEffective ? '28px 1fr 50px 70px 50px 56px 26px' : '28px 1fr 70px 56px 26px')
-        : (showLevelColEffective ? '28px 1fr 50px 70px 50px 56px' : '28px 1fr 70px 56px')));
+      ? (showLevelColEffective ? '20px 1fr 34px 50px 40px 44px 20px' : '20px 1fr 50px 44px 20px')
+      : (showLevelColEffective ? '28px 1fr 50px 70px 50px 56px' : '28px 1fr 70px 56px'));
 
   return (
     <div className="max-w-[1600px] mx-auto w-full px-4 md:px-6 pb-10" data-testid="leaderboard-view">
@@ -311,7 +278,6 @@ export default function LeaderboardView({ isAdmin = false }) {
                 <>
                   {showLeagueCol && <div className="text-right">{t('leaderboard.rank')}</div>}
                   <div className="text-right">{t('common.rating')}</div>
-                  {showAdminCol && <div />}
                 </>
               ) : (
                 <>
@@ -319,7 +285,6 @@ export default function LeaderboardView({ isAdmin = false }) {
                   <div className="text-right">{t('leaderboard.score')}</div>
                   {showLivesCol && <div className="text-right">{t('leaderboard.lives')}</div>}
                   <div className="text-right">{t('leaderboard.time')}</div>
-                  {showAdminCol && <div />}
                 </>
               )}
             </div>
@@ -357,14 +322,7 @@ export default function LeaderboardView({ isAdmin = false }) {
                       <div className={`text-right text-slate-300 font-display ${isNarrow ? 'text-[9px]' : 'text-[10px]'} tracking-[0.2em] uppercase`}>{String(league || '').replace('top500', 'top500')}</div>
                     )}
                     <div className="text-right neon-gold">{rating}</div>
-                    {showAdminCol && (
-                      <button
-                        onClick={() => hideRankedPlayer(name)}
-                        className="text-slate-600 hover:text-[#FF2A6D] transition-colors justify-self-end"
-                        title="Hide player"
-                        data-testid={`admin-hide-ranked-${i}`}
-                      ><Trash2 size={isNarrow ? 12 : 13} /></button>
-                    )}
+
                   </div>
                 );
               }
@@ -399,12 +357,6 @@ export default function LeaderboardView({ isAdmin = false }) {
                     </div>
                   )}
                   <div className="text-right text-slate-400">{String(e.time_seconds).padStart(3, '0')}s</div>
-                  {showAdminCol && (
-                    <button onClick={() => handleDelete(e.id)}
-                      className="text-slate-600 hover:text-[#FF2A6D] transition-colors justify-self-end"
-                      title="Delete entry" data-testid={`admin-delete-${i}`}
-                    ><Trash2 size={isNarrow ? 12 : 13} /></button>
-                  )}
                 </div>
               );
             })}
@@ -441,37 +393,6 @@ export default function LeaderboardView({ isAdmin = false }) {
               ))}
             </div>
           </div>
-
-          {isAdmin && (
-            <div className="glass-panel rounded-xl p-5" data-testid="player-stats-card">
-              <div className="flex items-center gap-2 mb-3">
-                <Shield size={14} className="neon-gold" />
-                <h3 className="font-display text-xs font-bold tracking-[0.25em] uppercase">{t('admin.panelTitle')}</h3>
-              </div>
-              <div className="flex gap-2 mb-3">
-                <div className="relative flex-1">
-                  <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                  <input className="neon-input pl-9" placeholder={t('leaderboard.callsignPlaceholder')} value={nameQuery}
-                    onChange={(e) => setNameQuery(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') fetchStats(nameQuery); }}
-                    data-testid="stats-name-input" maxLength={20} />
-                </div>
-                <button onClick={() => fetchStats(nameQuery)} className="neon-btn px-3 py-2 text-[10px]" data-testid="stats-fetch-btn">{t('leaderboard.scan')}</button>
-              </div>
-              {statsLoading && <div className="text-slate-500 text-xs text-center py-4">{t('leaderboard.scanning')}</div>}
-              {!statsLoading && stats && (
-                <div className="space-y-2">
-                  <StatLine label={t('stats.runs')} value={stats.total_runs} color="cyan" />
-                  <StatLine label={t('stats.wins')} value={stats.wins} color="lime" />
-                  <StatLine label={t('stats.losses')} value={stats.losses} color="coral" />
-                  <StatLine label={t('stats.winRate')} value={`${(stats.win_rate * 100).toFixed(1)}%`} color="gold" />
-                  <StatLine label={t('stats.bestScore')} value={(typeof stats.best_score === 'number') ? stats.best_score.toLocaleString() : '—'} color="cyan" />
-                  <StatLine label={t('stats.bestTime')} value={stats.best_time ? `${stats.best_time}s` : '—'} color="gold" />
-                </div>
-              )}
-              {!statsLoading && !stats && <div className="text-slate-500 text-xs text-center py-4">{t('leaderboard.enterCallsignHint')}</div>}
-            </div>
-          )}
 
         </aside>
       </div>

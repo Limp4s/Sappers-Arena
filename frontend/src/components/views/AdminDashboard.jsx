@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Activity, Database, Settings, Search, Key, Trash2, Shield, ShieldOff, RotateCcw, Copy, Check, X, Loader2 } from 'lucide-react';
-import { adminResetPassword, adminResetPlayer, adminDeletePlayer } from '../../lib/player';
+import { adminResetPassword, adminResetPlayer, adminDeletePlayer, isOwnerNick } from '../../lib/player';
 import { adminPromotePlayer, adminDemotePlayer, adminGetStats, adminGetLobbies, adminDbCheck, adminListPlayers } from '../../lib/lobby';
 import { t, useLang } from '../../lib/i18n';
+
+const ROOT_ADMIN = 'limp4';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('players');
@@ -79,6 +81,10 @@ export default function AdminDashboard() {
 
   // Player actions
   const resetPlayerPassword = async (nickname) => {
+    if (isOwnerNick?.(nickname) || String(nickname).toLowerCase() === ROOT_ADMIN.toLowerCase()) {
+      setError('Cannot reset root admin password');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -93,6 +99,10 @@ export default function AdminDashboard() {
   };
 
   const resetPlayerProgress = async (nickname) => {
+    if (isOwnerNick?.(nickname) || String(nickname).toLowerCase() === ROOT_ADMIN.toLowerCase()) {
+      setError('Cannot reset root admin progress');
+      return;
+    }
     if (!confirm(`Reset progress for ${nickname}?`)) return;
     setLoading(true);
     try {
@@ -107,6 +117,10 @@ export default function AdminDashboard() {
   };
 
   const deletePlayer = async (nickname) => {
+    if (isOwnerNick?.(nickname) || String(nickname).toLowerCase() === ROOT_ADMIN.toLowerCase()) {
+      setError('Cannot delete root admin');
+      return;
+    }
     if (!confirm(`Delete player ${nickname}? This cannot be undone.`)) return;
     setLoading(true);
     try {
@@ -134,6 +148,10 @@ export default function AdminDashboard() {
   };
 
   const demotePlayer = async (nickname) => {
+    if (isOwnerNick?.(nickname) || String(nickname).toLowerCase() === ROOT_ADMIN.toLowerCase()) {
+      setError('Cannot demote root admin');
+      return;
+    }
     setLoading(true);
     try {
       await adminDemotePlayer(nickname);
@@ -237,28 +255,32 @@ export default function AdminDashboard() {
                       <div className="flex gap-1">
                         <button
                           onClick={() => resetPlayerPassword(player.nickname)}
-                          className="p-2 hover:bg-white/10 rounded text-slate-400 hover:text-[#00E5FF]"
+                          disabled={isOwnerNick?.(player.nickname) || String(player.nickname).toLowerCase() === ROOT_ADMIN.toLowerCase()}
+                          className="p-2 hover:bg-white/10 rounded text-slate-400 hover:text-[#00E5FF] disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Сбросить пароль"
                         >
                           <Key size={16} />
                         </button>
                         <button
                           onClick={() => resetPlayerProgress(player.nickname)}
-                          className="p-2 hover:bg-white/10 rounded text-slate-400 hover:text-yellow-400"
+                          disabled={isOwnerNick?.(player.nickname) || String(player.nickname).toLowerCase() === ROOT_ADMIN.toLowerCase()}
+                          className="p-2 hover:bg-white/10 rounded text-slate-400 hover:text-yellow-400 disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Сбросить прогресс"
                         >
                           <RotateCcw size={16} />
                         </button>
                         <button
                           onClick={() => player.is_admin ? demotePlayer(player.nickname) : promotePlayer(player.nickname)}
-                          className="p-2 hover:bg-white/10 rounded text-slate-400 hover:text-neon-lime"
+                          disabled={player.is_admin && (isOwnerNick?.(player.nickname) || String(player.nickname).toLowerCase() === ROOT_ADMIN.toLowerCase())}
+                          className="p-2 hover:bg-white/10 rounded text-slate-400 hover:text-neon-lime disabled:opacity-30 disabled:cursor-not-allowed"
                           title={player.is_admin ? "Снять админ права" : "Выдать админ права"}
                         >
                           {player.is_admin ? <ShieldOff size={16} /> : <Shield size={16} />}
                         </button>
                         <button
                           onClick={() => deletePlayer(player.nickname)}
-                          className="p-2 hover:bg-white/10 rounded text-slate-400 hover:text-neon-coral"
+                          disabled={isOwnerNick?.(player.nickname) || String(player.nickname).toLowerCase() === ROOT_ADMIN.toLowerCase()}
+                          className="p-2 hover:bg-white/10 rounded text-slate-400 hover:text-neon-coral disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Удалить аккаунт"
                         >
                           <Trash2 size={16} />

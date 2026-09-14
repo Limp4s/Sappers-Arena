@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { User, LogOut, KeyRound, Trophy, Crown, Check, AlertCircle, Award } from 'lucide-react';
 import { logout, changePassword, validatePassword, getPlayerId, getToken, isOwnerNick } from '../../lib/player';
-import { promoteToAdmin } from '../../lib/lobby';
 import InventoryModal from '../modals/InventoryModal';
 import PlayerProfileModal from '../modals/PlayerProfileModal';
 import AchievementsModal from '../modals/AchievementsModal';
@@ -11,7 +10,6 @@ import { t } from '../../lib/i18n';
 import FriendsSection from '../profile/FriendsSection';
 import DailySection from '../profile/DailySection';
 import SettingsSection from '../profile/SettingsSection';
-import AdminPanel from '../profile/AdminPanel';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://Sappers-Arena-backend.onrender.com';
 const API = `${BACKEND_URL}/api`;
@@ -20,7 +18,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
   const [stats, setStats] = useState(null);
   const [showInventory, setShowInventory] = useState(false);
   const [showChangePw, setShowChangePw] = useState(false);
-  const [showPromote, setShowPromote] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [viewQuery, setViewQuery] = useState('');
   const [viewNick, setViewNick] = useState(null);
@@ -153,8 +150,6 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
             )}
           </div>
 
-          <AdminPanel player={player} onPlayerUpdate={onPlayerUpdate} />
-
           <FriendsSection 
             player={player} 
             onPlayerUpdate={onPlayerUpdate} 
@@ -173,15 +168,12 @@ export default function ProfileView({ player, onPlayerUpdate, onLogout }) {
             setShowInventory={setShowInventory} 
             showChangePw={showChangePw} 
             setShowChangePw={setShowChangePw} 
-            showPromote={showPromote} 
-            setShowPromote={setShowPromote} 
             handleLogout={handleLogout} 
           />
         </div>
 
       {showInventory && <InventoryModal player={player} onClose={() => setShowInventory(false)} />}
       {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}
-      {showPromote && <PromoteModal onClose={() => setShowPromote(false)} />}
       {(viewNick || viewNum != null) && (
         <PlayerProfileModal
           nickname={viewNick}
@@ -253,48 +245,6 @@ function ChangePasswordModal({ onClose }) {
               {submitting ? t('profile.updating') : t('profile.update')}
             </button>
             <button type="button" onClick={onClose} className="neon-btn neon-btn-coral" data-testid="change-password-cancel">{t('common.cancel')}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function PromoteModal({ onClose }) {
-  const [nick, setNick] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState(null);
-
-  const submit = async (e) => {
-    e.preventDefault();
-    if (!nick.trim()) return;
-    setBusy(true); setMsg(null);
-    try {
-      const res = await promoteToAdmin(nick.trim());
-      setMsg({ ok: true, text: `${res.player?.nickname || nick} ${t('admin.promoted')}` });
-      setNick('');
-    } catch (e2) {
-      setMsg({ ok: false, text: e2?.response?.data?.detail || t('profile.failed') });
-    } finally { setBusy(false); }
-  };
-
-  return (
-    <div className="modal-backdrop" data-testid="promote-modal">
-      <div className="glass-panel slide-up rounded-2xl p-7 max-w-md w-[92%]">
-        <h3 className="font-display text-xl font-black neon-gold mb-2 flex items-center gap-2">
-          <UserPlus size={18} /> {t('admin.promote')}
-        </h3>
-        <p className="text-xs text-slate-400 mb-4">{t('admin.promoteHelp')}</p>
-        <form onSubmit={submit} className="space-y-3">
-          <input className="neon-input" placeholder="CALLSIGN" value={nick} onChange={(e) => setNick(e.target.value.trim())} maxLength={20} autoFocus data-testid="promote-nick-input" />
-          {msg && <div className={`text-[11px] font-mono flex items-center gap-1.5 ${msg.ok ? 'neon-lime' : 'neon-coral'}`} data-testid="promote-msg">
-            {msg.ok ? <Check size={11} /> : <AlertCircle size={11} />}{msg.text}
-          </div>}
-          <div className="flex gap-2">
-            <button type="submit" disabled={!nick.trim() || busy} className="neon-btn flex-1" data-testid="promote-submit">
-              {busy ? t('admin.processing') : t('admin.grantBtn')}
-            </button>
-            <button type="button" onClick={onClose} className="neon-btn neon-btn-coral" data-testid="promote-cancel">{t('common.cancel')}</button>
           </div>
         </form>
       </div>

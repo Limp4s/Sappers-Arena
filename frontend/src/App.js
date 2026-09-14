@@ -247,7 +247,7 @@ function Home() {
         />
       )}
       {tab === 'shop' && <ShopView player={player} onPlayerUpdate={handlePlayerUpdate} />}
-      {tab === 'leaderboard' && <LeaderboardView isAdmin={player.isAdmin} />}
+      {tab === 'leaderboard' && <LeaderboardView />}
       {tab === 'profile' && <ProfileView player={player} onPlayerUpdate={handlePlayerUpdate} onLogout={handleLogout} />}
       {tab === 'admin' && player.isAdmin && <AdminDashboard />}
     </div>
