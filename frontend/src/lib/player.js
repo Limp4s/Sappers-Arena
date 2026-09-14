@@ -225,10 +225,8 @@ const _offlinePlayerDoc = (u) => ({
 
 export const authHeaders = () => {
   const t = getToken();
-  // If token is from cookie (not localStorage), don't send header
-  // Cookie is sent automatically by axios withCredentials
-  const isFromCookie = !localStorage.getItem(KEY_TOKEN) && t;
-  if (isFromCookie) return {};
+  // Always send X-Session-Token if we have a valid online token
+  // Cookie is also sent automatically by axios withCredentials
   return isOnlineToken(t) ? { 'X-Session-Token': t } : {};
 };
 

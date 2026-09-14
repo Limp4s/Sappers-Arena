@@ -2205,23 +2205,27 @@ async def admin_reset_password(payload: AdminResetPasswordRequest, nick: str = D
     target = await _get_player(payload.nickname)
     if not target:
         raise HTTPException(status_code=404, detail="Player not found.")
-    
+
     # Protect root admin from password reset
     if _is_admin_nick(target.get("nickname")):
         raise HTTPException(status_code=403, detail="Cannot reset the root admin password.")
-    
+
     # Generate random password
     new_password = _generate_random_password(random.randint(8, 12))
-    
+
     # Use standard PBKDF2 hashing (same as main system)
     new_hash = _hash_password(new_password)
-    
+
     # Update in database
     await db.players.update_one(
         {"nickname_lower": target["nickname_lower"]},
         {"$set": {"password_hash": new_hash}}
     )
-    
+
+    # Invalidate all sessions for this player so they must re-login with new password
+    target_nick = target.get("nickname")
+    await db.sessions.delete_many({"nickname": target_nick})
+
     return {"ok": True, "new_password": new_password}
 
 
