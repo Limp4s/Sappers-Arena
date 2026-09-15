@@ -25,8 +25,10 @@ export default function FriendLobbyModal({ config, onClose, onStartWithLobby, pl
         setLobby(latest);
         if (latest.status === 'playing') {
           clearInterval(t);
-          // Use the actual lobby config from server, not the local config
+          // Use the actual lobby config from server for identical settings
           const lobbyConfig = latest.config || {};
+          // But use a random seed for each player so they see different mine placements
+          const playerSeed = Math.floor(Math.random() * 1000000);
           onStartWithLobby({
             rows: lobbyConfig.rows || config.rows,
             cols: lobbyConfig.cols || config.cols,
@@ -36,7 +38,7 @@ export default function FriendLobbyModal({ config, onClose, onStartWithLobby, pl
             difficulty: 'lobby',
             label: `LOBBY · ${latest.code}`,
             lobbyCode: latest.code,
-            seed: latest.seed,
+            seed: playerSeed,
             narc: lobbyConfig.narc || false,
             random_mode: lobbyConfig.random_mode || false,
             no_flags: lobbyConfig.no_flags || false,
