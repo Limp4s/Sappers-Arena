@@ -25,7 +25,22 @@ export default function FriendLobbyModal({ config, onClose, onStartWithLobby, pl
         setLobby(latest);
         if (latest.status === 'playing') {
           clearInterval(t);
-          onStartWithLobby({ ...config, mode: 'lobby', difficulty: 'lobby', label: `LOBBY · ${latest.code}`, lobbyCode: latest.code, seed: latest.seed });
+          // Use the actual lobby config from server, not the local config
+          const lobbyConfig = latest.config || {};
+          onStartWithLobby({
+            rows: lobbyConfig.rows || config.rows,
+            cols: lobbyConfig.cols || config.cols,
+            mines: lobbyConfig.mines || config.mines,
+            lives: lobbyConfig.lives || config.lives,
+            mode: 'lobby',
+            difficulty: 'lobby',
+            label: `LOBBY · ${latest.code}`,
+            lobbyCode: latest.code,
+            seed: latest.seed,
+            narc: lobbyConfig.narc || false,
+            random_mode: lobbyConfig.random_mode || false,
+            no_flags: lobbyConfig.no_flags || false,
+          });
           onClose();
         }
       } catch {}
