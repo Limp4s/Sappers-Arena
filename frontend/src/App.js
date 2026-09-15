@@ -162,13 +162,16 @@ function Home() {
 
   const showOnboarding = !!player && !gameConfig && !onboardingDone;
   const finishOnboarding = useCallback(async () => {
+    // Always mark as done locally first to avoid blocking user on mobile
+    setOnboardingDone(true);
+    setOnboardingStep(0);
+    // Then try to sync with server
     try {
       await axios.post(`${API}/players/onboarding-done`, null, { headers: authHeaders() });
     } catch (e) {
-      console.error('Failed to mark onboarding done:', e);
+      console.error('Failed to mark onboarding done on server:', e);
+      // Don't block user if server call fails (especially on mobile)
     }
-    setOnboardingDone(true);
-    setOnboardingStep(0);
   }, []);
 
   useEffect(() => {

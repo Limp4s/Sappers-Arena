@@ -45,7 +45,15 @@ export default function FriendLobbyModal({ config, onClose, onStartWithLobby, pl
   const hostCreate = async () => {
     setBusy(true); setError(null);
     try {
-      const l = await createLobby({ ...config, mode: 'lobby_friend', public: false });
+      // Limit field size for friend lobbies to prevent UI issues
+      const lobbyConfig = {
+        ...config,
+        rows: Math.min(config.rows, 20),
+        cols: Math.min(config.cols, 20),
+        mode: 'lobby_friend',
+        public: false
+      };
+      const l = await createLobby(lobbyConfig);
       setLobby(l); setMode('host');
     } catch (e) { setError(e?.response?.data?.detail || t('lobbyFriend.createFailed')); }
     finally { setBusy(false); }

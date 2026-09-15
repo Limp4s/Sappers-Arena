@@ -896,8 +896,8 @@ class PurchaseRequest(BaseModel):
 class LobbyCreateRequest(BaseModel):
     mode: str = Field(..., min_length=1, max_length=32)   # lobby_friend | battle_simple | battle_ranked
     public: bool = True
-    rows: int = Field(..., ge=5, le=30)
-    cols: int = Field(..., ge=5, le=30)
+    rows: int = Field(..., ge=5, le=20)
+    cols: int = Field(..., ge=5, le=20)
     mines: int = Field(..., ge=1, le=500)
     lives: int = Field(default=3, ge=1, le=10)
     narc: bool = False
